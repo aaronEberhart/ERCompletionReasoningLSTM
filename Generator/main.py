@@ -36,4 +36,3 @@ try:
 except Exception as ex:
 	print(ex)
 
-input("DONE")
