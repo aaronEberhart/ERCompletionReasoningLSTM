@@ -7,13 +7,31 @@ y = Role('role',["gfdfd",'a'])
 y.display()
 
 try:
-	z = Concept(True,[5,5])
+	z = Predicate(True,[5,5])
 	z.display()
 except Exception as ex:
 	print(ex)
 
 try:
-	y = Role(786,[65756])
-	y.display()
+	w = Concept(True,[5,5])
+	w.display()
+except Exception as ex:
+	print(ex)
+
+try:
+	a = Concept(True,[[5]])
+	a.display()
+except Exception as ex:
+	print(ex)
+
+try:
+	b = Role(786,[65756])
+	b.display()
+except Exception as ex:
+	print(ex)
+
+try:
+	c = Role(786,65756)
+	c.display()
 except Exception as ex:
 	print(ex)
