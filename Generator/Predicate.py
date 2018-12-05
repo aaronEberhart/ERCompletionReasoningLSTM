@@ -1,4 +1,4 @@
-from Term import *
+from Generator.Term import *
 
 class Predicate(ABC):
 	
