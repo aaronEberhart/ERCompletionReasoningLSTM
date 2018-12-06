@@ -4,15 +4,15 @@ from Quantifier import *
 class Predicate(ABC):
 	
 	def __init__(self,ID,args):
-		if not self.validParams(ID,args): raise Exception("Invalid Predicate")
-		self.name = ID
+		self.checkPredicate()
 		self.terms = Terms(args)
+		self.name = ID		
 	
 	def toString(self):
 		return "{}({})".format(self.name,self.terms.toString())
 		
-	def validParams(self,ID,args):
-		return isinstance(ID,(int,float,complex,str,bool))
+	def checkPredicate(self,ID,args):
+		if not isinstance(ID,(int,float,complex,str,bool)): raise Exception("Invalid Predicate")
 
 class Concept(Predicate):
 	
@@ -27,6 +27,9 @@ class Role(Predicate):
 
 	def __init__(self,ID,args):
 		super().__init__(ID,args)
+		self.checkRole()
+		
+	def checkRole(self):
 		if self.terms.len() != 2: raise Exception("Invalid Role")
 
 class ConceptRole(Concept):
