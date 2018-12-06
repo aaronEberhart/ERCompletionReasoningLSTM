@@ -5,7 +5,14 @@ sys.path.insert(0,me+"/Reasoner")
 
 from Statement import *
 
-def runTests():
+def runStatementTests():
+	
+	s = ConceptStatement(0,0)
+	s.addToAntecedent(ConceptRole('e',Role('a',[78,8]),Concept('b',[8])))
+	s.addToConsequent(ConceptRole('e',Role('c',[78,8]),Concept('d',[8])))
+	print(s.toString())
+
+def runPredTests():
 	
 	x = Concept('concept',['a'])
 	print(x.toString())
@@ -56,4 +63,5 @@ def runTests():
 		
 		
 if __name__ == "__main__":
-	runTests()		
+	runPredTests()
+	runStatementTests()
