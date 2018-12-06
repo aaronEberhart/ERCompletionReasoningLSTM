@@ -1,5 +1,3 @@
-from abc import *
-
 class Term:
 	
 	def __init__(self,t):

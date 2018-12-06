@@ -1,7 +1,7 @@
 from Term import *
 from Quantifier import *
 
-class Predicate(ABC):
+class Predicate:
 	
 	def __init__(self,ID,args):
 		self.checkPredicate(ID)
