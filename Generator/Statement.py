@@ -2,7 +2,6 @@ from Predicate import *
 
 class Statement:
     
-    @abstractmethod
     def __init__(self):
         self.antecedent = []
         self.consequent = []
@@ -19,9 +18,9 @@ class Statement:
 class ConceptStatement(Statement):
     
     def __init__(self):
-        super.__init__(self)
+        super().__init__(self)
         
 class RoleStatement(Statement):
     
     def __init__(self):
-        super.__init__(self)
+        super().__init__(self)
