@@ -4,14 +4,14 @@ from Quantifier import *
 class Predicate(ABC):
 	
 	def __init__(self,ID,args):
-		self.checkPredicate()
+		self.checkPredicate(ID)
 		self.terms = Terms(args)
 		self.name = ID		
 	
 	def toString(self):
 		return "{}({})".format(self.name,self.terms.toString())
 		
-	def checkPredicate(self,ID,args):
+	def checkPredicate(self,ID):
 		if not isinstance(ID,(int,float,complex,str,bool)): raise Exception("Invalid Predicate")
 
 class Concept(Predicate):
