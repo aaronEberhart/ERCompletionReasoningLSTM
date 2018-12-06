@@ -1,9 +1,5 @@
 from Generator.Predicate import *
 
-
-if __name__ == "__main__":
-	runTests()
-
 def runTests():
 	x = Concept('concept',[345])
 	x.display()
@@ -40,4 +36,8 @@ def runTests():
 		c.display()
 	except Exception as ex:
 		print(ex)
-
+	
+	
+		
+if __name__ == "__main__":
+	runTests()		
