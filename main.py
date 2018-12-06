@@ -6,6 +6,7 @@ sys.path.insert(0,self+"/Reasoner")
 from Statement import *
 
 def runTests():
+	
 	x = Concept('concept',['a'])
 	print(x.toString())
 	
