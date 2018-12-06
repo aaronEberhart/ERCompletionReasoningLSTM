@@ -1,7 +1,7 @@
 import os,sys
-self = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0,self+"/Generator")
-sys.path.insert(0,self+"/Reasoner")
+me = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0,me+"/Generator")
+sys.path.insert(0,me+"/Reasoner")
 
 from Statement import *
 
