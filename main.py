@@ -1,4 +1,9 @@
-from Generator.Predicate import *
+import os,sys
+self = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0,self+"/Generator")
+sys.path.insert(0,self+"/Reasoner")
+
+from Statement import *
 
 def runTests():
 	x = Concept('concept',[345])
@@ -36,8 +41,7 @@ def runTests():
 		c.display()
 	except Exception as ex:
 		print(ex)
-	
-	
+		
 		
 if __name__ == "__main__":
 	runTests()		

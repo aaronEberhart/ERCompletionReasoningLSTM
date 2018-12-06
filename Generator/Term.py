@@ -3,8 +3,7 @@ from abc import *
 class Term:
 	
 	def __init__(self,t):
-		if not self.validTerm(t):
-			raise Exception("Invalid Term")
+		if not self.validTerm(t): raise Exception("Invalid Term")
 		self.term = t
 	
 	def getTerm(self):
@@ -18,20 +17,17 @@ class Term:
 	
 	@staticmethod
 	def validTerm(t):
-		return not isinstance(t,list)
+		return isinstance(t,(int,float,complex,str,bool))
 	
 class Terms(Term):
 	
 	def __init__(self,args):
-		if not Terms.validTerms(args):
-			raise Exception("Invalid Terms")
+		if not Terms.validTerms(args): raise Exception("Invalid Terms")
 		self.terms = [Term(term) for term in args]
 	
 	@staticmethod
 	def validTerms(terms):
-		if not isinstance(terms,list):
-			return False
-		return True
+		return isinstance(terms,list)
 	
 	def toString(self):
 		ret = ""
