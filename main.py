@@ -7,9 +7,12 @@ from Statement import *
 
 def runStatementTests():
 	
-	s = ConceptStatement(0,0)
-	s.addToAntecedent(ConceptRole('e',Role('a',[78,8]),Concept('b',[8])))
-	s.addToConsequent(ConceptRole('e',Role('c',[78,8]),Concept('d',[8])))
+	s = ConceptStatement(0,0,True)
+	s.addToAntecedent(ConceptRole('e',Role('a',[0,1]),Concept('b',[1])))
+	t = ConceptStatement(1,2,False)
+	t.addToAntecedent(Concept('d',[2]))
+	t.addToConsequent(Concept('e',[2]))
+	s.addToConsequent(ConceptRole('e',Role('c',[0,2]),t))
 	print(s.toString())
 
 def runPredTests():
@@ -20,8 +23,11 @@ def runPredTests():
 	y = Role('role',["gfdfd",'a'])
 	print(y.toString())
 	
-	aa = ConceptRole('e',Role('role',["gfdfd",'a']),Concept('concept',['a']))
+	aa = ConceptRole('e',Role('role',['b','a']),Concept('concept',['a']))
 	print(aa.toString())
+
+	ab = ConceptRole('e',Role('role',['c','b']),aa)
+	print(ab.toString())
 
 	print()
 
@@ -63,5 +69,5 @@ def runPredTests():
 		
 		
 if __name__ == "__main__":
-	runPredTests()
+	#runPredTests()
 	runStatementTests()

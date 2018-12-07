@@ -3,11 +3,12 @@ import random
 
 class Statement(Concept):
     
-    def __init__(self,ID,scope):
+    def __init__(self,ID,scope,outer):
         super().__init__(ID,[scope])
         self.antecedent = []
         self.consequent = []
         self.majorOperator = 'X'
+        self.outer = outer
         random.seed()
     
     def complete(self,operator):
@@ -31,15 +32,15 @@ class Statement(Concept):
         self.consequent.append(predicate)
         
     def toString(self):
-        return "{} {} {}".format(" ".join([item.toString() for item in self.antecedent]),self.majorOperator," ".join([item.toString() for item in self.consequent]))
+        return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.majorOperator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
     
 class ConceptStatement(Statement):
     
-    def __init__(self,ID,scope):
-        super().__init__(ID,scope)
+    def __init__(self,ID,scope,outer):
+        super().__init__(ID,scope,outer)
     
     def checkConceptStatement(self,concept):
-        if not isinstance(concept,Concept): raise Exception("Invalid Concept")
+        if not isinstance(concept,Concept) or not concept.terms.getTerm(0) == self.terms.getTerm(0): raise Exception("Invalid ConceptStatement")
     
     def addToAntecedent(self,concept):
         self.checkConceptStatement(concept)
@@ -51,11 +52,11 @@ class ConceptStatement(Statement):
         
 class RoleStatement(Statement):
     
-    def __init__(self,ID,scope):
-        super().__init__(ID,scope)
+    def __init__(self,ID,scope,outer):
+        super().__init__(ID,scope,outer)
     
     def checkRoleStatement(self,role):
-        if not isinstance(role,Role): raise Exception("Invalid Role")
+        if not isinstance(role,Role): raise Exception("Invalid RoleStatement")
     
     def addToAntecedent(self,role):
         self.checkRoleStatement(role)

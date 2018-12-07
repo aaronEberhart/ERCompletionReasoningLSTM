@@ -45,4 +45,4 @@ class ConceptRole(Concept):
 		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0): raise Exception("Invalid ConceptRole")
 	
 	def toString(self):
-		return "{}{}({}).{}({})".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.name,self.concept.terms.toString())
+		return "{}{}({}).{}".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.toString())
