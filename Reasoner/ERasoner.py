@@ -13,4 +13,6 @@ R -> S, A -> ∃R.B                     => A -> ∃S.B
 
 R1 o R2 -> R, A -> ∃R1.B, B -> ∃R2.C  => A -> ∃R.C
 
+ALL A -> A
+
 """

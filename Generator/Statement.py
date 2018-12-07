@@ -9,6 +9,7 @@ class Statement(Concept):
         self.consequent = []
         self.majorOperator = 'X'
         self.outer = outer
+        self.size = 0
         random.seed()
     
     def complete(self,operator):
@@ -26,10 +27,12 @@ class Statement(Concept):
     def addToAntecedent(self,predicate):
         self.checkStatementPredicate(predicate)
         self.antecedent.append(predicate)
+        self.size = self.size + 1
         
     def addToConsequent(self,predicate):
         self.checkStatementPredicate(predicate)
         self.consequent.append(predicate)
+        self.size = self.size + 1
         
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.majorOperator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
@@ -63,5 +66,6 @@ class RoleStatement(Statement):
         super().addToAntecedent(role)
         
     def addToConsequent(self,role):
+        if len(self.consequent) == 1: raise Exception("Invalid RoleStatement")
         self.checkRoleStatement(role)
         super().addToConsequent(role)
