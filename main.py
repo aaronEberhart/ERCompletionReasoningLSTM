@@ -1,3 +1,7 @@
+"""
+⊑ ⊓ ⊔ ≡
+"""
+
 import os,sys
 me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
@@ -8,7 +12,7 @@ from Statement import *
 def runStatementTests():
 	
 	s = ConceptStatement(0,True)
-	s.addToAntecedent(ConceptRole('e',Role('a',[0,1]),Concept('b',[1])))
+	s.addToAntecedent(ConceptRole('e',Role('a',[0,2]),Concept('b',[2])))
 	t = ConceptStatement(1)
 	t.addToAntecedent(Concept('d',[2]))
 	t.addToConsequent(Concept('e',[2]))
@@ -71,5 +75,5 @@ def runPredTests():
 		
 		
 if __name__ == "__main__":
-	#runPredTests()
+	runPredTests()
 	runStatementTests()
