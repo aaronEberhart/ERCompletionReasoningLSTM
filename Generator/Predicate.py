@@ -1,5 +1,6 @@
 from Term import *
 from Quantifier import *
+from Statement import *
 
 class Predicate:
 	
