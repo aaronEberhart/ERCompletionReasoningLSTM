@@ -1,7 +1,6 @@
 """
-⊑ ⊓ ⊔ ≡
+⊑ ⊓ ⊔ ≡ ∘
 """
-
 import os,sys
 me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
@@ -11,15 +10,19 @@ from Statement import *
 
 def runStatementTests():
 	
-	s = ConceptStatement(0,True)
-	s.addToAntecedent(ConceptRole('e',Role('a',[0,2]),Concept('b',[2])))
-	t = ConceptStatement(1)
-	t.addToAntecedent(Concept('d',[2]))
-	t.addToConsequent(Concept('e',[2]))
-	s.addToConsequent(ConceptRole('e',Role('c',[0,2]),t))
+	t = ConceptStatement(1,False,Concept('d',[2]),Concept('e',[2]))
+	t.complete('⊓')
+	
+	cr = ConceptRole('e',Role('c',[0,2]),t)
+	s = ConceptStatement(0,True,ConceptRole('e',Role('a',[0,2]),Concept('b',[2])),cr)
+	s.complete('⊑')
+	
 	print(s.toString())
 	
-	r = RoleStatement(0,True)
+	rs = RoleStatement(0,True,RoleChain(0,Role('a',[0,1]),Role('b',[1,2])),Role('d',[0,2]))
+	rs.complete('⊑')
+	
+	print(rs.toString())
 
 def runPredTests():
 	
@@ -72,6 +75,8 @@ def runPredTests():
 		print(cra.toString())
 	except Exception as ex:
 		print(ex)
+	
+	print()
 		
 		
 if __name__ == "__main__":

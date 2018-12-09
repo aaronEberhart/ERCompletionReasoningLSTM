@@ -16,7 +16,7 @@ class Term:
 	def checkTerm(self,t):
 		if not isinstance(t,(int,float,complex,str,bool)): raise Exception("Invalid Term")
 	
-class Terms(Term):
+class Terms:
 	
 	def __init__(self,args):
 		self.checkTerms(args)
@@ -32,6 +32,9 @@ class Terms(Term):
 			if i != len(self.terms) - 1:
 				ret = ret + ","
 		return ret
+	
+	def getTerms(self):
+		return self.terms
 	
 	def getTerm(self,i):
 		return self.terms[i].getTerm()

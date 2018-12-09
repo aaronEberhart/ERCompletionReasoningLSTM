@@ -47,3 +47,35 @@ class ConceptRole(Concept):
 	
 	def toString(self):
 		return "{}{}({}).{}".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.toString())
+	
+class RoleChain(Role):
+	
+	def __init__(self,ID,*chain):
+		self.checkRoleChain(chain)
+		self.checkPredicate(ID)
+		self.name = ID
+		self.roles = []
+		self.appendRoles(chain)
+	
+	def checkRoleChain(self,chain):
+		if chain == None or len(chain) == 0: raise Exception("Invalid RoleChain")
+		
+	def checkRoleChainAppend(self,role):
+		role.checkRole()
+		if self.terms.getTerm(1) != role.terms.getTerm(0): raise Exception("Invalid RoleChain")
+	
+	def appendRoles(self,chain):
+		for i in range(0,len(chain)):
+			
+			if i == 0 and self.roles == []:
+				chain[i].checkRole()
+				self.terms = Terms([term.getTerm() for term in chain[i].terms.getTerms()])
+				self.roles.append(chain[i])
+			else:
+				self.checkRoleChainAppend(chain[i])
+				self.roles.append(chain[i])
+				self.terms.setTerm(1,chain[i].terms.getTerm(1))
+	
+	def toString(self):
+		
+		return "".join(["{}{}".format("∘" if role != self.roles[0] else "",role.toString()) for role in self.roles])

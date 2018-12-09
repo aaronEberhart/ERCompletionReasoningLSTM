@@ -1,5 +1,5 @@
 """
-⊑ ⊓ ⊔ ≡
+⊑ ⊓ ⊔ ≡ ∘
 """
 
 from Predicate import *
@@ -42,8 +42,13 @@ class ConceptStatement(Concept):
     def __init__(self,ID,outer=False,*seed):
         self.checkPredicate(ID)
         self.name = ID
-        self.antecedent = [] if len(seed) < 1 else seed[0]
-        self.consequent = [] if len(seed) < 2 else seed[1]
+        self.antecedent = []
+        self.consequent = []
+        self.terms = None
+        if len(seed) > 0: 
+            self.addToAntecedent(seed[0])
+        if len(seed) > 1:
+            self.addToConsequent(seed[1])
         self.operator = 'X'
         self.outer = outer
         self.setScope()
@@ -82,21 +87,28 @@ class RoleStatement(Role):
     def __init__(self,ID,outer=False,*seed):
         self.checkPredicate(ID)
         self.name = ID
-        self.antecedent = [] if len(seed) < 1 else seed[0]
-        self.consequent = [] if len(seed) < 2 else seed[1]
+        self.antecedent = []
+        self.consequent = []
+        self.terms = None
+        if len(seed) > 0: 
+            self.addToAntecedent(seed[0])
+        if len(seed) > 1:
+            self.addToConsequent(seed[1])
         self.operator = 'X'
         self.outer = outer
+        self.setScope()
     
     def checkRoleStatement(self,role):
-        if not isinstance(role,Role): raise Exception("Invalid RoleStatement")
+        if not isinstance(role,Role) or (self.terms != None and (role.terms.getTerm(0) != self.terms.getTerm(0) or role.terms.getTerm(1) != self.terms.getTerm(1))): raise Exception("Invalid RoleStatement")
     
     def addToAntecedent(self,role):
+        if len(self.antecedent) == 1: raise Exception("Invalid RoleStatement")
         self.checkRoleStatement(role)
-        self.antecedent.append(concept)
+        self.antecedent.append(role)
         if self.terms == None: self.setScope()
         
     def addToConsequent(self,role):
-        if len(self.consequent) == 1 or isinstance(role, RoleStatement): raise Exception("Invalid RoleStatement")
+        if len(self.consequent) == 1 or isinstance(role, RoleChain): raise Exception("Invalid RoleStatement")
         self.checkRoleStatement(role)
         self.consequent.append(role)
         if self.terms == None: self.setScope()
