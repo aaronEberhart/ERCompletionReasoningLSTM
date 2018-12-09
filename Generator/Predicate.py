@@ -77,5 +77,4 @@ class RoleChain(Role):
 				self.terms.setTerm(1,chain[i].terms.getTerm(1))
 	
 	def toString(self):
-		
 		return "".join(["{}{}".format("∘" if role != self.roles[0] else "",role.toString()) for role in self.roles])
