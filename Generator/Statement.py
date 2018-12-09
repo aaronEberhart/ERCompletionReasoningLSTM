@@ -3,40 +3,7 @@
 """
 
 from Predicate import *
-
-class Statement(Predicate):
-    
-    def __init__(self,ID,outer=False,*seed):
-        self.checkPredicate(ID)
-        self.name = ID
-        self.antecedent = [] if len(seed) < 1 else seed[0]
-        self.consequent = [] if len(seed) < 2 else seed[1]
-        self.operator = 'X'
-        self.outer = outer
-    
-    def complete(self,operator):
-        self.majorOperator = operator
-    
-    def isComplete(self):
-        return not self.majorOperator == 'X'
-    
-    def canBeComplete(self):
-        return len(self.antecedent) > 0 and len(self.consequent) > 0
-    
-    def checkStatementPredicate(self,predicate):
-        if not isinstance(predicate,Predicate): raise Exception("Invalid Predicate")
-    
-    def addToAntecedent(self,predicate):
-        self.checkStatementPredicate(predicate)
-        self.antecedent.append(predicate)
-        
-    def addToConsequent(self,predicate):
-        self.checkStatementPredicate(predicate)
-        self.consequent.append(predicate)
-        
-    def toString(self):
-        return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
-    
+   
 class ConceptStatement(Concept):
     
     def __init__(self,ID,outer=False,*seed):
@@ -70,13 +37,14 @@ class ConceptStatement(Concept):
         if self.terms == None: self.setScope()
         
     def complete(self,operator):
+        self.checkCanBeComplete()
         self.operator = operator
     
     def isComplete(self):
         return not self.operator == 'X'
     
-    def canBeComplete(self):
-        return len(self.antecedent) > 0 and len(self.consequent) > 0   
+    def checkCanBeComplete(self):
+        if not len(self.antecedent) > 0 or not len(self.consequent) > 0: raise Exception("Not complete yet") 
     
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
@@ -114,13 +82,14 @@ class RoleStatement(Role):
         if self.terms == None: self.setScope()
         
     def complete(self,operator):
+        self.checkCanBeComplete()
         self.operator = operator
     
     def isComplete(self):
         return not self.operator == 'X'
     
-    def canBeComplete(self):
-        return len(self.antecedent) > 0 and len(self.consequent) > 0   
+    def checkCanBeComplete(self):
+        if not len(self.antecedent) > 0 or not len(self.consequent) > 0: raise Exception("Not complete yet") 
     
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
