@@ -70,7 +70,10 @@ class RoleStatement(Role):
         if not isinstance(role,Role) or (self.terms != None and (role.terms.getTerm(0) != self.terms.getTerm(0) or role.terms.getTerm(1) != self.terms.getTerm(1))): raise Exception("Invalid RoleStatement")
     
     def addToAntecedent(self,role):
-        if len(self.antecedent) > 0 and not isinstance(self.antecedent[0],RoleChain): self.antecedent[0] = RoleChain(role.name,self.antecedent[0])
+        if len(self.antecedent) > 0 and not isinstance(self.antecedent[0],RoleChain): 
+            self.antecedent[0] = RoleChain(role.name,self.antecedent[0])
+            if len(self.consequent) > 0 and isinstance(self.consequent[0],RoleChain):
+                self.antecedent[0].terms.setTerm(1,self.consequent[0].roles[len(self.consequent[0].roles) - 1].terms.getTerm(0))
         if len(self.antecedent) == 1:
             if self.consequent != None and not isinstance(self.consequent[0],RoleChain):
                 self.consequent[0].terms.setTerm(1,role.terms.getTerm(1))            
@@ -83,7 +86,10 @@ class RoleStatement(Role):
         if self.terms == None: self.setScope()
         
     def addToConsequent(self,role):
-        if len(self.consequent) > 0 and not isinstance(self.consequent[0],RoleChain): self.consequent[0] = RoleChain(role.name,self.consequent[0])
+        if len(self.consequent) > 0 and not isinstance(self.consequent[0],RoleChain): 
+            self.consequent[0] = RoleChain(role.name,self.consequent[0])
+            if len(self.antecedent) > 0 and isinstance(self.antecedent[0],RoleChain):
+                self.consequent[0].terms.setTerm(1,self.antecedent[0].roles[len(self.antecedent[0].roles) - 1].terms.getTerm(0))            
         if len(self.consequent) == 1:
             if self.antecedent != None and not isinstance(self.antecedent[0],RoleChain):
                 self.antecedent[0].terms.setTerm(1,role.terms.getTerm(1))

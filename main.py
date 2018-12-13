@@ -22,7 +22,18 @@ def runStatementTests():
 	rs = RoleStatement(0,True,Role('a',[0,1]),Role('b',[0,1]))
 	print(rs.toString())
 	rs.addToConsequent(Role('c',[1,2]))
+	print(rs.toString())	
+	rs.addToAntecedent(Role('d',[1,2]))
 	print(rs.toString())
+	rs.addToConsequent(Role('e',[2,3]))
+	print(rs.toString())	
+	
+	rs.addToConsequent(Role('g',[3,4]))
+	print(rs.toString())
+	rs.addToAntecedent(Role('f',[2,3]))
+	print(rs.toString())	
+	rs.addToAntecedent(Role('h',[3,4]))
+	print(rs.toString())		
 	rs.complete('⊑')
 	
 	print(rs.toString())
