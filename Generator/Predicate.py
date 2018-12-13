@@ -46,7 +46,7 @@ class ConceptRole(Concept):
 		self.role = role
 	
 	def checkConceptRoleMatch(self,role,concept):
-		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0) or  not concept.isComplete(): raise Exception("Invalid ConceptRole")
+		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0) or not concept.isComplete(): raise Exception("Invalid ConceptRole")
 	
 	def toString(self):
 		return "{}{}({}).{}".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.toString())
@@ -68,8 +68,7 @@ class RoleChain(Role):
 		if self.terms.getTerm(1) != role.terms.getTerm(0): raise Exception("Invalid RoleChain")
 	
 	def appendRoles(self,chain):
-		for i in range(0,len(chain)):
-			
+		for i in range(0,len(chain)):			
 			if i == 0 and self.roles == []:
 				chain[i].checkRole()
 				self.terms = Terms([term.getTerm() for term in chain[i].terms.getTerms()])

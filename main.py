@@ -19,9 +19,10 @@ def runStatementTests():
 	
 	print(s.toString())
 	
-	rs = RoleStatement(0,True,RoleChain(0,Role('a',[0,1]),Role('b',[1,2])))
-	rs.addToAntecedent(Role('c',[2,3]))
-	rs.addToConsequent(Role('c',[0,3]))
+	rs = RoleStatement(0,True,Role('a',[0,1]),Role('b',[0,1]))
+	print(rs.toString())
+	rs.addToConsequent(Role('c',[1,2]))
+	print(rs.toString())
 	rs.complete('⊑')
 	
 	print(rs.toString())
