@@ -23,6 +23,9 @@ class Concept(Predicate):
 	
 	def checkConcept(self):
 		if self.terms.len() != 1: raise Exception("Invalid Concept")
+		
+	def isComplete(self):
+		return True
 
 class Role(Predicate):
 
@@ -43,7 +46,7 @@ class ConceptRole(Concept):
 		self.role = role
 	
 	def checkConceptRoleMatch(self,role,concept):
-		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0): raise Exception("Invalid ConceptRole")
+		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0) or  not concept.isComplete(): raise Exception("Invalid ConceptRole")
 	
 	def toString(self):
 		return "{}{}({}).{}".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.toString())

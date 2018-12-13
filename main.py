@@ -19,7 +19,9 @@ def runStatementTests():
 	
 	print(s.toString())
 	
-	rs = RoleStatement(0,True,RoleChain(0,Role('a',[0,1]),Role('b',[1,2])),Role('d',[0,2]))
+	rs = RoleStatement(0,True,RoleChain(0,Role('a',[0,1]),Role('b',[1,2])))
+	rs.addToAntecedent(Role('c',[2,3]))
+	rs.addToConsequent(Role('c',[0,3]))
 	rs.complete('⊑')
 	
 	print(rs.toString())
@@ -37,6 +39,9 @@ def runPredTests():
 
 	ab = ConceptRole('e',Role('role',['c','b']),aa)
 	print(ab.toString())
+	
+	rc = RoleChain(0,Role('a',[0,1]),Role('b',[1,2]))
+	print(rc.toString())
 
 	print()
 
@@ -75,7 +80,26 @@ def runPredTests():
 		print(cra.toString())
 	except Exception as ex:
 		print(ex)
+		
+	try:
+		rcc = RoleChain(0,Role('a',[0,1]),Role('b',[2,2]))
+		print(rcc.toString())
+	except Exception as ex:
+		print(ex)
 	
+	try:
+		rcc = RoleChain(0,Role('a',[0,1]),Role('b',[1]))
+		print(rcc.toString())
+	except Exception as ex:
+		print(ex)
+	
+	try:
+		rcc = RoleChain(0,Role('a',[0,1]))
+		rcc.appendRoles([Role('b',[2,2])])
+		print(rcc.toString())
+	except Exception as ex:
+		print(ex)
+		
 	print()
 		
 		
