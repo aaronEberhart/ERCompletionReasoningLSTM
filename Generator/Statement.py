@@ -1,7 +1,3 @@
-"""
-⊑ ⊓ ⊔ ≡ ∘
-"""
-
 from Predicate import *
    
 class ConceptStatement(Concept):
