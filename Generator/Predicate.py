@@ -4,21 +4,26 @@ from Statement import *
 
 class Predicate:
 	
-	def __init__(self,ID,args):
+	def __init__(self,ID,args,negated=True,showTerms=False):
 		self.checkPredicate(ID)
 		self.terms = Terms(args)
-		self.name = ID		
+		self.name = ID
+		self.negated = not negated
+		self.showTerms = showTerms
+
+	def negate(self):
+		self.negated = not self.negated
 	
 	def toString(self):
-		return "{}({})".format(self.name,self.terms.toString())
+		return "{}{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
 		
 	def checkPredicate(self,ID):
 		if not isinstance(ID,(int,float,complex,str,bool)): raise Exception("Invalid Predicate")
 
 class Concept(Predicate):
 	
-	def __init__(self,ID,args):
-		super().__init__(ID,args)
+	def __init__(self,ID,args,negated=True,showTerms=False):
+		super().__init__(ID,args,negated,showTerms)
 		self.checkConcept()
 	
 	def checkConcept(self):
@@ -29,8 +34,8 @@ class Concept(Predicate):
 
 class Role(Predicate):
 
-	def __init__(self,ID,args):
-		super().__init__(ID,args)
+	def __init__(self,ID,args,negated=True,showTerms=False):
+		super().__init__(ID,args,negated,showTerms)
 		self.checkRole()
 		
 	def checkRole(self):
@@ -38,10 +43,10 @@ class Role(Predicate):
 
 class ConceptRole(Concept):
 	
-	def __init__(self,q,role,concept):
+	def __init__(self,q,role,concept,negated=True,showTerms=False):
 		self.checkConceptRoleMatch(role,concept)
 		self.quantifier = Quantifier(q)
-		super().__init__(role.name,[role.terms.getTerm(0)])
+		super().__init__(role.name,[role.terms.getTerm(0)],negated)
 		self.concept = concept
 		self.role = role
 	
@@ -49,7 +54,7 @@ class ConceptRole(Concept):
 		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0) or not concept.isComplete(): raise Exception("Invalid ConceptRole")
 	
 	def toString(self):
-		return "{}{}({}).{}".format(self.quantifier.toString(),self.role.name,self.role.terms.toString(),self.concept.toString())
+		return "{}{}{}{}.{}".format("¬" if self.negated else "",self.quantifier.toString(),self.role.name,"({})".format(self.terms.toString()) if self.showTerms else "",self.concept.toString())
 	
 class RoleChain(Role):
 	
