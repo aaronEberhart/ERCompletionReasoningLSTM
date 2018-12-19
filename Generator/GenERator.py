@@ -44,7 +44,7 @@ class GenERator:
 		for i in range(len(self.conceptTStatementsType3),int(self.numConceptTStatements/4)):
 			self.makeCTType3()
 			
-		for i in range(len(self.conceptTStatementsType4),int(self.numConceptTStatements/4)):
+		for i in range(len(self.conceptTStatementsType4),self.numConceptTStatements - len(self.conceptTStatementsType1) - len(self.conceptTStatementsType2) - len(self.conceptTStatementsType3)):
 			self.makeCTType4()
 	
 	def makeCTTypeNull(self,i):
