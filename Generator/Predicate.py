@@ -55,6 +55,9 @@ class ConceptRole(Concept):
 	
 	def checkConceptRoleMatch(self,role,concept):
 		if not isinstance(role,Role) or not isinstance(concept,Concept) or not role.terms.getTerm(1) == concept.terms.getTerm(0) or not concept.isComplete(): raise Exception("Invalid ConceptRole")
+		
+	def equals(self,other):
+		return self.role.name == other.role.name and self.terms.equals(other.terms) and self.negated == other.negated and self.concept.name == other.concept.name
 	
 	def toString(self):
 		return "{}{}{}{}.{}".format("¬" if self.negated else "",self.quantifier.toString(),self.role.name,"({})".format(self.terms.toString()) if self.showTerms else "",self.concept.toString())

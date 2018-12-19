@@ -40,13 +40,21 @@ class GenERator:
 				
 		for i in range(len(self.conceptTStatementsType2),int(self.numConceptTStatements/4)):
 			self.makeCTType2()
+		
+		for i in range(len(self.conceptTStatementsType3),int(self.numConceptTStatements/4)):
+			self.makeCTType3()
+			
+		for i in range(len(self.conceptTStatementsType4),int(self.numConceptTStatements/4)):
+			self.makeCTType4()
 	
 	def makeCTTypeNull(self,i):
+		""" C ⊑ C """
 		cs = ConceptStatement(1,True,Concept(i,[0]),Concept(i,[0]))
 		cs.complete('⊑')
 		self.conceptTStatementsTypeNull.append(cs)
 		
 	def makeCTType1(self):
+		""" C ⊑ D """
 		left = random.randint(0,self.conceptNamespace-1)
 		right = random.randint(0,self.conceptNamespace-1)
 		while left == right:
@@ -59,6 +67,7 @@ class GenERator:
 			self.conceptTStatementsType1.append(cs)
 			
 	def makeCTType2(self):
+		""" C ⊓ D ⊑ E """
 		left1 = random.randint(0,self.conceptNamespace-1)
 		left2 = random.randint(0,self.conceptNamespace-1)
 		while left1 == left2:
@@ -74,6 +83,21 @@ class GenERator:
 			self.makeType2()
 		else:
 			self.conceptTStatementsType2.append(cs)
+	
+	def makeCTType3(self):
+		""" C ⊑ ∃R.D """
+		left = random.randint(0,self.conceptNamespace-1)
+		rightC = random.randint(0,self.conceptNamespace-1)
+		rightR = random.randint(self.conceptNamespace,self.conceptNamespace*2 - 1)
+		cs = ConceptStatement(1,True,Concept(left,[0]),ConceptRole('e',Role(rightR,[0,1]),Concept(rightC,[1])))
+		cs.complete('⊑')
+		if self.alreadyGenERated(self.conceptTStatementsType3,cs):
+			self.makeCTType3()
+		else:
+			self.conceptTStatementsType3.append(cs)
+		
+	def makeCTType4(self):
+		""" ∃R.C ⊑ D """
 
 	def genERateRoleStatements(self):
 		if len(self.roleTStatements) == self.numRoleTStatements:
