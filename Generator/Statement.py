@@ -42,6 +42,14 @@ class ConceptStatement(Concept):
     def checkCanBeComplete(self):
         if self.antecedent == None or not len(self.antecedent) > 0 or self.consequent == None or not len(self.consequent) > 0 or (isinstance(self.antecedent[0],ConceptStatement) and not self.antecedent[0].isComplete()) or (isinstance(self.consequent[0],ConceptStatement) and not self.consequent[0].isComplete()): raise Exception("Not complete yet") 
     
+    def equals(self,other):
+        if self.operator != other.operator or len(self.antecedent) != len(other.antecedent) or len(self.consequent) != len(other.consequent): return False
+        for i in range(0,len(self.antecedent)):
+            if not self.antecedent[i].equals(other.antecedent[i]):return False
+        for i in range(0,len(self.consequent)):
+            if not self.consequent[i].equals(other.consequent[i]):return False
+        return True
+    
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
     
@@ -111,6 +119,14 @@ class RoleStatement(Role):
     
     def checkCanBeComplete(self):
         if not len(self.antecedent) > 0 or not len(self.consequent) > 0: raise Exception("Not complete yet") 
+        
+    def equals(self,other):
+        if self.operator != other.operator or len(self.antecedent) != len(other.antecedent) or len(self.consequent) != len(other.consequent): return False
+        for i in range(0,len(self.antecedent)):
+            if not self.antecedent[i].equals(other.antecedent[i]):return False
+        for i in range(0,len(self.consequent)):
+            if not self.consequent[i].equals(other.consequent[i]):return False
+        return True
     
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")

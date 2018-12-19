@@ -13,6 +13,9 @@ class Term:
 	def toString(self):
 		return str(self.term)
 	
+	def equals(self,other):
+		return self.term == other.getTerm()
+	
 	def checkTerm(self,t):
 		if not isinstance(t,(int,float,complex,str,bool)): raise Exception("Invalid Term")
 	
@@ -45,3 +48,10 @@ class Terms:
 	
 	def len(self):
 		return len(self.terms)
+	
+	def equals(self,other):
+		if self.len() != other.len(): return False
+		for i in range(0,self.len()):
+			if not self.getTerm(i) == other.getTerm(i):
+				return False
+		return True

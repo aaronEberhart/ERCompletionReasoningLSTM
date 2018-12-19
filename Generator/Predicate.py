@@ -17,6 +17,9 @@ class Predicate:
 	def toString(self):
 		return "{}{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
 		
+	def equals(self,other):
+		return self.name == other.name and self.terms.equals(other.terms) and self.negated == other.negated
+		
 	def checkPredicate(self,ID):
 		if not isinstance(ID,(int,float,complex,str,bool)): raise Exception("Invalid Predicate")
 

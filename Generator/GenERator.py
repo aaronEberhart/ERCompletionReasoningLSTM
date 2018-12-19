@@ -3,18 +3,22 @@ import random
 
 class GenERator:
 	
-	def __init__(self,numConceptStatements=800,numRoleStatements=100,numRoleChainStatements=100,conceptNamespace=100,roleNamespace=100):
-		self.numConceptStatements = numConceptStatements
-		self.numRoleStatements = numRoleStatements
+	def __init__(self,numConceptStatements=800,numRoleTStatements=150,numRoleChainStatements=50,conceptNamespace=100,roleNamespace=100):
+		self.numConceptTStatements = int(numConceptStatements * 3 / 4)
+		self.numConceptAStatements = numConceptStatements - self.numConceptTStatements
+		self.numRoleTStatements = int(numRoleTStatements / 2)
+		self.numRoleAStatements = self.numRoleTStatements - numRoleTStatements
 		self.numRoleChainStatements = numRoleChainStatements
 		self.conceptNamespace = conceptNamespace
 		self.roleNamespace = roleNamespace
-		self.conceptStatementsTypeNull = []
-		self.conceptStatementsType1 = []
-		self.conceptStatementsType2 = []
-		self.conceptStatementsType3 = []
-		self.conceptStatementsType4 = []
-		self.roleStatements = []
+		self.conceptAStatements = []
+		self.conceptTStatementsTypeNull = []
+		self.conceptTStatementsType1 = []
+		self.conceptTStatementsType2 = []
+		self.conceptTStatementsType3 = []
+		self.conceptTStatementsType4 = []
+		self.roleAStatements = []
+		self.roleTStatements = []
 		self.roleChainStatements = []
 	
 	def genERate(self):
@@ -23,38 +27,56 @@ class GenERator:
 		self.genERateRoleChainStatements()
 
 	def genERateConceptStatements(self):
-		if len(self.conceptStatementsType1) + len(self.conceptStatementsType2) + len(self.conceptStatementsType3) + len(self.conceptStatementsType4) == self.numConceptStatements and len(self.conceptStatementsTypeNull) == self.conceptNamespace:
+		
+		if len(self.conceptTStatementsType1) + len(self.conceptTStatementsType2) + len(self.conceptTStatementsType3) + len(self.conceptTStatementsType4) == self.numConceptTStatements and len(self.conceptAStatements) == self.numConceptAStatements and len(self.conceptTStatementsTypeNull) == self.conceptNamespace:
 			print("Concept generator already completed")
 			return False
-		for i in range(0,self.conceptNamespace):
-			cs = ConceptStatement(1,True,Concept(i,[0]),Concept(i,[0]))
-			cs.complete('⊑')
-			self.conceptStatementsTypeNull.append(cs)
-		for i in range(0,int(self.numConceptStatements/4)):
-			left = random.randint(0,self.conceptNamespace-1)
+		
+		for i in range(len(self.conceptTStatementsTypeNull),self.conceptNamespace):
+			self.makeCTTypeNull(i)
+			
+		for i in range(len(self.conceptTStatementsType1),int(self.numConceptTStatements/4)):
+			self.makeCTType1()
+				
+		for i in range(len(self.conceptTStatementsType2),int(self.numConceptTStatements/4)):
+			self.makeCTType2()
+	
+	def makeCTTypeNull(self,i):
+		cs = ConceptStatement(1,True,Concept(i,[0]),Concept(i,[0]))
+		cs.complete('⊑')
+		self.conceptTStatementsTypeNull.append(cs)
+		
+	def makeCTType1(self):
+		left = random.randint(0,self.conceptNamespace-1)
+		right = random.randint(0,self.conceptNamespace-1)
+		while left == right:
 			right = random.randint(0,self.conceptNamespace-1)
-			while left == right:
-				right = random.randint(0,self.conceptNamespace-1)
-			cs = ConceptStatement(1,True,Concept(left,[0]),Concept(right,[0]))
-			cs.complete('⊑')
-			self.conceptStatementsType1.append(cs)
-		for i in range(0,int(self.numConceptStatements/4)):
-			left1 = random.randint(0,self.conceptNamespace-1)
+		cs = ConceptStatement(1,True,Concept(left,[0]),Concept(right,[0]))
+		cs.complete('⊑')
+		if self.alreadyGenERated(self.conceptTStatementsType1,cs):
+			self.makeCTType1()
+		else:
+			self.conceptTStatementsType1.append(cs)
+			
+	def makeCTType2(self):
+		left1 = random.randint(0,self.conceptNamespace-1)
+		left2 = random.randint(0,self.conceptNamespace-1)
+		while left1 == left2:
 			left2 = random.randint(0,self.conceptNamespace-1)
-			while left1 == left2:
-				left2 = random.randint(0,self.conceptNamespace-1)
-			cs1 = ConceptStatement(1,True,Concept(left1,[0]),Concept(left2,[0]))
-			cs1.complete('⊓')
+		cs1 = ConceptStatement(1,True,Concept(left1,[0]),Concept(left2,[0]))
+		cs1.complete('⊓')
+		right = random.randint(0,self.conceptNamespace-1)
+		while left1 == right or right == left2:
 			right = random.randint(0,self.conceptNamespace-1)
-			while left1 == right or right == left2:
-				right = random.randint(0,self.conceptNamespace-1)
-			cs = ConceptStatement(1,True,cs1,Concept(right,[0]))
-			cs.complete('⊑')
-			self.conceptStatementsType1.append(cs)
-
+		cs = ConceptStatement(1,True,cs1,Concept(right,[0]))
+		cs.complete('⊑')
+		if self.alreadyGenERated(self.conceptTStatementsType2,cs):
+			self.makeType2()
+		else:
+			self.conceptTStatementsType2.append(cs)
 
 	def genERateRoleStatements(self):
-		if len(self.roleStatements) == self.numRoleStatements:
+		if len(self.roleTStatements) == self.numRoleTStatements:
 			print("Role generator already completed")
 			return False
 
@@ -63,17 +85,23 @@ class GenERator:
 			print("RoleChain generator already completed")
 			return False
 
+	def alreadyGenERated(self,part,cs):
+		for i in range(0,len(part)):
+			if cs.equals(part[i]):
+				return True
+		return False
+
 	def toString(self):
 		ret = ""
-		#for statement in self.conceptStatementsTypeNull:
+		#for statement in self.conceptTStatementsTypeNull:
 			#ret = ret + statement.toString() + "\n"
-		for statement in self.conceptStatementsType1:
+		for statement in self.conceptTStatementsType1:
 			ret = ret + statement.toString() + "\n"
-		for statement in self.conceptStatementsType2:
+		for statement in self.conceptTStatementsType2:
 			ret = ret + statement.toString() + "\n"
-		for statement in self.conceptStatementsType3:
+		for statement in self.conceptTStatementsType3:
 			ret = ret + statement.toString() + "\n"
-		for statement in self.roleStatements:
+		for statement in self.roleTStatements:
 			ret = ret + statement.toString() + "\n"
 		for statement in self.roleChainStatements:
 			ret = ret + statement.toString() + "\n"
