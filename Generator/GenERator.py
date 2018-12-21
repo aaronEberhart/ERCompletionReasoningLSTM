@@ -186,6 +186,8 @@ class GenERator:
 			ret = ret + statement.toString() + "\n"
 		for statement in self.conceptTStatementsType3:
 			ret = ret + statement.toString() + "\n"
+		for statement in self.conceptTStatementsType4:
+			ret = ret + statement.toString() + "\n"		
 		for statement in self.conceptAStatements:
 			ret = ret + statement.toString() + "\n"		
 		for statement in self.roleTStatements:
