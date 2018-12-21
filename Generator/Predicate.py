@@ -4,11 +4,11 @@ from Statement import *
 
 class Predicate:
 	
-	def __init__(self,ID,args,negated=True,showTerms=False):
+	def __init__(self,ID,args,negated=False,showTerms=False):
 		self.checkPredicate(ID)
 		self.terms = Terms(args)
 		self.name = ID
-		self.negated = not negated
+		self.negated = negated
 		self.showTerms = showTerms
 
 	def negate(self):
@@ -25,7 +25,7 @@ class Predicate:
 
 class Concept(Predicate):
 	
-	def __init__(self,ID,args,negated=True,showTerms=False):
+	def __init__(self,ID,args,negated=False,showTerms=False):
 		super().__init__(ID,args,negated,showTerms)
 		self.checkConcept()
 	
@@ -37,7 +37,7 @@ class Concept(Predicate):
 
 class Role(Predicate):
 
-	def __init__(self,ID,args,negated=True,showTerms=False):
+	def __init__(self,ID,args,negated=False,showTerms=False):
 		super().__init__(ID,args,negated,showTerms)
 		self.checkRole()
 		
@@ -46,7 +46,7 @@ class Role(Predicate):
 
 class ConceptRole(Concept):
 	
-	def __init__(self,q,role,concept,negated=True,showTerms=False):
+	def __init__(self,q,role,concept,negated=False,showTerms=False):
 		self.checkConceptRoleMatch(role,concept)
 		self.quantifier = Quantifier(q)
 		super().__init__(role.name,[role.terms.getTerm(0)],negated)
@@ -88,6 +88,12 @@ class RoleChain(Role):
 				self.checkRoleChainAppend(chain[i])
 				self.roles.append(chain[i])
 				self.terms.setTerm(1,chain[i].terms.getTerm(1))
+	
+	def equals(self,other):
+		if len(self.roles) != len(other.roles): return False
+		for i in range(0,len(self.roles)):
+			if not self.roles[i].equals(other.roles[i]): return False
+		return True
 	
 	def toString(self):
 		return "".join(["{}{}".format("∘" if role != self.roles[0] else "",role.toString()) for role in self.roles])
