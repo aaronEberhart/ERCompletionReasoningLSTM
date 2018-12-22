@@ -1,11 +1,5 @@
 from GenERator import *
 
-def runGenERator():
-
-	gen = GenERator()
-	gen.genERate()
-	print(gen.toString())
-
 def runStatementTests():
 	
 	t = ConceptStatement(1,False,Concept('d',[2]),Concept('e',[2]))

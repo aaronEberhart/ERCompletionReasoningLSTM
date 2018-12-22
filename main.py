@@ -10,6 +10,8 @@ sys.path.insert(0,me+"/Reasoner")
 from test import *
 
 if __name__ == "__main__":
-	#runPredTests()
-	#runStatementTests()
-	runGenERator()
+	
+	gen = GenERator()
+	gen.genERate()
+	print(gen.toString())
+	
