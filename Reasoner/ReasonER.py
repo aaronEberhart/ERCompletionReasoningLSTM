@@ -1,3 +1,5 @@
+from GenERator import *
+
 """
 Completion rules:
 
@@ -47,12 +49,15 @@ class ReasonER:
 	
 	def solveRule1(self):
 		""" C ⊑ D,A ⊑ C |= A ⊑ D """
-		candidates = self.syntheticData.conceptTStatementsTypeNull + self.syntheticData.conceptTStatementsType1 + self.newCType1
+		candidates = self.syntheticData.conceptTStatementsType1 + self.newCType1
 		
-		for candidate in candidates:
-			pass
-		
-		pass
+		for candidate1 in candidates:
+			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].equals(x.consequent[0]),candidates)):
+				cs = ConceptStatement(len(self.newCType1),True,candidate2.antecedent[0],candidate1.consequent[0])
+				cs.complete('⊑')
+				#print(candidate1.toString() + "\t" + candidate2.toString() + "\t" + cs.toString())
+				if not self.alreadyKnown(candidates,cs):
+					self.newCType1.append(cs)
 	
 	def solveRule2(self):
 		""" C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
@@ -73,6 +78,9 @@ class ReasonER:
 	def solveRule6(self):
 		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C |= A ⊑ ∃R.C """
 		pass
+	
+	def alreadyKnown(self,statements,s):
+		return any(x.equals(s) for x in statements)
 	
 	def toString(self):
 		ret = self.syntheticData.toString()

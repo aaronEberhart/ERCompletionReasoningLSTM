@@ -166,11 +166,8 @@ class GenERator:
 		else:
 			self.roleChainStatements.append(rs)			
 
-	def alreadyGenERated(self,part,cs):
-		for i in range(0,len(part)):
-			if cs.equals(part[i]):
-				return True
-		return False
+	def alreadyGenERated(self,listy,y):
+		return any(x.equals(y) for x in listy)
 
 	def toString(self):
 		ret = ""
