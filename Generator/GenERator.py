@@ -4,6 +4,7 @@ import random
 class GenERator:
 	
 	def __init__(self,numConceptTStatementsType1=150,numConceptTStatementsType2=150,numConceptTStatementsType3=150,numConceptTStatementsType4=150,numConceptAStatements=150,numRoleTStatements=150,numRoleAStatements=50,numRoleChainStatements=50,conceptNamespace=100,roleNameSpace=200,termNamespace=50):
+		self.hasRun = False
 		self.numConceptTStatementsType1 = numConceptTStatementsType1
 		self.numConceptTStatementsType2 = numConceptTStatementsType2
 		self.numConceptTStatementsType3 = numConceptTStatementsType3
@@ -26,15 +27,13 @@ class GenERator:
 		self.roleChainStatements = []
 	
 	def genERate(self):
+		
 		self.genERateConceptStatements()		
 		self.genERateRoleStatements()
+		
+		self.hasRun = True
 
-	def genERateConceptStatements(self):
-		
-		if len(self.conceptTStatementsType1) == self.numConceptTStatementsType1 and len(self.conceptTStatementsType2) == self.numConceptTStatementsType2 and len(self.conceptTStatementsType3) == self.numConceptTStatementsType3 and len(self.conceptTStatementsType4) == self.numConceptTStatementsType4 and len(self.conceptAStatements) == self.numConceptAStatements and len(self.conceptTStatementsTypeNull) == self.conceptNamespace:
-			print("Concept generator already completed")
-			return False
-		
+	def genERateConceptStatements(self):		
 		for i in range(len(self.conceptTStatementsTypeNull),self.conceptNamespace):
 			self.makeCTypeNull(i)
 			
@@ -52,8 +51,6 @@ class GenERator:
 			
 		for i in range(len(self.conceptAStatements),self.numConceptAStatements):	
 			self.makeCTypeA()
-			
-		return True
 	
 	def makeCTypeNull(self,i):
 		""" C ⊑ C """
@@ -124,11 +121,7 @@ class GenERator:
 		else:
 			self.conceptAStatements.append(c)
 		
-	def genERateRoleStatements(self):
-		if len(self.roleTStatements) == self.numRoleTStatements and len(self.roleChainStatements) == self.numRoleChainStatements and len(self.roleAStatements) == self.numRoleAStatements:
-			print("Role generator already completed")
-			return False
-		
+	def genERateRoleStatements(self):			
 		for i in range(len(self.roleTStatements),self.numRoleTStatements):
 			self.makeRTypeT()
 		
