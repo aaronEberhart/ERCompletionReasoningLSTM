@@ -19,14 +19,17 @@ Completion rules:
 
 class ReasonER:
 	
-	def __init__(self,genERator):
+	def __init__(self,genERator,showSteps=False):
 		self.syntheticData = genERator
+		self.showSteps = showSteps
 		if not self.syntheticData.hasRun:
 			self.syntheticData.genERate()
 		self.newCType1 = []
-		self.lenNewCType1 = 0
+		self.knownCType1 = []
+		self.numKnownCType1 = 0
 		self.newCType3 = []
-		self.lenNewCType3 = 0
+		self.knownCType3 = []
+		self.numKnownCType3 = 0
 	
 	def ERason(self):
 		self.trySolveRules()
@@ -40,36 +43,88 @@ class ReasonER:
 		self.solveRule4()
 		self.solveRule5()
 		self.solveRule6()
+		self.pruneNewRules()
+		#self.newCType1.sort(key=lambda x: x.antecedent[0].name)
+		#self.newCType3.sort(key=lambda x: x.antecedent[0].name)
+		
+	def pruneNewRules(self):
+		c1Known = self.knownCType1 + self.syntheticData.conceptTStatementsType1
+		c3Known = self.knownCType3 + self.syntheticData.conceptTStatementsType3
+		for rule in self.newCType1:
+			if not self.alreadyKnown(c1Known,rule):
+				if self.showSteps: print(rule.toString())
+				self.knownCType1.append(rule)
+				c1Known.append(rule)
+		for rule in self.newCType3:
+			if not self.alreadyKnown(c3Known,rule):
+				if self.showSteps: print(rule.toString())
+				self.knownCType3.append(rule)
+				c3Known.append(rule)
+		self.newCType1 = []
+		self.newCType3 = []
 	
 	def hasGrown(self):
-		if len(self.newCType1) == self.lenNewCType1 and len(self.newCType3) == self.lenNewCType3: return False
-		self.lenNewCType1 = len(self.newCType1)
-		self.lenNewCType3 = len(self.newCType3)
+		if len(self.knownCType1) == self.numKnownCType1 and len(self.knownCType3) == self.numKnownCType3: return False
+		self.numKnownCType1 = len(self.knownCType1)
+		self.numKnownCType3 = len(self.knownCType3)
 		return True
 	
 	def solveRule1(self):
 		""" C ⊑ D,A ⊑ C |= A ⊑ D """
-		candidates = self.syntheticData.conceptTStatementsType1 + self.newCType1
+		candidates = self.syntheticData.conceptTStatementsType1 + self.knownCType1
 		
 		for candidate1 in candidates:
 			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].equals(x.consequent[0]),candidates)):
-				cs = ConceptStatement(len(self.newCType1),True,candidate2.antecedent[0],candidate1.consequent[0])
+				
+				if candidate2.antecedent[0].equals(candidate1.consequent[0]): continue
+				
+				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
 				cs.complete('⊑')
-				#print(candidate1.toString() + "\t" + candidate2.toString() + "\t" + cs.toString())
-				if not self.alreadyKnown(candidates,cs):
-					self.newCType1.append(cs)
+				self.newCType1.append(cs)
 	
 	def solveRule2(self):
 		""" C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
-		pass
+		candidates = self.syntheticData.conceptTStatementsTypeNull + self.syntheticData.conceptTStatementsType1 + self.knownCType1
+		
+		for conjunction in self.syntheticData.conceptTStatementsType2:
+			for candidate1 in list(filter(lambda x: conjunction.antecedent[0].antecedent[0].equals(x.consequent[0]),candidates)):
+				for candidate2 in list(filter(lambda x: conjunction.antecedent[0].consequent[0].equals(x.consequent[0]) and x.antecedent[0].equals(candidate1.antecedent[0]),candidates)):
+					
+					if candidate1.antecedent[0].equals(conjunction.consequent[0]): continue
+					
+					cs = ConceptStatement(0,True,candidate1.antecedent[0],conjunction.consequent[0])
+					cs.complete('⊑')	
+					
+					self.newCType1.append(cs)
 	
 	def solveRule3(self):
 		""" C ⊑ ∃R.D, A ⊑ C |= A ⊑ ∃R.D """
-		pass
+		type1Candidates = self.syntheticData.conceptTStatementsTypeNull + self.syntheticData.conceptTStatementsType1 + self.knownCType1
+		type3Candidates = self.syntheticData.conceptTStatementsType3 + self.knownCType3
+		
+		for candidate1 in type3Candidates:
+			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].equals(x.consequent[0]),type1Candidates)):
+				
+				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
+				cs.complete('⊑')	
+				
+				self.newCType3.append(cs)
 	
 	def solveRule4(self):
 		""" ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C |= A ⊑ D """
-		pass
+		type1Candidates = self.syntheticData.conceptTStatementsTypeNull + self.syntheticData.conceptTStatementsType1 + self.knownCType1
+		type3Candidates = self.syntheticData.conceptTStatementsType3 + self.knownCType3		
+		
+		for candidate1 in self.syntheticData.conceptTStatementsType4:
+			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].concept.name == x.consequent[0].name,type1Candidates)):
+				for candidate3 in list(filter(lambda x: x.consequent[0].concept.name == candidate2.antecedent[0].name,type3Candidates)):
+					
+					if candidate3.antecedent[0].name == candidate1.consequent[0].name: continue
+					
+					cs = ConceptStatement(0,True,Concept(candidate3.antecedent[0].name,[0]),Concept(candidate1.consequent[0].name,[0]))
+					cs.complete('⊑')	
+					
+					self.newCType1.append(cs)
 	
 	def solveRule5(self):
 		""" R ⊑ S, A ⊑ ∃R.B |= A ⊑ ∃S.B """
@@ -83,9 +138,9 @@ class ReasonER:
 		return any(x.equals(s) for x in statements)
 	
 	def toString(self):
-		ret = self.syntheticData.toString()
-		for statement in self.newCType1:
+		ret = "Original KB:\n\n"+self.syntheticData.toString()+"\nExtended KB:\n\n"+("EMPTY" if len(self.knownCType1) == 0 and len(self.knownCType3) == 0 else "")
+		for statement in self.knownCType1:
 			ret = ret + statement.toString() + "\n"
-		for statement in self.newCType3:
+		for statement in self.knownCType3:
 			ret = ret + statement.toString() + "\n"	
 		return ret
