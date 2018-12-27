@@ -35,6 +35,8 @@ class ReasonER:
 		self.trySolveRules()
 		while self.hasGrown():
 			self.trySolveRules()
+		self.knownCType1.sort(key=lambda x: x.antecedent[0].name)
+		self.knownCType3.sort(key=lambda x: x.antecedent[0].name)
 			
 	def trySolveRules(self):
 		self.solveRule1()
@@ -44,8 +46,7 @@ class ReasonER:
 		self.solveRule5()
 		self.solveRule6()
 		self.pruneNewRules()
-		#self.newCType1.sort(key=lambda x: x.antecedent[0].name)
-		#self.newCType3.sort(key=lambda x: x.antecedent[0].name)
+		
 		
 	def pruneNewRules(self):
 		c1Known = self.knownCType1 + self.syntheticData.conceptTStatementsType1
@@ -76,7 +77,7 @@ class ReasonER:
 		for candidate1 in candidates:
 			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].equals(x.consequent[0]),candidates)):
 				
-				if candidate2.antecedent[0].equals(candidate1.consequent[0]): continue
+				if candidate2.antecedent[0].name == candidate1.consequent[0].name: continue
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
 				cs.complete('⊑')
@@ -90,7 +91,7 @@ class ReasonER:
 			for candidate1 in list(filter(lambda x: conjunction.antecedent[0].antecedent[0].equals(x.consequent[0]),candidates)):
 				for candidate2 in list(filter(lambda x: conjunction.antecedent[0].consequent[0].equals(x.consequent[0]) and x.antecedent[0].equals(candidate1.antecedent[0]),candidates)):
 					
-					if candidate1.antecedent[0].equals(conjunction.consequent[0]): continue
+					if candidate1.antecedent[0].name == conjunction.consequent[0].name: continue
 					
 					cs = ConceptStatement(0,True,candidate1.antecedent[0],conjunction.consequent[0])
 					cs.complete('⊑')	
@@ -128,12 +129,29 @@ class ReasonER:
 	
 	def solveRule5(self):
 		""" R ⊑ S, A ⊑ ∃R.B |= A ⊑ ∃S.B """
-		pass
+		type3Candidates = self.syntheticData.conceptTStatementsType3 + self.knownCType3
+		
+		for roleStatement in self.syntheticData.roleTStatements:
+			for matchingConceptStatement in list(filter(lambda x: roleStatement.antecedent[0].name == x.consequent[0].role.name,type3Candidates)):
+				
+				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent[0],ConceptRole('e',roleStatement.consequent[0],matchingConceptStatement.consequent[0].concept))
+				cs.complete('⊑')	
+				
+				self.newCType3.append(cs)
 	
 	def solveRule6(self):
 		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C |= A ⊑ ∃R.C """
-		pass
-	
+		type3Candidates = self.syntheticData.conceptTStatementsType3 + self.knownCType3
+		
+		for roleChain in self.syntheticData.roleChainStatements:
+			for matchingConceptStatement1 in list(filter(lambda x: roleChain.antecedent[0].roles[0].name == x.consequent[0].role.name,type3Candidates)):
+				for matchingConceptStatement2 in list(filter(lambda x: x.antecedent[0].name == matchingConceptStatement1.consequent[0].concept.name and roleChain.antecedent[0].roles[1].name == x.consequent[0].role.name,type3Candidates)):
+					
+					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent[0],ConceptRole('e',Role(roleChain.consequent[0].name,[0,1]),matchingConceptStatement2.consequent[0].concept))
+					cs.complete('⊑')	
+					
+					self.newCType3.append(cs)
+					
 	def alreadyKnown(self,statements,s):
 		return any(x.equals(s) for x in statements)
 	

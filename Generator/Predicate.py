@@ -34,6 +34,9 @@ class Concept(Predicate):
 		
 	def isComplete(self):
 		return True
+	
+	def toString(self):
+		return super().toString() if not isinstance(self.name,int) else "{}C{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
 
 class Role(Predicate):
 
@@ -43,6 +46,9 @@ class Role(Predicate):
 		
 	def checkRole(self):
 		if self.terms.len() != 2: raise Exception("Invalid Role")
+		
+	def toString(self):
+		return super().toString() if not isinstance(self.name,int) else "{}R{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else ""	)
 
 class ConceptRole(Concept):
 	
@@ -60,7 +66,7 @@ class ConceptRole(Concept):
 		return self.role.name == other.role.name and self.terms.equals(other.terms) and self.negated == other.negated and self.concept.name == other.concept.name
 	
 	def toString(self):
-		return "{}{}{}{}.{}".format("¬" if self.negated else "",self.quantifier.toString(),self.role.name,"({})".format(self.terms.toString()) if self.showTerms else "",self.concept.toString())
+		return "{}{}{}{}{}.{}".format("¬" if self.negated else "",self.quantifier.toString(),"" if not isinstance(self.name,int) else "R",self.role.name,"({})".format(self.terms.toString()) if self.showTerms else "",self.concept.toString())
 	
 class RoleChain(Role):
 	

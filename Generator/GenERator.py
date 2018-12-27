@@ -3,7 +3,7 @@ import random
 
 class GenERator:
 	
-	def __init__(self,numConceptTStatementsType1=150,numConceptTStatementsType2=150,numConceptTStatementsType3=150,numConceptTStatementsType4=150,numConceptAStatements=150,numRoleTStatements=150,numRoleAStatements=50,numRoleChainStatements=50,conceptNamespace=100,roleNameSpace=200,termNamespace=50):
+	def __init__(self,numConceptTStatementsType1=150,numConceptTStatementsType2=150,numConceptTStatementsType3=150,numConceptTStatementsType4=150,numConceptAStatements=0,numRoleTStatements=150,numRoleAStatements=0,numRoleChainStatements=50,conceptNamespace=100,roleNameSpace=200,termNamespace=50):
 		self.hasRun = False
 		self.numConceptTStatementsType1 = numConceptTStatementsType1
 		self.numConceptTStatementsType2 = numConceptTStatementsType2
@@ -93,7 +93,7 @@ class GenERator:
 		""" C ⊑ ∃R.D """
 		left = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		rightC = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		rightR = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+		rightR = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		cs = ConceptStatement(len(self.conceptTStatementsType3),True,Concept(left,[0]),ConceptRole('e',Role(rightR,[0,1]),Concept(rightC,[1])))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.conceptTStatementsType3,cs):
@@ -105,7 +105,7 @@ class GenERator:
 		""" ∃R.C ⊑ D """
 		right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		leftC = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		leftR = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+		leftR = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		cs = ConceptStatement(len(self.conceptTStatementsType4),True,ConceptRole('e',Role(leftR,[0,1]),Concept(leftC,[1])),Concept(right,[0]))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.conceptTStatementsType4,cs):
@@ -133,10 +133,10 @@ class GenERator:
 		
 	def makeRTypeT(self):
 		""" R ⊑ S """
-		left = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
-		right = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+		left = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		while left == right:
-			right = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+			right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		rs = RoleStatement(len(self.roleTStatements),True,Role(left,[0,1]),Role(right,[0,1]))
 		rs.complete('⊑')
 		if self.alreadyGenERated(self.roleTStatements,rs):
@@ -146,7 +146,7 @@ class GenERator:
 		
 	def makeRTypeA(self):
 		""" R(rand,rand) """
-		r = Role(random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1))),[random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1),random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1)],showTerms=True)
+		r = Role(random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) ,[random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1),random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1)],showTerms=True)
 		if self.alreadyGenERated(self.roleAStatements,r):
 			self.makeRTypeA()
 		else:
@@ -154,11 +154,11 @@ class GenERator:
 
 	def makeRTypeC(self):
 		""" R1 ∘ R2 ⊑ S """
-		leftR1 = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
-		leftR2 = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
-		right = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+		leftR1 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		leftR2 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		while leftR1 == leftR2:
-			leftR2 = random.randint(0,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace < 0) else (random.randint(self.roleNamespace,-1) if (self.roleNamespace < 0 and self.conceptNamespace > 0) else (random.randint(self.conceptNamespace,self.roleNamespace-1) if (self.roleNamespace > 0 and self.conceptNamespace > 0) else random.randint(self.roleNamespace,self.conceptNamespace-1)))
+			leftR2 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		rs = RoleStatement(len(self.roleChainStatements),True,RoleChain(0,Role(leftR1,[0,1]),Role(leftR2,[1,2])),Role(right,[0,2]))
 		rs.complete('⊑')
 		if self.alreadyGenERated(self.roleChainStatements,rs):
