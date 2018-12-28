@@ -35,8 +35,9 @@ class ReasonER:
 		self.trySolveRules()
 		while self.hasGrown():
 			self.trySolveRules()
-		self.knownCType1.sort(key=lambda x: x.antecedent[0].name)
-		self.knownCType3.sort(key=lambda x: x.antecedent[0].name)
+		if self.showSteps: 
+			self.knownCType1.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].name))
+			self.knownCType3.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].role.name))
 			
 	def trySolveRules(self):
 		self.solveRule1()
@@ -47,18 +48,17 @@ class ReasonER:
 		self.solveRule6()
 		self.pruneNewRules()
 		
-		
 	def pruneNewRules(self):
 		c1Known = self.knownCType1 + self.syntheticData.conceptTStatementsType1
 		c3Known = self.knownCType3 + self.syntheticData.conceptTStatementsType3
 		for rule in self.newCType1:
 			if not self.alreadyKnown(c1Known,rule):
-				if self.showSteps: print(rule.toString())
+				if self.showSteps: print("Learned new rule: "+rule.toString())
 				self.knownCType1.append(rule)
 				c1Known.append(rule)
 		for rule in self.newCType3:
 			if not self.alreadyKnown(c3Known,rule):
-				if self.showSteps: print(rule.toString())
+				if self.showSteps: print("Learned new rule: "+rule.toString())
 				self.knownCType3.append(rule)
 				c3Known.append(rule)
 		self.newCType1 = []
@@ -94,8 +94,7 @@ class ReasonER:
 					if candidate1.antecedent[0].name == conjunction.consequent[0].name: continue
 					
 					cs = ConceptStatement(0,True,candidate1.antecedent[0],conjunction.consequent[0])
-					cs.complete('⊑')	
-					
+					cs.complete('⊑')					
 					self.newCType1.append(cs)
 	
 	def solveRule3(self):
@@ -107,8 +106,7 @@ class ReasonER:
 			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].equals(x.consequent[0]),type1Candidates)):
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
-				cs.complete('⊑')	
-				
+				cs.complete('⊑')				
 				self.newCType3.append(cs)
 	
 	def solveRule4(self):
@@ -123,8 +121,7 @@ class ReasonER:
 					if candidate3.antecedent[0].name == candidate1.consequent[0].name: continue
 					
 					cs = ConceptStatement(0,True,Concept(candidate3.antecedent[0].name,[0]),Concept(candidate1.consequent[0].name,[0]))
-					cs.complete('⊑')	
-					
+					cs.complete('⊑')					
 					self.newCType1.append(cs)
 	
 	def solveRule5(self):
@@ -135,8 +132,7 @@ class ReasonER:
 			for matchingConceptStatement in list(filter(lambda x: roleStatement.antecedent[0].name == x.consequent[0].role.name,type3Candidates)):
 				
 				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent[0],ConceptRole('e',roleStatement.consequent[0],matchingConceptStatement.consequent[0].concept))
-				cs.complete('⊑')	
-				
+				cs.complete('⊑')				
 				self.newCType3.append(cs)
 	
 	def solveRule6(self):
@@ -148,8 +144,7 @@ class ReasonER:
 				for matchingConceptStatement2 in list(filter(lambda x: x.antecedent[0].name == matchingConceptStatement1.consequent[0].concept.name and roleChain.antecedent[0].roles[1].name == x.consequent[0].role.name,type3Candidates)):
 					
 					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent[0],ConceptRole('e',Role(roleChain.consequent[0].name,[0,1]),matchingConceptStatement2.consequent[0].concept))
-					cs.complete('⊑')	
-					
+					cs.complete('⊑')					
 					self.newCType3.append(cs)
 					
 	def alreadyKnown(self,statements,s):
