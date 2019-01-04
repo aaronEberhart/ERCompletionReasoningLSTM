@@ -3,7 +3,7 @@ import random
 
 class GenERator:
 	
-	def __init__(self,numConceptTStatementsType1=150,numConceptTStatementsType2=150,numConceptTStatementsType3=150,numConceptTStatementsType4=150,numConceptAStatements=0,numRoleTStatements=150,numRoleAStatements=0,numRoleChainStatements=50,conceptNamespace=100,roleNameSpace=200,termNamespace=50):
+	def __init__(self,numConceptTStatementsType1=50,numConceptTStatementsType2=25,numConceptTStatementsType3=15,numConceptTStatementsType4=10,numConceptAStatements=0,numRoleTStatements=15,numRoleAStatements=0,numRoleChainStatements=5,conceptNamespace=100,roleNameSpace=40,termNamespace=5):
 		self.hasRun = False
 		self.numConceptTStatementsType1 = numConceptTStatementsType1
 		self.numConceptTStatementsType2 = numConceptTStatementsType2
@@ -27,6 +27,7 @@ class GenERator:
 		self.roleChainStatements = []
 	
 	def genERate(self):
+		if self.hasRun: return
 		
 		self.genERateConceptStatements()		
 		self.genERateRoleStatements()
@@ -146,7 +147,7 @@ class GenERator:
 		
 	def makeRTypeA(self):
 		""" R(rand,rand) """
-		r = Role(random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) ,[random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1),random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1)],showTerms=True)
+		r = Role(random.rNegativesGenERatorandint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) ,[random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1),random.randint(self.termNamespace,-1) if self.termNamespace < 0 else random.randint(0,self.termNamespace-1)],showTerms=True)
 		if self.alreadyGenERated(self.roleAStatements,r):
 			self.makeRTypeA()
 		else:

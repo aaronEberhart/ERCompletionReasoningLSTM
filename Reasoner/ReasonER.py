@@ -1,4 +1,4 @@
-from GenERator import *
+from Statement import *
 
 """
 Completion rules:
@@ -20,6 +20,7 @@ Completion rules:
 class ReasonER:
 	
 	def __init__(self,genERator,showSteps=False):
+		self.hasRun = False
 		self.syntheticData = genERator
 		self.showSteps = showSteps
 		if not self.syntheticData.hasRun:
@@ -32,12 +33,14 @@ class ReasonER:
 		self.numKnownCType3 = 0
 	
 	def ERason(self):
+		if self.hasRun: return
 		self.trySolveRules()
 		while self.hasGrown():
 			self.trySolveRules()
 		if self.showSteps: 
 			self.knownCType1.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].name))
 			self.knownCType3.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].role.name))
+		self.hasRun = True
 			
 	def trySolveRules(self):
 		self.solveRule1()
