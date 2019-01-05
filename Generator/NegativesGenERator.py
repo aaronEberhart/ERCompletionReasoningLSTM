@@ -15,7 +15,9 @@ class NegativesGenERator:
         self.allC = self.CType1 + self.CType2 + self.CType3 + self.CType4
         self.roleSubs = reasonER.syntheticData.roleTStatements
         self.roleChains = reasonER.syntheticData.roleChainStatements
-        self.allR = self.roleChains + self.roleSubs
+        self.allR = []
+        self.addNullRs()
+        self.allR = self.allR + self.roleChains + self.roleSubs
         self.numCType1 = numCType1
         self.numCType2 = numCType2
         self.numCType3 = numCType3
@@ -39,7 +41,19 @@ class NegativesGenERator:
         self.genERateRoleStatements()        
         
         self.hasRun = True
-        
+    
+    def addNullRs(self):
+        for statement in self.CType3:
+            rs = RoleStatement(len(self.roleSubs),True,Role(statement.consequent[0].role.name,[0,1]),Role(statement.consequent[0].role.name,[0,1]))
+            rs.complete('⊑')
+            if not self.alreadyGenERated(self.allR,rs):
+                self.allR.append(rs)
+        for statement in self.CType4:
+            rs = RoleStatement(len(self.roleSubs),True,Role(statement.antecedent[0].role.name,[0,1]),Role(statement.antecedent[0].role.name,[0,1]))
+            rs.complete('⊑')
+            if not self.alreadyGenERated(self.allR,rs):
+                self.allR.append(rs)
+      
     def genERateConceptStatements(self):
         for i in range(len(self.notCType1),self.numCType1):
             self.makeCType1()
