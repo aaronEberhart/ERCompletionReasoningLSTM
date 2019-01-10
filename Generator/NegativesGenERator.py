@@ -3,18 +3,17 @@ import random
 
 class NegativesGenERator:
     
-    def __init__(self,reasonER,numCType1=5,numCType2=5,numCType3=5,numCType4=1,numRoleSub=5,numRoleChains=1):
-        self.reasonER = reasonER
-        if not self.reasonER.hasRun:
-            self.reasonER.ERason()
+    def __init__(self,reasonER,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10):
+        if not reasonER.hasRun:
+            reasonER.ERason()
         self.hasRun = False
-        self.CType1 = reasonER.syntheticData.conceptTStatementsType1 + reasonER.knownCType1
-        self.CType2 = reasonER.syntheticData.conceptTStatementsType2
-        self.CType3 = reasonER.syntheticData.conceptTStatementsType3 + reasonER.knownCType3
-        self.CType4 = reasonER.syntheticData.conceptTStatementsType4
+        self.CType1 = reasonER.syntheticData.CType1 + reasonER.knownCType1
+        self.CType2 = reasonER.syntheticData.CType2
+        self.CType3 = reasonER.syntheticData.CType3 + reasonER.knownCType3
+        self.CType4 = reasonER.syntheticData.CType4
         self.allC = self.CType1 + self.CType2 + self.CType3 + self.CType4
-        self.roleSubs = reasonER.syntheticData.roleTStatements
-        self.roleChains = reasonER.syntheticData.roleChainStatements
+        self.roleSubs = reasonER.syntheticData.roleSubs
+        self.roleChains = reasonER.syntheticData.roleChains
         self.allR = []
         self.addNullRs()
         self.allR = self.allR + self.roleChains + self.roleSubs
@@ -168,20 +167,20 @@ class NegativesGenERator:
         return any(x.equals(y) for x in listy)    
     
     def toString(self):
-        ret = self.reasonER.toString()+("\nNegative Examples:\n\n" if self.hasRun else "")
+        ret = "\nNegative Examples" if self.hasRun else ""
         
         for statement in self.notCType1:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         for statement in self.notCType2:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         for statement in self.notCType3:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         for statement in self.notCType4:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         for statement in self.notRoleSubs:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         for statement in self.notRoleChains:
-            ret = ret + statement.toString() + "\n"
+            ret = ret + "\n" + statement.toString()
         
         return ret
             
