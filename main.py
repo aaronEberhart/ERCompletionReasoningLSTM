@@ -17,8 +17,7 @@ def writeFile(filename,data):
 	file.write(data)
 	file.close()
 
-if __name__ == "__main__":
-	
+def runExperiment(i):
 	start = time.time()
 	
 	generator = GenERator()	
@@ -29,6 +28,12 @@ if __name__ == "__main__":
 	
 	negatives = NegativesGenERator(reasoner)
 	
-	writeFile("KB.txt",generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("details.txt",reasoner.getLog()+reasonerSteps.toString())
-	print("Time: {}seconds".format(time.time()-start))
+	writeFile("KB{}.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
+	writeFile("details{}.txt".format(i),reasoner.getLog()+reasonerSteps.toString())
+	
+	print("KB#{} Time: {}seconds".format(i,time.time()-start))	
+
+if __name__ == "__main__":
+	
+	for i in range(0,1000):
+		runExperiment(i)
