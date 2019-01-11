@@ -28,10 +28,10 @@ def runExperiment(i):
 	
 	negatives = NegativesGenERator(reasoner)
 	
-	writeFile("KB{}.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("details{}.txt".format(i),reasoner.getLog()+reasonerSteps.toString())
+	writeFile("output/{}KB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
+	writeFile("output/{}details.txt".format(i),reasoner.getLog()+reasonerSteps.toString())
 	
-	print("KB#{} Time: {}seconds".format(i,time.time()-start))	
+	print("KB {} Time: {}seconds".format(i,time.time()-start))	
 
 if __name__ == "__main__":
 	
