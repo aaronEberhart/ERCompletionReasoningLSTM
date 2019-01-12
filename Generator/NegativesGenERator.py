@@ -3,7 +3,7 @@ import random
 
 class NegativesGenERator:
     
-    def __init__(self,reasonER,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10):
+    def __init__(self,reasonER,numCType1=0,numCType2=0,numCType3=0,numCType4=0,numRoleSub=0,numRoleChains=0):
         if not reasonER.hasRun:
             reasonER.ERason()
         self.hasRun = False
@@ -17,9 +17,9 @@ class NegativesGenERator:
         self.allR = []
         self.addNullRs()
         self.allR = self.allR + self.roleChains + self.roleSubs
-        self.numCType1 = numCType1
+        self.numCType1 = numCType1 if numCType1 != 0 else len(reasonER.knownCType1)
         self.numCType2 = numCType2
-        self.numCType3 = numCType3
+        self.numCType3 = numCType3 if numCType3 != 0 else len(reasonER.knownCType3)
         self.numCType4 = numCType4
         self.numRoleSub = numRoleSub
         self.numRoleChains = numRoleChains
@@ -183,4 +183,24 @@ class NegativesGenERator:
             ret = ret + "\n" + statement.toString()
         
         return ret
-            
+    
+    def getStatistics(self):
+
+        uniqueConceptNames = []
+        allConceptNames = 0
+        uniqueRoleNames = []
+        allRoleNames = 0
+
+        for statement in self.CType1:
+            if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
+            if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+            allConceptNames = allConceptNames + 2
+        for statement in self.CType3:
+            if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
+            if statement.consequent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].concept.name)
+            if statement.consequent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].role.name)
+            allConceptNames = allConceptNames + 2
+            allRoleNames = allRoleNames + 1
+
+        return [["both",["unique",len(uniqueConceptNames)+len(uniqueRoleNames)],["all",allConceptNames+allRoleNames]],["concept",["unique",len(uniqueConceptNames)],["all",allConceptNames]],["role",["unique",len(uniqueRoleNames)],["all",allRoleNames]]]
+    

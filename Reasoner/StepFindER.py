@@ -83,7 +83,7 @@ class StepFindER:
     def toString(self):
         ret = "\nExtended KB w/ Justifications"
         for statement in self.newType1:
-            ret = ret + "\n{}:{}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else ";".join([x for x in statement[1]])))
+            ret = ret + "\n{}: {}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else " ; ".join([x for x in statement[1]])))
         for statement in self.newType3:
-            ret = ret + "\n{}:{}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else ";".join([x for x in statement[1]])))
+            ret = ret + "\n{}: {}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else " ; ".join([x for x in statement[1]])))
         return ret    

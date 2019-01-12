@@ -17,6 +17,15 @@ def writeFile(filename,data):
 	file.write(data)
 	file.close()
 
+def formatStatistics(start,gen,reas,neg):
+	genStats = gen.getStatistics()
+	reasStats = reas.getStatistics()
+	negStats = neg.getStatistics()
+	return "KB {} Time: {}seconds\nRandom Seed: {}\nGeneratorStats:\n\tStatements: {}\n\tPredicates:\n\t\t{} unique\n\t\t{} total\n\tConcepts:\n\t\t{} unique\n\t\t{} total\n\tRoles:\n\t\t{} unique\n\t\t{} total\nReasonerStats:\n\tStatements: {}\n\tPredicates:\n\t\t{} unique\n\t\t{} total\n\tConcepts:\n\t\t{} unique\n\t\t{} total\n\tRoles:\n\t\t{} unique\n\t\t{} total\nNegativesStats:\n\tStatements: {}\n\tPredicates:\n\t\t{} unique\n\t\t{} total\n\tConcepts:\n\t\t{} unique\n\t\t{} total\n\tRoles:\n\t\t{} unique\n\t\t{} total\n".format(i,time.time()-start,gen.seed, \
+	              len(gen.CType1)+len(gen.CType2)+len(gen.CType3)+len(gen.CType4)+len(gen.roleChains)+len(gen.roleSubs),genStats[0][1][1],genStats[0][2][1],genStats[1][1][1],genStats[1][2][1],genStats[2][1][1],genStats[2][2][1], \
+	              len(reas.knownCType1)+len(reas.knownCType3),reasStats[0][1][1],reasStats[0][2][1],reasStats[1][1][1],reasStats[1][2][1],reasStats[2][1][1],reasStats[2][2][1], \
+	              len(neg.notCType1)+len(neg.notCType2)+len(neg.notCType3)+len(neg.notCType4)+len(neg.notRoleChains)+len(neg.notRoleSubs),negStats[0][1][1],negStats[0][2][1],negStats[1][1][1],negStats[1][2][1],negStats[2][1][1],negStats[2][2][1])
+
 def runExperiment(i):
 	start = time.time()
 	
@@ -29,11 +38,9 @@ def runExperiment(i):
 	negatives = NegativesGenERator(reasoner)
 	
 	writeFile("output/{}KB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("output/{}details.txt".format(i),reasoner.getLog()+reasonerSteps.toString())
-	
-	print("KB {} Time: {}seconds".format(i,time.time()-start))	
+	writeFile("output/{}details.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getLog()+reasonerSteps.toString())
 
 if __name__ == "__main__":
 	
-	for i in range(0,1000):
+	for i in range(0,100):
 		runExperiment(i)

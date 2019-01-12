@@ -169,3 +169,24 @@ class ReasonER:
 		for statement in self.knownCType3:
 			ret = ret + "\n" + statement.toString()
 		return ret
+	
+	def getStatistics(self):
+		
+		uniqueConceptNames = []
+		allConceptNames = 0
+		uniqueRoleNames = []
+		allRoleNames = 0
+		
+		for statement in self.knownCType1:
+			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
+			if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+			allConceptNames = allConceptNames + 2
+		for statement in self.knownCType3:
+			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
+			if statement.consequent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].concept.name)
+			if statement.consequent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].role.name)
+			allConceptNames = allConceptNames + 2
+			allRoleNames = allRoleNames + 1
+			
+		return [["both",["unique",len(uniqueConceptNames)+len(uniqueRoleNames)],["all",allConceptNames+allRoleNames]],["concept",["unique",len(uniqueConceptNames)],["all",allConceptNames]],["role",["unique",len(uniqueRoleNames)],["all",allRoleNames]]]
+	
