@@ -41,6 +41,6 @@ def runExperiment(i):
 	writeFile("output/{}details.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getLog()+reasonerSteps.toString())
 
 if __name__ == "__main__":
-	
-	for i in range(0,100):
+	os.mkdir("output")
+	for i in range(0,1):
 		runExperiment(i)

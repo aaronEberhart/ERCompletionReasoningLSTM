@@ -1,0 +1,163 @@
+KB 0 Time: 0.3354775905609131seconds
+Random Seed: 1547481812.6366484
+GeneratorStats:
+	Statements: 120
+	Predicates:
+		89 unique
+		325 total
+	Concepts:
+		74 unique
+		225 total
+	Roles:
+		15 unique
+		100 total
+ReasonerStats:
+	Statements: 63
+	Predicates:
+		49 unique
+		158 total
+	Concepts:
+		40 unique
+		126 total
+	Roles:
+		9 unique
+		32 total
+NegativesStats:
+	Statements: 63
+	Predicates:
+		73 unique
+		283 total
+	Concepts:
+		60 unique
+		226 total
+	Roles:
+		13 unique
+		57 total
+Reasoner Steps
+Learned C38 ⊑ C27 in loop 0
+Learned C72 ⊑ C17 in loop 0
+Learned C72 ⊑ C57 in loop 0
+Learned C11 ⊑ C71 in loop 0
+Learned C36 ⊑ C20 in loop 0
+Learned C68 ⊑ C35 in loop 0
+Learned C26 ⊑ C73 in loop 0
+Learned C69 ⊑ C73 in loop 0
+Learned C4 ⊑ C7 in loop 0
+Learned C39 ⊑ C15 in loop 0
+Learned C68 ⊑ C3 in loop 0
+Learned C35 ⊑ C65 in loop 0
+Learned C30 ⊑ C65 in loop 0
+Learned C70 ⊑ C65 in loop 0
+Learned C17 ⊑ C58 in loop 0
+Learned C18 ⊑ C72 in loop 0
+Learned C72 ⊑ ∃R6.C15 in loop 0
+Learned C8 ⊑ ∃R2.C2 in loop 0
+Learned C39 ⊑ ∃R2.C2 in loop 0
+Learned C11 ⊑ ∃R12.C25 in loop 0
+Learned C34 ⊑ ∃R2.C60 in loop 0
+Learned C45 ⊑ ∃R2.C60 in loop 0
+Learned C35 ⊑ ∃R5.C55 in loop 0
+Learned C35 ⊑ ∃R6.C20 in loop 0
+Learned C15 ⊑ ∃R6.C53 in loop 0
+Learned C42 ⊑ ∃R6.C53 in loop 0
+Learned C29 ⊑ ∃R13.C19 in loop 0
+Learned C26 ⊑ ∃R14.C57 in loop 0
+Learned C41 ⊑ ∃R14.C67 in loop 0
+Learned C68 ⊑ ∃R14.C35 in loop 0
+Learned C69 ⊑ ∃R14.C8 in loop 0
+Learned C35 ⊑ ∃R2.C16 in loop 0
+Learned C39 ⊑ ∃R2.C6 in loop 0
+Learned C35 ⊑ ∃R6.C16 in loop 0
+Learned C39 ⊑ ∃R6.C6 in loop 0
+Learned C39 ⊑ C74 in loop 1
+Learned C68 ⊑ C70 in loop 1
+Learned C18 ⊑ C8 in loop 1
+Learned C18 ⊑ C17 in loop 1
+Learned C18 ⊑ C57 in loop 1
+Learned C68 ⊑ C65 in loop 1
+Learned C8 ⊑ C58 in loop 1
+Learned C39 ⊑ C58 in loop 1
+Learned C72 ⊑ C58 in loop 1
+Learned C11 ⊑ C72 in loop 1
+Learned C72 ⊑ ∃R2.C2 in loop 1
+Learned C68 ⊑ ∃R11.C16 in loop 1
+Learned C18 ⊑ ∃R6.C15 in loop 1
+Learned C68 ⊑ ∃R5.C55 in loop 1
+Learned C68 ⊑ ∃R6.C20 in loop 1
+Learned C39 ⊑ ∃R6.C53 in loop 1
+Learned C68 ⊑ ∃R2.C16 in loop 1
+Learned C68 ⊑ ∃R6.C16 in loop 1
+Learned C29 ⊑ ∃R4.C19 in loop 1
+Learned C11 ⊑ C8 in loop 2
+Learned C11 ⊑ C17 in loop 2
+Learned C11 ⊑ C57 in loop 2
+Learned C18 ⊑ C58 in loop 2
+Learned C11 ⊑ C58 in loop 2
+Learned C18 ⊑ ∃R2.C2 in loop 2
+Learned C11 ⊑ ∃R6.C15 in loop 2
+Learned C11 ⊑ ∃R2.C2 in loop 2
+Learned C29 ⊑ ∃R1.C19 in loop 2
+Extended KB w/ Justifications
+C4 ⊑ C7: (4)C4 ⊑ ∃R14.C46,C46 ⊑ C46,∃R1.C46 ⊑ C7
+C8 ⊑ C58: (1)C8 ⊑ C17,C17 ⊑ C58 ; (4)C8 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C11 ⊑ C8: (1)C11 ⊑ C18,C18 ⊑ C8 ; (1)C11 ⊑ C72,C72 ⊑ C8
+C11 ⊑ C17: (1)C11 ⊑ C18,C18 ⊑ C17 ; (1)C11 ⊑ C72,C72 ⊑ C17 ; (1)C11 ⊑ C8,C8 ⊑ C17
+C11 ⊑ C57: (1)C11 ⊑ C18,C18 ⊑ C57 ; (1)C11 ⊑ C72,C72 ⊑ C57 ; (1)C11 ⊑ C8,C8 ⊑ C57
+C11 ⊑ C58: (1)C11 ⊑ C8,C8 ⊑ C58 ; (1)C11 ⊑ C17,C17 ⊑ C58 ; (1)C11 ⊑ C18,C18 ⊑ C58 ; (1)C11 ⊑ C72,C72 ⊑ C58 ; (4)C11 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C11 ⊑ C71: (1)C11 ⊑ C12,C12 ⊑ C71
+C11 ⊑ C72: (1)C11 ⊑ C18,C18 ⊑ C72 ; (4)C11 ⊑ ∃R12.C25,C25 ⊑ C25,∃R13.C25 ⊑ C72
+C17 ⊑ C58: (4)C17 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C18 ⊑ C8: (1)C18 ⊑ C72,C72 ⊑ C8
+C18 ⊑ C17: (1)C18 ⊑ C72,C72 ⊑ C17 ; (1)C18 ⊑ C8,C8 ⊑ C17
+C18 ⊑ C57: (1)C18 ⊑ C72,C72 ⊑ C57 ; (1)C18 ⊑ C8,C8 ⊑ C57
+C18 ⊑ C58: (1)C18 ⊑ C8,C8 ⊑ C58 ; (1)C18 ⊑ C17,C17 ⊑ C58 ; (1)C18 ⊑ C72,C72 ⊑ C58 ; (4)C18 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C18 ⊑ C72: (4)C18 ⊑ ∃R12.C25,C25 ⊑ C25,∃R13.C25 ⊑ C72
+C26 ⊑ C73: (4)C26 ⊑ ∃R14.C57,C57 ⊑ C57,∃R0.C57 ⊑ C73 ; (4)C26 ⊑ ∃R8.C57,C57 ⊑ C57,∃R0.C57 ⊑ C73
+C30 ⊑ C65: (4)C30 ⊑ ∃R10.C55,C55 ⊑ C16,∃R11.C16 ⊑ C65
+C35 ⊑ C65: (1)C35 ⊑ C70,C70 ⊑ C65 ; (4)C35 ⊑ ∃R2.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C35 ⊑ ∃R5.C55,C55 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C35 ⊑ ∃R6.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C35 ⊑ ∃R11.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65
+C36 ⊑ C20: (1)C36 ⊑ C62,C62 ⊑ C20
+C38 ⊑ C27: (1)C38 ⊑ C1,C1 ⊑ C27
+C39 ⊑ C15: (4)C39 ⊑ ∃R2.C6,C6 ⊑ C6,∃R7.C6 ⊑ C15 ; (4)C39 ⊑ ∃R6.C6,C6 ⊑ C6,∃R7.C6 ⊑ C15 ; (4)C39 ⊑ ∃R11.C6,C6 ⊑ C6,∃R7.C6 ⊑ C15
+C39 ⊑ C58: (1)C39 ⊑ C17,C17 ⊑ C58 ; (4)C39 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C39 ⊑ C74: (1)C39 ⊑ C15,C15 ⊑ C74
+C68 ⊑ C3: (4)C68 ⊑ ∃R14.C35,C35 ⊑ C35,∃R9.C35 ⊑ C3 ; (4)C68 ⊑ ∃R8.C35,C35 ⊑ C35,∃R9.C35 ⊑ C3
+C68 ⊑ C35: (4)C68 ⊑ ∃R14.C35,C35 ⊑ C35,∃R0.C35 ⊑ C35 ; (4)C68 ⊑ ∃R8.C35,C35 ⊑ C35,∃R0.C35 ⊑ C35
+C68 ⊑ C65: (1)C68 ⊑ C35,C35 ⊑ C65 ; (1)C68 ⊑ C70,C70 ⊑ C65 ; (4)C68 ⊑ ∃R2.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C68 ⊑ ∃R5.C55,C55 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C68 ⊑ ∃R6.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65 ; (4)C68 ⊑ ∃R11.C16,C16 ⊑ C16,∃R11.C16 ⊑ C65
+C68 ⊑ C70: (1)C68 ⊑ C35,C35 ⊑ C70
+C69 ⊑ C73: (4)C69 ⊑ ∃R14.C8,C8 ⊑ C57,∃R0.C57 ⊑ C73 ; (4)C69 ⊑ ∃R8.C8,C8 ⊑ C57,∃R0.C57 ⊑ C73
+C70 ⊑ C65: (4)C70 ⊑ ∃R5.C55,C55 ⊑ C16,∃R11.C16 ⊑ C65
+C72 ⊑ C17: (1)C72 ⊑ C8,C8 ⊑ C17
+C72 ⊑ C57: (1)C72 ⊑ C8,C8 ⊑ C57
+C72 ⊑ C58: (1)C72 ⊑ C8,C8 ⊑ C58 ; (1)C72 ⊑ C17,C17 ⊑ C58 ; (4)C72 ⊑ ∃R2.C2,C2 ⊑ C2,∃R12.C2 ⊑ C58
+C8 ⊑ ∃R2.C2: (3)C8 ⊑ C17,C17 ⊑ ∃R2.C2
+C11 ⊑ ∃R2.C2: (3)C11 ⊑ C8,C8 ⊑ ∃R2.C2 ; (3)C11 ⊑ C18,C18 ⊑ ∃R2.C2 ; (3)C11 ⊑ C72,C72 ⊑ ∃R2.C2 ; (3)C11 ⊑ C17,C17 ⊑ ∃R2.C2
+C11 ⊑ ∃R6.C15: (3)C11 ⊑ C18,C18 ⊑ ∃R6.C15 ; (3)C11 ⊑ C72,C72 ⊑ ∃R6.C15 ; (3)C11 ⊑ C8,C8 ⊑ ∃R6.C15
+C11 ⊑ ∃R12.C25: (3)C11 ⊑ C18,C18 ⊑ ∃R12.C25
+C15 ⊑ ∃R6.C53: (3)C15 ⊑ C74,C74 ⊑ ∃R6.C53
+C18 ⊑ ∃R2.C2: (3)C18 ⊑ C8,C8 ⊑ ∃R2.C2 ; (3)C18 ⊑ C72,C72 ⊑ ∃R2.C2 ; (3)C18 ⊑ C17,C17 ⊑ ∃R2.C2
+C18 ⊑ ∃R6.C15: (3)C18 ⊑ C72,C72 ⊑ ∃R6.C15 ; (3)C18 ⊑ C8,C8 ⊑ ∃R6.C15
+C26 ⊑ ∃R14.C57: (5)C26 ⊑ ∃R8.C57,R8 ⊑ R14
+C29 ⊑ ∃R1.C19: (5)C29 ⊑ ∃R4.C19,R4 ⊑ R1
+C29 ⊑ ∃R4.C19: (5)C29 ⊑ ∃R13.C19,R13 ⊑ R4
+C29 ⊑ ∃R13.C19: (5)C29 ⊑ ∃R4.C19,R4 ⊑ R13 ; (5)C29 ⊑ ∃R7.C19,R7 ⊑ R13
+C34 ⊑ ∃R2.C60: (3)C34 ⊑ C19,C19 ⊑ ∃R2.C60
+C35 ⊑ ∃R2.C16: (5)C35 ⊑ ∃R11.C16,R11 ⊑ R2
+C35 ⊑ ∃R5.C55: (3)C35 ⊑ C70,C70 ⊑ ∃R5.C55
+C35 ⊑ ∃R6.C16: (5)C35 ⊑ ∃R11.C16,R11 ⊑ R6
+C35 ⊑ ∃R6.C20: (3)C35 ⊑ C70,C70 ⊑ ∃R6.C20
+C39 ⊑ ∃R2.C2: (3)C39 ⊑ C17,C17 ⊑ ∃R2.C2
+C39 ⊑ ∃R2.C6: (5)C39 ⊑ ∃R11.C6,R11 ⊑ R2
+C39 ⊑ ∃R6.C6: (5)C39 ⊑ ∃R11.C6,R11 ⊑ R6
+C39 ⊑ ∃R6.C53: (3)C39 ⊑ C15,C15 ⊑ ∃R6.C53 ; (3)C39 ⊑ C74,C74 ⊑ ∃R6.C53
+C41 ⊑ ∃R14.C67: (5)C41 ⊑ ∃R8.C67,R8 ⊑ R14
+C42 ⊑ ∃R6.C53: (3)C42 ⊑ C74,C74 ⊑ ∃R6.C53
+C45 ⊑ ∃R2.C60: (3)C45 ⊑ C19,C19 ⊑ ∃R2.C60
+C68 ⊑ ∃R2.C16: (3)C68 ⊑ C35,C35 ⊑ ∃R2.C16 ; (5)C68 ⊑ ∃R11.C16,R11 ⊑ R2
+C68 ⊑ ∃R5.C55: (3)C68 ⊑ C35,C35 ⊑ ∃R5.C55 ; (3)C68 ⊑ C70,C70 ⊑ ∃R5.C55
+C68 ⊑ ∃R6.C16: (3)C68 ⊑ C35,C35 ⊑ ∃R6.C16 ; (5)C68 ⊑ ∃R11.C16,R11 ⊑ R6
+C68 ⊑ ∃R6.C20: (3)C68 ⊑ C35,C35 ⊑ ∃R6.C20 ; (3)C68 ⊑ C70,C70 ⊑ ∃R6.C20
+C68 ⊑ ∃R11.C16: (3)C68 ⊑ C35,C35 ⊑ ∃R11.C16
+C68 ⊑ ∃R14.C35: (5)C68 ⊑ ∃R8.C35,R8 ⊑ R14
+C69 ⊑ ∃R14.C8: (5)C69 ⊑ ∃R8.C8,R8 ⊑ R14
+C72 ⊑ ∃R2.C2: (3)C72 ⊑ C8,C8 ⊑ ∃R2.C2 ; (3)C72 ⊑ C17,C17 ⊑ ∃R2.C2
+C72 ⊑ ∃R6.C15: (3)C72 ⊑ C8,C8 ⊑ ∃R6.C15
