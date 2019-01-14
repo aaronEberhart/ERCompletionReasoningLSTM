@@ -16,6 +16,9 @@ class Predicate:
 	
 	def toString(self):
 		return "{}{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
+	
+	def toFunctionalSyntax(self):
+		return ""	
 		
 	def equals(self,other):
 		return self.name == other.name and self.terms.equals(other.terms) and self.negated == other.negated
@@ -37,7 +40,10 @@ class Concept(Predicate):
 	
 	def toString(self):
 		return super().toString() if not isinstance(self.name,int) else "{}C{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
-
+	
+	def toFunctionalSyntax(self):
+		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","C" if isinstane(self.name,int) else "",self.name," )" if self.negated else "")
+	
 class Role(Predicate):
 
 	def __init__(self,ID,args,negated=False,showTerms=False):
@@ -50,6 +56,9 @@ class Role(Predicate):
 	def toString(self):
 		return super().toString() if not isinstance(self.name,int) else "{}R{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else ""	)
 
+	def toFunctionalSyntax(self):
+		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","R" if isinstance(self.name,int) else "",self.name," )" if self.negated else "")
+	
 class ConceptRole(Concept):
 	
 	def __init__(self,q,role,concept,negated=False,showTerms=False):
@@ -67,6 +76,9 @@ class ConceptRole(Concept):
 	
 	def toString(self):
 		return "{}{}{}{}{}.{}".format("¬" if self.negated else "",self.quantifier.toString(),"" if not isinstance(self.name,int) else "R",self.role.name,"({})".format(self.terms.toString()) if self.showTerms else "",self.concept.toString())
+	
+	def toFunctionalSyntax(self):
+		return "{}{}( {} {} ){}".format("ObjectComplementOf( " if self.negated else "",self.quantifier.toFunctionalSyntax(),self.role.toFunctionalSyntax(),self.concept.toFunctionalSyntax()," )" if self.negated else "")
 	
 class RoleChain(Role):
 	
@@ -103,3 +115,6 @@ class RoleChain(Role):
 	
 	def toString(self):
 		return "".join(["{}{}".format("∘" if role != self.roles[0] else "",role.toString()) for role in self.roles])
+	
+	def toFunctionalSyntax(self):
+		return "ObjectPropertyChain( {} )".format(" ".join([x.toFunctionalSyntax() for x in self.roles]))

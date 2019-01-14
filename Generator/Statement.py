@@ -5,8 +5,8 @@ class ConceptStatement(Concept):
     def __init__(self,ID,outer=False,*seed):
         self.checkPredicate(ID)
         self.name = ID
-        self.antecedent = []
-        self.consequent = []
+        self.antecedent = None
+        self.consequent = None
         self.terms = None
         if len(seed) > 0: 
             self.addToAntecedent(seed[0])
@@ -17,19 +17,19 @@ class ConceptStatement(Concept):
         self.setScope()
     
     def setScope(self):
-        self.terms = None if len(self.antecedent) == 0 and len(self.consequent) == 0 else (Terms([self.antecedent[0].terms.getTerm(0)]) if len(self.antecedent) > 0 else Terms([self.consequent[0].terms.getTerm(0)]))
+        self.terms = None if self.antecedent == None and self.consequent == None else (Terms([self.antecedent.terms.getTerm(0)]) if self.antecedent != None else Terms([self.consequent.terms.getTerm(0)]))
     
     def checkConceptStatement(self,concept):
         if not isinstance(concept,Concept) or not (self.terms == None or concept.terms.getTerm(0) == self.terms.getTerm(0)): raise Exception("Invalid ConceptStatement")
     
     def addToAntecedent(self,concept):
         self.checkConceptStatement(concept)
-        self.antecedent.append(concept)
+        self.antecedent = concept
         if self.terms == None: self.setScope()
         
     def addToConsequent(self,concept):
         self.checkConceptStatement(concept)
-        self.consequent.append(concept)
+        self.consequent = concept
         if self.terms == None: self.setScope()
         
     def complete(self,operator):
@@ -40,27 +40,25 @@ class ConceptStatement(Concept):
         return not self.operator == 'X'
     
     def checkCanBeComplete(self):
-        if self.antecedent == None or not len(self.antecedent) > 0 or self.consequent == None or not len(self.consequent) > 0 or (isinstance(self.antecedent[0],ConceptStatement) and not self.antecedent[0].isComplete()) or (isinstance(self.consequent[0],ConceptStatement) and not self.consequent[0].isComplete()): raise Exception("Not complete yet") 
+        if self.antecedent == None or self.consequent == None or (isinstance(self.antecedent,ConceptStatement) and not self.antecedent.isComplete()) or (isinstance(self.consequent,ConceptStatement) and not self.consequent.isComplete()): raise Exception("Not complete yet") 
     
     def equals(self,other):
-        if self.operator != other.operator or len(self.antecedent) != len(other.antecedent) or len(self.consequent) != len(other.consequent): return False
-        for i in range(0,len(self.antecedent)):
-            if not self.antecedent[i].equals(other.antecedent[i]):return False
-        for i in range(0,len(self.consequent)):
-            if not self.consequent[i].equals(other.consequent[i]):return False
+        if self.operator != other.operator or not self.antecedent.equals(other.antecedent) or not self.consequent.equals(other.consequent): return False
         return True
     
     def toString(self):
-        return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
+        return "{}{} {} {}{}".format("( " if not self.outer else "",self.antecedent.toString(),self.operator,self.consequent.toString()," )" if not self.outer else "")
     
+    def toFunctionalSyntax(self):
+        return "SubClassOf( {} {} )".format(self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
         
 class RoleStatement(Role):
     
     def __init__(self,ID,outer=False,*seed):
         self.checkPredicate(ID)
         self.name = ID
-        self.antecedent = []
-        self.consequent = []
+        self.antecedent = None
+        self.consequent = None
         self.terms = None
         if len(seed) > 0: 
             self.addToAntecedent(seed[0])
@@ -74,35 +72,35 @@ class RoleStatement(Role):
         if not isinstance(role,Role) or (self.terms != None and (role.terms.getTerm(0) != self.terms.getTerm(0) or role.terms.getTerm(1) != self.terms.getTerm(1))): raise Exception("Invalid RoleStatement")
     
     def addToAntecedent(self,role):
-        if len(self.antecedent) > 0 and not isinstance(self.antecedent[0],RoleChain): 
-            self.antecedent[0] = RoleChain(role.name,self.antecedent[0])
-            if len(self.consequent) > 0 and isinstance(self.consequent[0],RoleChain):
-                self.antecedent[0].terms.setTerm(1,self.consequent[0].roles[len(self.consequent[0].roles) - 1].terms.getTerm(0))
-        if len(self.antecedent) == 1:
-            if self.consequent != None and not isinstance(self.consequent[0],RoleChain):
-                self.consequent[0].terms.setTerm(1,role.terms.getTerm(1))            
+        if self.antecedent != None and not isinstance(self.antecedent,RoleChain): 
+            self.antecedent = RoleChain(role.name,self.antecedent)
+            if self.consequent != None and isinstance(self.consequent,RoleChain):
+                self.antecedent.terms.setTerm(1,self.consequent.roles[len(self.consequent.roles) - 1].terms.getTerm(0))
+        if isinstance(self.antecedent,Role):
+            if self.consequent != None and not isinstance(self.consequent,RoleChain):
+                self.consequent.terms.setTerm(1,role.terms.getTerm(1))            
             if role.terms.getTerm(1) != self.terms.getTerm(1): 
                 self.terms.setTerm(1,role.terms.getTerm(1))
-            self.antecedent[0].appendRoles([role])
+            self.antecedent.appendRoles([role])
         else:
             self.checkRoleStatement(role)
-            self.antecedent.append(role)
+            self.antecedent = role
         if self.terms == None: self.setScope()
         
     def addToConsequent(self,role):
-        if len(self.consequent) > 0 and not isinstance(self.consequent[0],RoleChain): 
-            self.consequent[0] = RoleChain(role.name,self.consequent[0])
-            if len(self.antecedent) > 0 and isinstance(self.antecedent[0],RoleChain):
-                self.consequent[0].terms.setTerm(1,self.antecedent[0].roles[len(self.antecedent[0].roles) - 1].terms.getTerm(0))            
-        if len(self.consequent) == 1:
-            if self.antecedent != None and not isinstance(self.antecedent[0],RoleChain):
-                self.antecedent[0].terms.setTerm(1,role.terms.getTerm(1))
+        if self.consequent != None and not isinstance(self.consequent,RoleChain): 
+            self.consequent = RoleChain(role.name,self.consequent)
+            if self.antecedent != None and isinstance(self.antecedent,RoleChain):
+                self.consequent.terms.setTerm(1,self.antecedent.roles[len(self.antecedent[0].roles) - 1].terms.getTerm(0))            
+        if isinstance(self.consequent,Role):
+            if self.antecedent != None and not isinstance(self.antecedent,RoleChain):
+                self.antecedent.terms.setTerm(1,role.terms.getTerm(1))
             if role.terms.getTerm(1) != self.terms.getTerm(1): 
                 self.terms.setTerm(1,role.terms.getTerm(1))
-            self.consequent[0].appendRoles([role])
+            self.consequent.appendRoles([role])
         else:
             self.checkRoleStatement(role)
-            self.consequent.append(role)
+            self.consequent = role
         if self.terms == None: self.setScope()            
         
     def complete(self,operator):
@@ -112,25 +110,23 @@ class RoleStatement(Role):
     
     def checkTermsSame(self):
         for i in range(0,len(self.terms.getTerms())):
-            if self.terms.getTerm(i) != self.antecedent[0].terms.getTerm(i) or self.terms.getTerm(i) != self.consequent[0].terms.getTerm(i): raise Exception("Roles do not match")
+            if self.terms.getTerm(i) != self.antecedent.terms.getTerm(i) or self.terms.getTerm(i) != self.consequent.terms.getTerm(i): raise Exception("Roles do not match")
         
     def isComplete(self):
         return not self.operator == 'X'
     
     def checkCanBeComplete(self):
-        if not len(self.antecedent) > 0 or not len(self.consequent) > 0: raise Exception("Not complete yet") 
+        if self.antecedent == None or self.consequent== None: raise Exception("Not complete yet") 
         
     def equals(self,other):
-        if self.operator != other.operator or len(self.antecedent) != len(other.antecedent) or len(self.consequent) != len(other.consequent): return False
-        for i in range(0,len(self.antecedent)):
-            if not self.antecedent[i].equals(other.antecedent[i]):return False
-        for i in range(0,len(self.consequent)):
-            if not self.consequent[i].equals(other.consequent[i]):return False
+        if self.operator != other.operator or self.antecedent.equals(other.antecedent) or self.consequent.equals(other.consequent): return False
         return True
     
     def toString(self):
-        return "{}{} {} {}{}".format("( " if not self.outer else ""," ".join([item.toString() for item in self.antecedent]),self.operator," ".join([item.toString() for item in self.consequent])," )" if not self.outer else "")
+        return "{}{} {} {}{}".format("( " if not self.outer else "",self.antecedent.toString(),self.operator,self.consequent.toString()," )" if not self.outer else "")
     
     def setScope(self):
-        self.terms = None if len(self.antecedent) == 0 and len(self.consequent) == 0 else (Terms([self.antecedent[0].terms.getTerm(0),self.antecedent[0].terms.getTerm(1)]) if len(self.antecedent) > 0 else Terms([self.consequent[0].terms.getTerm(0),self.consequent[0].terms.getTerm(1)]))
+        self.terms = None if self.antecedent == None and self.consequent == None else (Terms([self.antecedent.terms.getTerm(0),self.antecedent.terms.getTerm(1)]) if self.antecedent != None else Terms([self.consequent.terms.getTerm(0),self.consequent.terms.getTerm(1)]))
     
+    def toFunctionalSyntax(self):
+        return "SubObjectPropertyOf( {} {} )".format(self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())    

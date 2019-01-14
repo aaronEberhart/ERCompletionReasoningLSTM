@@ -14,10 +14,10 @@ class Term:
 		return str(self.term)
 	
 	def equals(self,other):
-		return self.term == other.getTerm()
+		return self.term == other.term
 	
 	def checkTerm(self,t):
-		if not isinstance(t,(int,float,complex,str,bool)): raise Exception("Invalid Term")
+		if not isinstance(t,int) and not isinstance(t,(float,complex,str,bool)): raise Exception("Invalid Term")
 	
 class Terms:
 	

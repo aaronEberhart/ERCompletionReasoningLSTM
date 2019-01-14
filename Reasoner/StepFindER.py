@@ -27,26 +27,26 @@ class StepFindER:
     def findMatchesRule1(self,statement):
         """ C ⊑ D,A ⊑ C |= A ⊑ D """
         matches = []
-        for candidate1 in list(filter(lambda x: statement.consequent[0].name == x.consequent[0].name,self.allType1)):
-            for candidate2 in list(filter(lambda x: statement.antecedent[0].name == x.antecedent[0].name and x.consequent[0].name == candidate1.antecedent[0].name,self.allType1)):
+        for candidate1 in list(filter(lambda x: statement.consequent.name == x.consequent.name,self.allType1)):
+            for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name and x.consequent.name == candidate1.antecedent.name,self.allType1)):
                 matches.append("(1){},{}".format(candidate2.toString(),candidate1.toString()))
         return matches
     
     def findMatchesRule2(self,statement):
         """ C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
         matches = []
-        for candidate1 in list(filter(lambda x: statement.consequent[0].name == x.consequent[0].name,self.allType2)):
-            for candidate2 in list(filter(lambda x: statement.antecedent[0].name == x.antecedent[0].name and x.consequent[0].name == candidate1.antecedent[0].antecedent[0].name,self.allType1+self.nullType)):
-                for candidate3 in list(filter(lambda x: statement.antecedent[0].name == x.antecedent[0].name and x.consequent[0].name == candidate1.antecedent[0].consequent[0].name,self.allType1+self.nullType)):
+        for candidate1 in list(filter(lambda x: statement.consequent.name == x.consequent.name,self.allType2)):
+            for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name and x.consequent.name == candidate1.antecedent.antecedent.name,self.allType1+self.nullType)):
+                for candidate3 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name and x.consequent.name == candidate1.antecedent.consequent.name,self.allType1+self.nullType)):
                     matches.append("(2){},{},{}".format(candidate2.toString(),candidate3.toString(),candidate1.toString()))
         return matches
     
     def findMatchesRule4(self,statement):
         """ ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C |= A ⊑ D """
         matches = []
-        for candidate1 in list(filter(lambda x: statement.consequent[0].name == x.consequent[0].name,self.allType4)):
-            for candidate2 in list(filter(lambda x: statement.antecedent[0].name == x.antecedent[0].name, self.allType3)):
-                for candidate3 in list(filter(lambda x: x.antecedent[0].name == candidate2.consequent[0].concept.name and x.consequent[0].name == candidate1.antecedent[0].concept.name,self.allType1+self.nullType)):
+        for candidate1 in list(filter(lambda x: statement.consequent.name == x.consequent.name,self.allType4)):
+            for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name, self.allType3)):
+                for candidate3 in list(filter(lambda x: x.antecedent.name == candidate2.consequent.concept.name and x.consequent.name == candidate1.antecedent.concept.name,self.allType1+self.nullType)):
                     matches.append("(4){},{},{}".format(candidate2.toString(),candidate3.toString(),candidate1.toString()))
         return matches
     
@@ -58,25 +58,25 @@ class StepFindER:
     def findMatchesRule3(self,statement):
         """ C ⊑ ∃R.D, A ⊑ C |= A ⊑ ∃R.D """
         matches = []
-        for candidate1 in list(filter(lambda x: statement.antecedent[0].name != x.antecedent[0].name and statement.consequent[0].role.name == x.consequent[0].role.name and statement.consequent[0].concept.name == x.consequent[0].concept.name,self.allType3)):
-            for candidate2 in list(filter(lambda x: x.antecedent[0].name == statement.antecedent[0].name and x.consequent[0].name == candidate1.antecedent[0].name,self.allType1)):
+        for candidate1 in list(filter(lambda x: statement.antecedent.name != x.antecedent.name and statement.consequent.role.name == x.consequent.role.name and statement.consequent.concept.name == x.consequent.concept.name,self.allType3)):
+            for candidate2 in list(filter(lambda x: x.antecedent.name == statement.antecedent.name and x.consequent.name == candidate1.antecedent.name,self.allType1)):
                 matches.append("(3){},{}".format(candidate2.toString(),candidate1.toString()))
         return matches
     
     def findMatchesRule5(self,statement):
         """ R ⊑ S, A ⊑ ∃R.B |= A ⊑ ∃S.B """
         matches = []
-        for candidate1 in list(filter(lambda x: statement.consequent[0].role.name == x.consequent[0].name,self.allRoles)):
-            for candidate2 in list(filter(lambda x: statement.antecedent[0].name == x.antecedent[0].name and statement.consequent[0].concept.name == x.consequent[0].concept.name and x.consequent[0].role.name == candidate1.antecedent[0].name,self.allType3)):
+        for candidate1 in list(filter(lambda x: statement.consequent.role.name == x.consequent.name,self.allRoles)):
+            for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name and statement.consequent.concept.name == x.consequent.concept.name and x.consequent.role.name == candidate1.antecedent.name,self.allType3)):
                 matches.append("(5){},{}".format(candidate2.toString(),candidate1.toString()))
         return matches
     
     def findMatchesRule6(self,statement):
         """ R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C |= A ⊑ ∃R.C """
         matches = []
-        for candidate1 in list(filter(lambda x: x.consequent[0].name == statement.consequent[0].role.name,self.allChain)):
-            for candidate2 in list(filter(lambda x: x.consequent[0].role.name == candidate1.antecedent[0].roles[0].name and x.antecedent[0].name == statement.antecedent[0].name,self.allType3)):
-                for candidate3 in list(filter(lambda x: x.antecedent[0].name == candidate2.consequent[0].concept.name and x.consequent[0].role.name == candidate1.antecedent[0].roles[1].name and x.consequent[0].concept.name == statement.consequent[0].concept.name,self.allType3)):
+        for candidate1 in list(filter(lambda x: x.consequent.name == statement.consequent.role.name,self.allChain)):
+            for candidate2 in list(filter(lambda x: x.consequent.role.name == candidate1.antecedent.roles[0].name and x.antecedent.name == statement.antecedent.name,self.allType3)):
+                for candidate3 in list(filter(lambda x: x.antecedent.name == candidate2.consequent.concept.name and x.consequent.role.name == candidate1.antecedent.roles[1].name and x.consequent.concept.name == statement.consequent.concept.name,self.allType3)):
                     matches.append("(6){},{},{}".format(candidate2.toString(),candidate3.toString(),candidate1.toString()))
         return matches
     

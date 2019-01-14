@@ -43,8 +43,8 @@ class ReasonER:
 			self.trySolveRules(i)
 			i = i + 1
 		 
-		self.knownCType1.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].name))
-		self.knownCType3.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].role.name, x.consequent[0].concept.name))
+		self.knownCType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+		self.knownCType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
 		
 		self.hasRun = True
 			
@@ -84,11 +84,11 @@ class ReasonER:
 		candidates = self.syntheticData.CType1 + self.knownCType1
 		
 		for candidate1 in candidates:
-			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].name == x.consequent[0].name,candidates)):
+			for candidate2 in list(filter(lambda x: candidate1.antecedent.name == x.consequent.name,candidates)):
 			
-				if candidate2.antecedent[0].name == candidate1.consequent[0].name: continue
+				if candidate2.antecedent.name == candidate1.consequent.name: continue
 				
-				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
+				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')
 				self.newCType1.append(cs)
 	
@@ -97,12 +97,12 @@ class ReasonER:
 		candidates = self.syntheticData.CTypeNull + self.syntheticData.CType1 + self.knownCType1
 		
 		for conjunction in self.syntheticData.CType2:
-			for candidate1 in list(filter(lambda x: conjunction.antecedent[0].antecedent[0].name == x.consequent[0].name,candidates)):
-				for candidate2 in list(filter(lambda x: conjunction.antecedent[0].consequent[0].name == x.consequent[0].name and x.antecedent[0].name == candidate1.antecedent[0].name,candidates)):
+			for candidate1 in list(filter(lambda x: conjunction.antecedent.antecedent.name == x.consequent.name,candidates)):
+				for candidate2 in list(filter(lambda x: conjunction.antecedent.consequent.name == x.consequent.name and x.antecedent.name == candidate1.antecedent.name,candidates)):
 					
-					if candidate1.antecedent[0].name == conjunction.consequent[0].name: continue
+					if candidate1.antecedent.name == conjunction.consequent.name: continue
 					
-					cs = ConceptStatement(0,True,candidate1.antecedent[0],conjunction.consequent[0])
+					cs = ConceptStatement(0,True,candidate1.antecedent,conjunction.consequent)
 					cs.complete('⊑')					
 					self.newCType1.append(cs)
 	
@@ -112,9 +112,9 @@ class ReasonER:
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
 		for candidate1 in type3Candidates:
-			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].name == x.consequent[0].name,type1Candidates)):
+			for candidate2 in list(filter(lambda x: candidate1.antecedent.name == x.consequent.name,type1Candidates)):
 				
-				cs = ConceptStatement(0,True,candidate2.antecedent[0],candidate1.consequent[0])
+				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')				
 				self.newCType3.append(cs)
 	
@@ -124,12 +124,12 @@ class ReasonER:
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3		
 		
 		for candidate1 in self.syntheticData.CType4:
-			for candidate2 in list(filter(lambda x: candidate1.antecedent[0].concept.name == x.consequent[0].name,type1Candidates)):
-				for candidate3 in list(filter(lambda x: x.consequent[0].concept.name == candidate2.antecedent[0].name,type3Candidates)):
+			for candidate2 in list(filter(lambda x: candidate1.antecedent.concept.name == x.consequent.name,type1Candidates)):
+				for candidate3 in list(filter(lambda x: x.consequent.concept.name == candidate2.antecedent.name,type3Candidates)):
 					
-					if candidate3.antecedent[0].name == candidate1.consequent[0].name: continue
+					if candidate3.antecedent.name == candidate1.consequent.name: continue
 					
-					cs = ConceptStatement(0,True,Concept(candidate3.antecedent[0].name,[0]),Concept(candidate1.consequent[0].name,[0]))
+					cs = ConceptStatement(0,True,Concept(candidate3.antecedent.name,[0]),Concept(candidate1.consequent.name,[0]))
 					cs.complete('⊑')					
 					self.newCType1.append(cs)
 	
@@ -138,9 +138,9 @@ class ReasonER:
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
 		for roleStatement in self.syntheticData.roleSubs:
-			for matchingConceptStatement in list(filter(lambda x: roleStatement.antecedent[0].name == x.consequent[0].role.name,type3Candidates)):
+			for matchingConceptStatement in list(filter(lambda x: roleStatement.antecedent.name == x.consequent.role.name,type3Candidates)):
 				
-				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent[0],ConceptRole('e',roleStatement.consequent[0],matchingConceptStatement.consequent[0].concept))
+				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent,ConceptRole('e',roleStatement.consequent,matchingConceptStatement.consequent.concept))
 				cs.complete('⊑')				
 				self.newCType3.append(cs)
 	
@@ -149,10 +149,10 @@ class ReasonER:
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
 		for roleChain in self.syntheticData.roleChains:
-			for matchingConceptStatement1 in list(filter(lambda x: roleChain.antecedent[0].roles[0].name == x.consequent[0].role.name,type3Candidates)):
-				for matchingConceptStatement2 in list(filter(lambda x: x.antecedent[0].name == matchingConceptStatement1.consequent[0].concept.name and roleChain.antecedent[0].roles[1].name == x.consequent[0].role.name,type3Candidates)):
+			for matchingConceptStatement1 in list(filter(lambda x: roleChain.antecedent.roles[0].name == x.consequent.role.name,type3Candidates)):
+				for matchingConceptStatement2 in list(filter(lambda x: x.antecedent.name == matchingConceptStatement1.consequent.concept.name and roleChain.antecedent.roles[1].name == x.consequent.role.name,type3Candidates)):
 					
-					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent[0],ConceptRole('e',Role(roleChain.consequent[0].name,[0,1]),matchingConceptStatement2.consequent[0].concept))
+					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent,ConceptRole('e',Role(roleChain.consequent.name,[0,1]),matchingConceptStatement2.consequent.concept))
 					cs.complete('⊑')					
 					self.newCType3.append(cs)
 					
@@ -178,13 +178,13 @@ class ReasonER:
 		allRoleNames = 0
 		
 		for statement in self.knownCType1:
-			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-			if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+			if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+			if statement.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.name)
 			allConceptNames = allConceptNames + 2
 		for statement in self.knownCType3:
-			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-			if statement.consequent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].concept.name)
-			if statement.consequent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].role.name)
+			if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+			if statement.consequent.concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.concept.name)
+			if statement.consequent.role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent.role.name)
 			allConceptNames = allConceptNames + 2
 			allRoleNames = allRoleNames + 1
 			

@@ -9,3 +9,6 @@ class Quantifier:
     
     def toString(self):
         return str('∀' if self.quantifier == 0 else '∃')
+    
+    def toFunctionalSyntax(self):
+        return "{}".format("ObjectSomeValuesFrom" if self.quantifier == 1 else "ObjectAllValuesFrom")

@@ -43,12 +43,12 @@ class NegativesGenERator:
     
     def addNullRs(self):
         for statement in self.CType3:
-            rs = RoleStatement(len(self.roleSubs),True,Role(statement.consequent[0].role.name,[0,1]),Role(statement.consequent[0].role.name,[0,1]))
+            rs = RoleStatement(len(self.roleSubs),True,Role(statement.consequent.role.name,[0,1]),Role(statement.consequent.role.name,[0,1]))
             rs.complete('⊑')
             if not self.alreadyGenERated(self.allR,rs):
                 self.allR.append(rs)
         for statement in self.CType4:
-            rs = RoleStatement(len(self.roleSubs),True,Role(statement.antecedent[0].role.name,[0,1]),Role(statement.antecedent[0].role.name,[0,1]))
+            rs = RoleStatement(len(self.roleSubs),True,Role(statement.antecedent.role.name,[0,1]),Role(statement.antecedent.role.name,[0,1]))
             rs.complete('⊑')
             if not self.alreadyGenERated(self.allR,rs):
                 self.allR.append(rs)
@@ -67,10 +67,10 @@ class NegativesGenERator:
             self.makeCType4()
     
     def pickFromKB(self,exType):
-        ex = exType[random.randint(0,len(exType)-1)].antecedent[0] if bool(random.getrandbits(1)) else exType[random.randint(0,len(exType)-1)].consequent[0]
+        ex = exType[random.randint(0,len(exType)-1)].antecedent if bool(random.getrandbits(1)) else exType[random.randint(0,len(exType)-1)].consequent
         if isinstance(ex,ConceptRole): return ex.concept.name
         elif isinstance(ex,RoleChain): return ex.roles[0].name if bool(random.getrandbits(1)) else ex.roles[1].name        
-        elif isinstance(ex,ConceptStatement): return ex.antecedent[0].name if bool(random.getrandbits(1)) else ex.consequent[0].name
+        elif isinstance(ex,ConceptStatement): return ex.antecedent.name if bool(random.getrandbits(1)) else ex.consequent.name
         elif isinstance(ex,(Concept,Role)): return ex.name
         else: raise Exception("OOPS")
     
@@ -192,13 +192,13 @@ class NegativesGenERator:
         allRoleNames = 0
 
         for statement in self.CType1:
-            if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-            if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+            if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+            if statement.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.name)
             allConceptNames = allConceptNames + 2
         for statement in self.CType3:
-            if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-            if statement.consequent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].concept.name)
-            if statement.consequent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].role.name)
+            if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+            if statement.consequent.concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.concept.name)
+            if statement.consequent.role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent.role.name)
             allConceptNames = allConceptNames + 2
             allRoleNames = allRoleNames + 1
 

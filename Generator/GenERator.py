@@ -3,7 +3,7 @@ import random,time
 
 class GenERator:
 	
-	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNameSpace=15):
+	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=50,roleNameSpace=10,seed=False):
 		self.hasRun = False
 		self.numCType1 = numCType1
 		self.numCType2 = numCType2
@@ -20,7 +20,7 @@ class GenERator:
 		self.CType4 = []
 		self.roleSubs = []
 		self.roleChains = []
-		self.seed = time.time()
+		self.seed = time.time() if not seed else seed
 		random.seed(self.seed)
 	
 	def genERate(self):
@@ -47,10 +47,10 @@ class GenERator:
 		for i in range(len(self.CType4),self.numCType4):
 			self.makeCType4()
 			
-		self.CType1.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].name))
-		self.CType2.sort(key=lambda x: (x.antecedent[0].antecedent[0].name, x.antecedent[0].consequent[0].name, x.consequent[0].name))
-		self.CType3.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].role.name, x.consequent[0].concept.name))
-		self.CType4.sort(key=lambda x: (x.antecedent[0].role.name, x.antecedent[0].concept.name, x.consequent[0].name))
+		self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+		self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
+		self.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
+		self.CType4.sort(key=lambda x: (x.antecedent.role.name, x.antecedent.concept.name, x.consequent.name))
 	
 	def makeCTypeNull(self,i):
 		""" C ⊑ C """
@@ -120,8 +120,8 @@ class GenERator:
 		for i in range(len(self.roleChains),self.numRoleChains):
 			self.makeRTypeC()	
 			
-		self.roleSubs.sort(key=lambda x: (x.antecedent[0].name, x.consequent[0].name))
-		self.roleChains.sort(key=lambda x: (x.antecedent[0].roles[0].name, x.antecedent[0].roles[1].name, x.consequent[0].name))
+		self.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+		self.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))
 		
 	def makeRTypeT(self):
 		""" R ⊑ S """
@@ -179,34 +179,34 @@ class GenERator:
 		allRoleNames = 0
 		
 		for statement in self.CType1:
-			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-			if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+			if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+			if statement.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.name)
 			allConceptNames = allConceptNames + 2
 		for statement in self.CType2:
-			if statement.antecedent[0].antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].antecedent[0].name)
-			if statement.antecedent[0].consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].consequent[0].name)
-			if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
+			if statement.antecedent.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.antecedent.name)
+			if statement.antecedent.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.consequent.name)
+			if statement.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.name)
 			allConceptNames = allConceptNames + 3
 		for statement in self.CType3:
-			if statement.antecedent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].name)
-			if statement.consequent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].concept.name)
-			if statement.consequent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].role.name)
+			if statement.antecedent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.name)
+			if statement.consequent.concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.concept.name)
+			if statement.consequent.role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent.role.name)
 			allConceptNames = allConceptNames + 2
 			allRoleNames = allRoleNames + 1
 		for statement in self.CType4:
-			if statement.consequent[0].name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent[0].name)
-			if statement.antecedent[0].concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent[0].concept.name)
-			if statement.antecedent[0].role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent[0].role.name)
+			if statement.consequent.name not in uniqueConceptNames: uniqueConceptNames.append(statement.consequent.name)
+			if statement.antecedent.concept.name not in uniqueConceptNames: uniqueConceptNames.append(statement.antecedent.concept.name)
+			if statement.antecedent.role.name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent.role.name)
 			allConceptNames = allConceptNames + 2
 			allRoleNames = allRoleNames + 1
 		for statement in self.roleSubs:
-			if statement.antecedent[0].name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent[0].name)
-			if statement.consequent[0].name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].name)
+			if statement.antecedent.name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent.name)
+			if statement.consequent.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent.name)
 			allRoleNames = allRoleNames + 2
 		for statement in self.roleChains:
-			if statement.antecedent[0].roles[0].name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent[0].roles[0].name)
-			if statement.antecedent[0].roles[1].name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent[0].roles[1].name)
-			if statement.consequent[0].name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent[0].name)
+			if statement.antecedent.roles[0].name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent.roles[0].name)
+			if statement.antecedent.roles[1].name not in uniqueRoleNames: uniqueRoleNames.append(statement.antecedent.roles[1].name)
+			if statement.consequent.name not in uniqueRoleNames: uniqueRoleNames.append(statement.consequent.name)
 			allRoleNames = allRoleNames + 3
 			
 		return [["both",["unique",len(uniqueConceptNames)+len(uniqueRoleNames)],["all",allConceptNames+allRoleNames]],["concept",["unique",len(uniqueConceptNames)],["all",allConceptNames]],["role",["unique",len(uniqueRoleNames)],["all",allRoleNames]]]

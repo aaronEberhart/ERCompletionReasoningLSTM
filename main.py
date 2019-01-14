@@ -1,7 +1,3 @@
-"""
-⊑ ⊓ ⊔ ≡ ∘ ¬
-"""
-
 import os,sys,time
 me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
@@ -41,6 +37,6 @@ def runExperiment(i):
 	writeFile("output/{}details.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getLog()+reasonerSteps.toString())
 
 if __name__ == "__main__":
-	os.mkdir("output")
+	if not os.path.isdir("output"): os.mkdir("output")
 	for i in range(0,1):
 		runExperiment(i)
