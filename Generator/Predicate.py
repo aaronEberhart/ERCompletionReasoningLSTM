@@ -42,7 +42,7 @@ class Concept(Predicate):
 		return super().toString() if not isinstance(self.name,int) else "{}C{}{}".format("¬" if self.negated else "",self.name,"({})".format(self.terms.toString()) if self.showTerms else "")
 	
 	def toFunctionalSyntax(self):
-		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","C" if isinstane(self.name,int) else "",self.name," )" if self.negated else "")
+		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","C" if isinstance(self.name,int) else "",self.name," )" if self.negated else "")
 	
 class Role(Predicate):
 

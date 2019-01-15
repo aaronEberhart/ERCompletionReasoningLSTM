@@ -33,10 +33,12 @@ def runExperiment(i):
 	
 	negatives = NegativesGenERator(reasoner)
 	
+	writeFile("owl/{}funcSynt.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
 	writeFile("output/{}KB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}details.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getLog()+reasonerSteps.toString())
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
+	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		runExperiment(i)

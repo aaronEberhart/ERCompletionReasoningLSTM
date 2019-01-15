@@ -50,7 +50,7 @@ class ConceptStatement(Concept):
         return "{}{} {} {}{}".format("( " if not self.outer else "",self.antecedent.toString(),self.operator,self.consequent.toString()," )" if not self.outer else "")
     
     def toFunctionalSyntax(self):
-        return "SubClassOf( {} {} )".format(self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
+        return "{}( {} {} )".format("SubClassOf" if self.operator == "⊑" else "ObjectIntersectionOf", self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
         
 class RoleStatement(Role):
     
@@ -119,7 +119,7 @@ class RoleStatement(Role):
         if self.antecedent == None or self.consequent== None: raise Exception("Not complete yet") 
         
     def equals(self,other):
-        if self.operator != other.operator or self.antecedent.equals(other.antecedent) or self.consequent.equals(other.consequent): return False
+        if self.operator != other.operator or not self.antecedent.equals(other.antecedent) or not self.consequent.equals(other.consequent): return False
         return True
     
     def toString(self):

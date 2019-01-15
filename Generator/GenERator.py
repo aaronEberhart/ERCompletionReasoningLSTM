@@ -3,7 +3,7 @@ import random,time
 
 class GenERator:
 	
-	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=50,roleNameSpace=10,seed=False):
+	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNamespace=15,seed=False):
 		self.hasRun = False
 		self.numCType1 = numCType1
 		self.numCType2 = numCType2
@@ -12,7 +12,7 @@ class GenERator:
 		self.numRoleSub = numRoleSub
 		self.numRoleChains = numRoleChains
 		self.conceptNamespace = conceptNamespace
-		self.roleNamespace = roleNameSpace
+		self.roleNamespace = roleNamespace
 		self.CTypeNull = []
 		self.CType1 = []
 		self.CType2 = []
@@ -170,6 +170,22 @@ class GenERator:
 		for statement in self.roleChains:
 			ret = ret + "\n" + statement.toString()
 		return ret
+	
+	def toFunctionalSyntax(self):
+		ret = ""
+		for statement in self.CType1:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType2:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType3:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType4:
+			ret = ret + "\n" + statement.toFunctionalSyntax()	
+		for statement in self.roleSubs:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.roleChains:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		return ret		
 
 	def getStatistics(self):
 		
