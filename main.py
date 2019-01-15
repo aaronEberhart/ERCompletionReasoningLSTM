@@ -25,7 +25,7 @@ def formatStatistics(start,gen,reas,neg):
 def runExperiment(i):
 	start = time.time()
 	
-	generator = GenERator()	
+	generator = GenERator(conceptNamespace=100,roleNamespace=20)	
 	
 	reasoner = ReasonER(generator,showSteps=True)
 

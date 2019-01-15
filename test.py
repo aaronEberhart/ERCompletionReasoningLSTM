@@ -1,3 +1,8 @@
+import os,sys,time
+me = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0,me+"/Generator")
+sys.path.insert(0,me+"/Reasoner")
+
 from GenERator import *
 
 def runStatementTests():
