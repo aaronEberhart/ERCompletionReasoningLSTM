@@ -55,16 +55,16 @@ class NegativesGenERator:
       
     def genERateConceptStatements(self):
         for i in range(len(self.notCType1),self.numCType1):
-            self.makeCType1()
+            while not self.makeCType1(): pass
     
         for i in range(len(self.notCType2),self.numCType2):
-            self.makeCType2()
+            while not self.makeCType2(): pass
             
         for i in range(len(self.notCType3),self.numCType3):
-            self.makeCType3()
+            while not self.makeCType3(): pass
             
         for i in range(len(self.notCType4),self.numCType4):
-            self.makeCType4()
+            while not self.makeCType4(): pass
     
     def pickFromKB(self,exType):
         ex = exType[random.randint(0,len(exType)-1)].antecedent if bool(random.getrandbits(1)) else exType[random.randint(0,len(exType)-1)].consequent
@@ -83,9 +83,10 @@ class NegativesGenERator:
         cs = ConceptStatement(len(self.CType1),True,Concept(left,[0]),Concept(right,[0]))
         cs.complete('⊑')
         if self.alreadyGenERated(self.CType1+self.notCType1,cs):
-            self.makeCType1()
+            return False
         else:
             self.notCType1.append(cs)
+            return True
 
     def makeCType2(self):
         """ C ⊓ D ⊑ E """
@@ -101,9 +102,10 @@ class NegativesGenERator:
         cs = ConceptStatement(len(self.CType2),True,cs1,Concept(right,[0]))
         cs.complete('⊑')
         if self.alreadyGenERated(self.CType2+self.notCType2,cs):
-            self.makeCType2()
+            return False
         else:
             self.notCType2.append(cs)
+            return True
 
     def makeCType3(self):
         """ C ⊑ ∃R.D """
@@ -113,9 +115,10 @@ class NegativesGenERator:
         cs = ConceptStatement(len(self.CType3),True,Concept(left,[0]),ConceptRole('e',Role(rightR,[0,1]),Concept(rightC,[1])))
         cs.complete('⊑')
         if self.alreadyGenERated(self.CType3+self.notCType3,cs):
-            self.makeCType3()
+            return False
         else:
             self.notCType3.append(cs)
+            return True
 
     def makeCType4(self):
         """ ∃R.C ⊑ D """
@@ -125,16 +128,17 @@ class NegativesGenERator:
         cs = ConceptStatement(len(self.CType4),True,ConceptRole('e',Role(leftR,[0,1]),Concept(leftC,[1])),Concept(right,[0]))
         cs.complete('⊑')
         if self.alreadyGenERated(self.notCType4+self.CType4,cs):
-            self.makeCType4()
+            return False
         else:
             self.notCType4.append(cs)
+            return True
     
     def genERateRoleStatements(self):
         for i in range(len(self.notRoleSubs),self.numRoleSub):
-            self.makeRS()
+            while not self.makeRS(): pass
     
         for i in range(len(self.notRoleChains),self.numRoleChains):
-            self.makeRC() 
+            while not self.makeRC(): pass 
      
     def makeRS(self):
         """ R ⊑ S """
@@ -145,9 +149,10 @@ class NegativesGenERator:
         rs = RoleStatement(len(self.roleSubs),True,Role(left,[0,1]),Role(right,[0,1]))
         rs.complete('⊑')
         if self.alreadyGenERated(self.roleSubs+self.notRoleSubs,rs):
-            self.makeRS()
+            return False
         else:
-            self.notRoleSubs.append(rs)	        
+            self.notRoleSubs.append(rs)	  
+            return True
     
     def makeRC(self):
         """ R1 ∘ R2 ⊑ S """
@@ -159,9 +164,10 @@ class NegativesGenERator:
         rs = RoleStatement(len(self.roleChains),True,RoleChain(0,Role(leftR1,[0,1]),Role(leftR2,[1,2])),Role(right,[0,2]))
         rs.complete('⊑')
         if self.alreadyGenERated(self.roleChains+self.notRoleChains,rs):
-            self.makeRC()
+            return False
         else:
             self.notRoleChains.append(rs)
+            return True
     
     def alreadyGenERated(self,listy,y):
         return any(x.equals(y) for x in listy)    

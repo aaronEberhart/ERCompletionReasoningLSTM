@@ -38,16 +38,16 @@ class GenERator:
 			self.makeCTypeNull(i)
 			
 		for i in range(len(self.CType1),self.numCType1):
-			self.makeCType1()
+			while not self.makeCType1(): pass
 				
 		for i in range(len(self.CType2),self.numCType2):
-			self.makeCType2()
+			while not self.makeCType2(): pass
 		
 		for i in range(len(self.CType3),self.numCType3):
-			self.makeCType3()
+			while not self.makeCType3(): pass
 			
 		for i in range(len(self.CType4),self.numCType4):
-			self.makeCType4()
+			while not self.makeCType4(): pass
 			
 		self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
 		self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
@@ -69,9 +69,10 @@ class GenERator:
 		cs = ConceptStatement(len(self.CType1),True,Concept(left,[0]),Concept(right,[0]))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType1,cs):
-			self.makeCType1()
+			return False
 		else:
 			self.CType1.append(cs)
+			return True
 			
 	def makeCType2(self):
 		""" C ⊓ D ⊑ E """
@@ -87,9 +88,10 @@ class GenERator:
 		cs = ConceptStatement(len(self.CType2),True,cs1,Concept(right,[0]))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType2,cs):
-			self.makeCType2()
+			return False
 		else:
 			self.CType2.append(cs)
+			return True
 	
 	def makeCType3(self):
 		""" C ⊑ ∃R.D """
@@ -99,9 +101,10 @@ class GenERator:
 		cs = ConceptStatement(len(self.CType3),True,Concept(left,[0]),ConceptRole('e',Role(rightR,[0,1]),Concept(rightC,[1])))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType3,cs):
-			self.makeCType3()
+			return False
 		else:
 			self.CType3.append(cs)
+			return True
 		
 	def makeCType4(self):
 		""" ∃R.C ⊑ D """
@@ -111,16 +114,17 @@ class GenERator:
 		cs = ConceptStatement(len(self.CType4),True,ConceptRole('e',Role(leftR,[0,1]),Concept(leftC,[1])),Concept(right,[0]))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType4,cs):
-			self.makeCType4()
+			return False
 		else:
 			self.CType4.append(cs)
+			return True
 		
 	def genERateRoleStatements(self):			
 		for i in range(len(self.roleSubs),self.numRoleSub):
-			self.makeRTypeT()
+			while not self.makeRTypeT(): pass
 		
 		for i in range(len(self.roleChains),self.numRoleChains):
-			self.makeRTypeC()	
+			while not self.makeRTypeC(): pass	
 			
 		self.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
 		self.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))
@@ -134,9 +138,10 @@ class GenERator:
 		rs = RoleStatement(len(self.roleSubs),True,Role(left,[0,1]),Role(right,[0,1]))
 		rs.complete('⊑')
 		if self.alreadyGenERated(self.roleSubs,rs):
-			self.makeRTypeT()
+			return False
 		else:
-			self.roleSubs.append(rs)			
+			self.roleSubs.append(rs)
+			return True
 
 	def makeRTypeC(self):
 		""" R1 ∘ R2 ⊑ S """
@@ -148,9 +153,10 @@ class GenERator:
 		rs = RoleStatement(len(self.roleChains),True,RoleChain(0,Role(leftR1,[0,1]),Role(leftR2,[1,2])),Role(right,[0,2]))
 		rs.complete('⊑')
 		if self.alreadyGenERated(self.roleChains,rs):
-			self.makeRTypeC()
+			return False
 		else:
-			self.roleChains.append(rs)			
+			self.roleChains.append(rs)
+			return True
 
 	def alreadyGenERated(self,listy,y):
 		return any(x.equals(y) for x in listy)
