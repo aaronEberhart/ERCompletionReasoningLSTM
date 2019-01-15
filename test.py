@@ -99,3 +99,6 @@ def runPredTests():
 		print(ex)
 		
 	print()
+
+runStatementTests()
+runPredTests()

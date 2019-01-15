@@ -43,14 +43,13 @@ class ConceptStatement(Concept):
         if self.antecedent == None or self.consequent == None or (isinstance(self.antecedent,ConceptStatement) and not self.antecedent.isComplete()) or (isinstance(self.consequent,ConceptStatement) and not self.consequent.isComplete()): raise Exception("Not complete yet") 
     
     def equals(self,other):
-        if self.operator != other.operator or not self.antecedent.equals(other.antecedent) or not self.consequent.equals(other.consequent): return False
-        return True
+        return self.operator == other.operator and self.antecedent.equals(other.antecedent) and self.consequent.equals(other.consequent)
     
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else "",self.antecedent.toString(),self.operator,self.consequent.toString()," )" if not self.outer else "")
     
     def toFunctionalSyntax(self):
-        return "{}( {} {} )".format("SubClassOf" if self.operator == "⊑" else "ObjectIntersectionOf", self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
+        return "{}( {} {} )".format("SubClassOf" if self.operator == "⊑" else ("ObjectIntersectionOf" if self.operator == "⊓" else "ObjectUnionOf"), self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
         
 class RoleStatement(Role):
     
@@ -119,8 +118,7 @@ class RoleStatement(Role):
         if self.antecedent == None or self.consequent== None: raise Exception("Not complete yet") 
         
     def equals(self,other):
-        if self.operator != other.operator or not self.antecedent.equals(other.antecedent) or not self.consequent.equals(other.consequent): return False
-        return True
+        return self.operator == other.operator and self.antecedent.equals(other.antecedent) and self.consequent.equals(other.consequent)
     
     def toString(self):
         return "{}{} {} {}{}".format("( " if not self.outer else "",self.antecedent.toString(),self.operator,self.consequent.toString()," )" if not self.outer else "")
