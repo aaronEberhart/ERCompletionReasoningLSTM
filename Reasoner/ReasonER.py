@@ -3,17 +3,17 @@ from Statement import *
 """
 Completion rules:
 
-(1) C ⊑ D,A ⊑ C                         |= A ⊑ D
+(1) C ⊑ D,A ⊑ C                         ⊨ A ⊑ D
 
-(2) C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2         |= A ⊑ D
+(2) C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2         ⊨ A ⊑ D
 
-(3) C ⊑ ∃R.D, A ⊑ C                     |= A ⊑ ∃R.D
+(3) C ⊑ ∃R.D, A ⊑ C                     ⊨ A ⊑ ∃R.D
 
-(4) ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C           |= A ⊑ D
+(4) ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C           ⊨ A ⊑ D
 
-(5) R ⊑ S, A ⊑ ∃R.B                     |= A ⊑ ∃S.B
+(5) R ⊑ S, A ⊑ ∃R.B                     ⊨ A ⊑ ∃S.B
 
-(6) R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C   |= A ⊑ ∃R.C
+(6) R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C   ⊨ A ⊑ ∃R.C
 
 """
 
@@ -32,6 +32,7 @@ class ReasonER:
 		self.knownCType3 = []
 		self.numKnownCType3 = 0
 		self.log = "" if not showSteps else "Reasoner Steps"
+		self.rulesCount = [0,0,0,0,0,0]
 	
 	def ERason(self):
 		if self.hasRun: return
@@ -61,15 +62,17 @@ class ReasonER:
 		c1Known = self.knownCType1 + self.syntheticData.CType1
 		c3Known = self.knownCType3 + self.syntheticData.CType3
 		for rule in self.newCType1:
-			if not self.alreadyKnown(c1Known,rule):
-				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule.toString(),i)
-				self.knownCType1.append(rule)
-				c1Known.append(rule)
+			if not self.alreadyKnown(c1Known,rule[0]):
+				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule[0].toString(),i)
+				self.knownCType1.append(rule[0])
+				c1Known.append(rule[0])
+				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
 		for rule in self.newCType3:
-			if not self.alreadyKnown(c3Known,rule):
-				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule.toString(),i)
-				self.knownCType3.append(rule)
-				c3Known.append(rule)
+			if not self.alreadyKnown(c3Known,rule[0]):
+				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule[0].toString(),i)
+				self.knownCType3.append(rule[0])
+				c3Known.append(rule[0])
+				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
 		self.newCType1 = []
 		self.newCType3 = []
 	
@@ -80,7 +83,7 @@ class ReasonER:
 		return True
 	
 	def solveRule1(self):
-		""" C ⊑ D,A ⊑ C |= A ⊑ D """
+		""" C ⊑ D,A ⊑ C ⊨ A ⊑ D """
 		candidates = self.syntheticData.CType1 + self.knownCType1
 		
 		for candidate1 in candidates:
@@ -90,10 +93,12 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')
-				self.newCType1.append(cs)
+				self.newCType1.append([cs,0])
+				
+				
 	
 	def solveRule2(self):
-		""" C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
+		""" C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 ⊨ A ⊑ D """
 		candidates = self.syntheticData.CTypeNull + self.syntheticData.CType1 + self.knownCType1
 		
 		for conjunction in self.syntheticData.CType2:
@@ -104,10 +109,10 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,candidate1.antecedent,conjunction.consequent)
 					cs.complete('⊑')					
-					self.newCType1.append(cs)
+					self.newCType1.append([cs,1])
 	
 	def solveRule3(self):
-		""" C ⊑ ∃R.D, A ⊑ C |= A ⊑ ∃R.D """
+		""" C ⊑ ∃R.D, A ⊑ C ⊨ A ⊑ ∃R.D """
 		type1Candidates = self.syntheticData.CType1 + self.knownCType1
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
@@ -116,10 +121,10 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')				
-				self.newCType3.append(cs)
+				self.newCType3.append([cs,2])
 	
 	def solveRule4(self):
-		""" ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C |= A ⊑ D """
+		""" ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C ⊨ A ⊑ D """
 		type1Candidates = self.syntheticData.CTypeNull + self.syntheticData.CType1 + self.knownCType1
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3		
 		
@@ -131,10 +136,10 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,Concept(candidate3.antecedent.name,[0]),Concept(candidate1.consequent.name,[0]))
 					cs.complete('⊑')					
-					self.newCType1.append(cs)
+					self.newCType1.append([cs,3])
 	
 	def solveRule5(self):
-		""" R ⊑ S, A ⊑ ∃R.B |= A ⊑ ∃S.B """
+		""" R ⊑ S, A ⊑ ∃R.B ⊨ A ⊑ ∃S.B """
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
 		for roleStatement in self.syntheticData.roleSubs:
@@ -142,10 +147,10 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent,ConceptRole('e',roleStatement.consequent,matchingConceptStatement.consequent.concept))
 				cs.complete('⊑')				
-				self.newCType3.append(cs)
+				self.newCType3.append([cs,4])
 	
 	def solveRule6(self):
-		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C |= A ⊑ ∃R.C """
+		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C ⊨ A ⊑ ∃R.C """
 		type3Candidates = self.syntheticData.CType3 + self.knownCType3
 		
 		for roleChain in self.syntheticData.roleChains:
@@ -154,7 +159,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent,ConceptRole('e',Role(roleChain.consequent.name,[0,1]),matchingConceptStatement2.consequent.concept))
 					cs.complete('⊑')					
-					self.newCType3.append(cs)
+					self.newCType3.append([cs,5])
 					
 	def alreadyKnown(self,statements,s):
 		return any(x.equals(s) for x in statements)
@@ -182,6 +187,9 @@ class ReasonER:
 		for statement in self.knownCType3:
 			s = s + "\n" + statement.toFunctionalSyntax()
 		return s + "\n\n)"		
+	
+	def getRuleCountString(self):
+		return "\nRule Usage Counts:\n(1) : {:<9} C ⊑ D,A ⊑ C ⊨ A ⊑ D\n(2) : {:<9} C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 ⊨ A ⊑ D\n(3) : {:<9} C ⊑ ∃R.D, A ⊑ C ⊨ A ⊑ ∃R.D\n(4) : {:<9} ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C ⊨ A ⊑ D\n(5) : {:<9} R ⊑ S, A ⊑ ∃R.B ⊨ A ⊑ ∃S.B\n(6) : {:<9} R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C ⊨ A ⊑ ∃R.C\n".format(self.rulesCount[0],self.rulesCount[1],self.rulesCount[2],self.rulesCount[3],self.rulesCount[4],self.rulesCount[5])
 	
 	def getStatistics(self):
 		

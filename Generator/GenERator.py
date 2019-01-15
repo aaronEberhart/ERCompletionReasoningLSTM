@@ -5,7 +5,7 @@ import random,time
 
 class GenERator:
 	
-	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=50,roleNamespace=10,seed=False):
+	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20,seed=False):
 		self.hasRun = False
 		self.numCType1 = numCType1
 		self.numCType2 = numCType2
