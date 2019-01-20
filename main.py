@@ -26,7 +26,7 @@ def formatStatistics(start,gen,reas,neg):
 def runExperiment(i):
 	start = time.time()
 	
-	generator = HardGenERator(difficulty=3)	
+	generator = HardGenERator(difficulty=2)	
 	
 	reasoner = ReasonER(generator,showSteps=True)
 

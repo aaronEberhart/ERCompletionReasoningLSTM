@@ -41,6 +41,7 @@ class HardGenERator:
 			self.makeCTypeNull(i)
 		
 		for i in range(0,self.difficulty):
+			self.unwantedDeductions(i*3)
 			self.genERateSequence(i)
 			
 		self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
@@ -50,10 +51,28 @@ class HardGenERator:
 
 		self.hasRun = True
 	
-	def setup(self):		
+	def unwantedDeductions(self,i):
+		cs = ConceptStatement(len(self.CType4),True,Concept(i+2,[0]),ConceptRole('e',Role(i+2,[0,1]),Concept(i+3,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
+		
+		cs = ConceptStatement(len(self.CType4),True,Concept(1,[0]),ConceptRole('e',Role(i+2,[0,1]),Concept(i+3,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
+		
+		cs = ConceptStatement(len(self.CType4),True,Concept(1,[0]),ConceptRole('e',Role(i+6,[0,1]),Concept(i+7,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
+	
+	def setup(self):	
+		"""seeds"""
 		cs1 = ConceptStatement(len(self.CType1),True,Concept(1,[0]),Concept(2,[0]))
 		cs1.complete('⊑')
 		self.CType1.append(cs1)
+		
+		cs = ConceptStatement(len(self.CType3),True,Concept(1,[0]),ConceptRole('e',Role(1,[0,1]),Concept(1,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
 		
 	def makeCTypeNull(self,i):
 		""" C ⊑ C """
@@ -63,19 +82,13 @@ class HardGenERator:
 			
 	def genERateSequence(self,i):
 		j = (i * 3)
-		k = i
 		self.genERateFirstPart(j)
-		self.genERateSecondPart(j,k)
-		self.genERateThirdPart(j,k)
+		self.genERateSecondPart(j)
 		
 	def genERateFirstPart(self,j):
 		cs = ConceptStatement(len(self.CType4),True,ConceptRole('e',Role(1,[0,1]),Concept(j+2,[1])),Concept(j+4,[0]))
 		cs.complete('⊑')
 		self.CType4.append(cs)
-		
-		cs = ConceptStatement(len(self.CType3),True,Concept(1,[0]),ConceptRole('e',Role(1,[0,1]),Concept(1,[1])))
-		cs.complete('⊑')
-		self.CType3.append(cs)
 		
 		cs1 = ConceptStatement(len(self.CType1),True,Concept(j+2,[0]),Concept(j+3,[0]))
 		cs1.complete('⊑')
@@ -87,11 +100,22 @@ class HardGenERator:
 		cs.complete('⊑')
 		self.CType2.append(cs)
 	
-	def genERateSecondPart(self,j,k):
-		pass
-	
-	def genERateThirdPart(self,j,k):
-		pass
+	def genERateSecondPart(self,j):
+		cs = ConceptStatement(len(self.CType4),True,Concept(j+2,[0]),ConceptRole('e',Role(j+1,[0,1]),Concept(j+3,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
+		
+		cs = ConceptStatement(len(self.CType4),True,Concept(j+1,[0]),ConceptRole('e',Role(j+3,[0,1]),Concept(j+4,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
+		
+		rs = RoleStatement(len(self.roleChains),True,RoleChain(0,Role(j+1,[0,1]),Role(j+3,[1,2])),Role(j+4,[0,2]))
+		rs.complete('⊑')
+		self.roleChains.append(rs)
+		
+		rs = RoleStatement(len(self.roleSubs),True,Role(j+1,[0,1]),Role(j+2,[0,1]))
+		rs.complete('⊑')
+		self.roleSubs.append(rs)
 	
 	def toString(self):
 		ret = "Original KB"
