@@ -26,7 +26,7 @@ def formatStatistics(start,gen,reas,neg):
 def runExperiment(i):
 	start = time.time()
 	
-	generator = HardGenERator(difficulty=2)	
+	generator = HardGenERator(difficulty=i)	
 	
 	reasoner = ReasonER(generator,showSteps=True)
 
@@ -41,6 +41,6 @@ def runExperiment(i):
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1):
+	for i in range(0,20):
 		print(i)
 		runExperiment(i)

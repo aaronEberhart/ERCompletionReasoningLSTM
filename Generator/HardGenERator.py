@@ -65,11 +65,12 @@ class HardGenERator:
 		self.CType3.append(cs)
 	
 	def setup(self):	
-		"""seeds"""
+		"""seed"""
 		cs1 = ConceptStatement(len(self.CType1),True,Concept(1,[0]),Concept(2,[0]))
 		cs1.complete('⊑')
 		self.CType1.append(cs1)
 		
+		"""only need 1 for whole KB"""
 		cs = ConceptStatement(len(self.CType3),True,Concept(1,[0]),ConceptRole('e',Role(1,[0,1]),Concept(1,[1])))
 		cs.complete('⊑')
 		self.CType3.append(cs)
