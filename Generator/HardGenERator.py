@@ -21,8 +21,8 @@ class HardGenERator:
 	
 	def __init__(self,difficulty=50):
 		self.seed = "N/A"
-		self.conceptNamespace = 0
-		self.roleNamespace = 0	
+		self.conceptNamespace = 50
+		self.roleNamespace = 50	
 		self.CTypeNull = []
 		self.CType1 = []
 		self.CType2 = []
@@ -34,6 +34,12 @@ class HardGenERator:
 		self.hasRun = False
 		
 	def genERate(self):
+		
+		self.setup()
+		
+		for i in range(0,self.conceptNamespace):
+			self.makeCTypeNull(i)
+		
 		for i in range(0,self.difficulty):
 			self.genERateSequence(i)
 			
@@ -43,6 +49,11 @@ class HardGenERator:
 		self.CType4.sort(key=lambda x: (x.antecedent.role.name, x.antecedent.concept.name, x.consequent.name))
 
 		self.hasRun = True
+	
+	def setup(self):		
+		cs1 = ConceptStatement(len(self.CType1),True,Concept(1,[0]),Concept(2,[0]))
+		cs1.complete('⊑')
+		self.CType1.append(cs1)
 		
 	def makeCTypeNull(self,i):
 		""" C ⊑ C """
@@ -51,73 +62,36 @@ class HardGenERator:
 		self.CTypeNull.append(cs)
 			
 	def genERateSequence(self,i):
-		j = 20 * i
-		k = 20 * i
-		self.genERateFirstPart(j,k)
-		j = j + 1
-		k = k + 2
+		j = (i * 3)
+		k = i
+		self.genERateFirstPart(j)
 		self.genERateSecondPart(j,k)
-		k = k + 1
-		j = j + 6
 		self.genERateThirdPart(j,k)
 		
-	def genERateFirstPart(self,j,k):
-		"""(1) 0 ⊑ 1,1 ⊑ 2                         ⊨ 0 ⊑ 2
-		   (6) 0 ∘ 1 ⊑ 2, 3 ⊑ 0.4, 4 ⊑ 1.5         ⊨ 3 ⊑ 2.5
-		"""
+	def genERateFirstPart(self,j):
+		cs = ConceptStatement(len(self.CType4),True,ConceptRole('e',Role(1,[0,1]),Concept(j+2,[1])),Concept(j+4,[0]))
+		cs.complete('⊑')
+		self.CType4.append(cs)
 		
-		if j == 0:
-			cs3 = ConceptStatement(len(self.CType1),True,Concept(j,[0]),Concept(j+1,[0]))
-			cs3.complete('⊑')
-			self.CType1.append(cs3)
-			j = j + 1
-			
-		cs2 = ConceptStatement(len(self.CType1),True,Concept(j,[0]),Concept(j+1,[0]))
-		cs2.complete('⊑')
-		self.CType1.append(cs2)
-		j = j + 2
+		cs = ConceptStatement(len(self.CType3),True,Concept(1,[0]),ConceptRole('e',Role(1,[0,1]),Concept(1,[1])))
+		cs.complete('⊑')
+		self.CType3.append(cs)
 		
-		rs1 = RoleStatement(len(self.roleChains),True,RoleChain(0,Role(k,[0,1]),Role(k+1,[1,2])),Role(k+2,[0,2]))
-		rs1.complete('⊑')
-		self.roleChains.append(rs1)
-		k = k + 3
-					
-		cs1 = ConceptStatement(len(self.CType3),True,Concept(j,[0]),ConceptRole('e',Role(k-3,[0,1]),Concept(j+1,[1])))
+		cs1 = ConceptStatement(len(self.CType1),True,Concept(j+2,[0]),Concept(j+3,[0]))
 		cs1.complete('⊑')
-		self.CType3.append(cs1)
-		j = j + 1
+		self.CType1.append(cs1)
 		
-		if j == 4:
-			cs4 = ConceptStatement(len(self.CType3),True,Concept(j,[0]),ConceptRole('e',Role(k-2,[0,1]),Concept(j+1,[1])))
-			cs4.complete('⊑')
-			self.CType3.append(cs4)	
-		
-				
+		cs1 = ConceptStatement(0,True,Concept(j+3,[0]),Concept(j+4,[0]))
+		cs1.complete('⊓')
+		cs = ConceptStatement(len(self.CType2),True,cs1,Concept(j+5,[0]))
+		cs.complete('⊑')
+		self.CType2.append(cs)
 	
 	def genERateSecondPart(self,j,k):
-		"""
-		   (2) 1 ⊓ 2 ⊑ 6, 0 ⊑ 1, 0 ⊑ 2         ⊨ 0 ⊑ 6
-		   (5) 2 ⊑ 3, 3 ⊑ 2.5                  ⊨ 3 ⊑ 3.5
-		"""
-		rs = RoleStatement(len(self.roleSubs),True,Role(k,[0,1]),Role(k+1,[0,1]))
-		rs.complete('⊑')
-		self.roleSubs.append(rs)
-		
-		cs1 = ConceptStatement(0,True,Concept(j,[0]),Concept(j+1,[0]))
-		cs1.complete('⊓')
-		cs2 = ConceptStatement(len(self.CType2),True,cs1,Concept(j+5,[0]))
-		cs2.complete('⊑')
-		self.CType2.append(cs2)
+		pass
 	
 	def genERateThirdPart(self,j,k):
-		"""
-		   (3) C ⊑ ∃R.D, A ⊑ C                     ⊨ A ⊑ ∃R.D
-		   (4) ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C           ⊨ A ⊑ D
-		"""
-		
-		cs1 = ConceptStatement(len(self.CType3),True,ConceptRole('e',Role(k,[0,1]),Concept(j-6,[1])),Concept(j,[0]))
-		cs1.complete('⊑')
-		self.CType4.append(cs1)	
+		pass
 	
 	def toString(self):
 		ret = "Original KB"
