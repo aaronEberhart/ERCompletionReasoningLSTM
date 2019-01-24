@@ -31,7 +31,9 @@ class ReasonER:
 		self.newCType3 = []
 		self.knownCType3 = []
 		self.numKnownCType3 = 0
-		self.log = "" if not showSteps else "Reasoner Steps"
+		self.log = []
+		self.KBLog = [] 
+		self.sequenceLog = []
 		self.rulesCount = [0,0,0,0,0,0]
 	
 	def ERason(self):
@@ -61,18 +63,28 @@ class ReasonER:
 	def pruneNewRules(self,i):
 		c1Known = self.knownCType1 + self.syntheticData.CType1
 		c3Known = self.knownCType3 + self.syntheticData.CType3
+		logis = []
+		logik = []
 		for rule in self.newCType1:
 			if not self.alreadyKnown(c1Known,rule[0]):
-				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule[0].toString(),i)
+				if self.showSteps: 
+					self.log.append(rule[0].toString())
+					if self.inSequence(rule[0]):logis.append(rule[0].toString())
+					else:logik.append(rule[0].toString())
 				self.knownCType1.append(rule[0])
 				c1Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
 		for rule in self.newCType3:
 			if not self.alreadyKnown(c3Known,rule[0]):
-				if self.showSteps: self.log = self.log + "\nLearned {} in loop {}".format(rule[0].toString(),i)
+				if self.showSteps:
+					self.log.append(rule[0].toString())
+					if self.inSequence(rule[0]):logis.append(rule[0].toString())
+					else:logik.append(rule[0].toString())
 				self.knownCType3.append(rule[0])
 				c3Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
+		if len(logis) != 0: self.sequenceLog.append(logis)
+		self.KBLog.append(logik)
 		self.newCType1 = []
 		self.newCType3 = []
 	
@@ -165,7 +177,28 @@ class ReasonER:
 		return any(x.equals(s) for x in statements)
 	
 	def getLog(self):
-		return self.log
+		return "Reasoner Steps\n"+"\n".join(self.log)
+	
+	def getKBLog(self):
+		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.KBLog])
+	
+	def getKBLogI(self,i):
+		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBLog[i]])
+	
+	def getSequenceLog(self):
+		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.sequenceLog])
+	
+	def getSequenceLogI(self,i):
+		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.sequenceLog[i]])	
+	
+	def inSequence(self,statement):
+		if isinstance(statement, ConceptStatement):
+			if isinstance(statement.consequent, ConceptRole) and isinstance(statement.antecedent, Concept):
+				if statement.consequent.role.name < self.syntheticData.hRoleNamespace and statement.consequent.concept.name < self.syntheticData.hConceptNamespace and statement.antecedent.name <= self.syntheticData.hConceptNamespace: return True
+				return False			
+			elif isinstance(statement.antecedent, Concept) and isinstance(statement.consequent, Concept):
+				if statement.antecedent.name < self.syntheticData.hConceptNamespace and statement.consequent.name <= self.syntheticData.hConceptNamespace: return True
+				return False
 	
 	def toString(self):
 		ret = "\nExtended KB"

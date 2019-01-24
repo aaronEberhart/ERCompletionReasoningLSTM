@@ -26,7 +26,8 @@ def formatStatistics(start,gen,reas,neg):
 def runExperiment(i):
 	start = time.time()
 	
-	generator = HardGenERator(difficulty=i)	
+	generator = HardGenERator(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNamespace=15),difficulty=20)  #GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNamespace=15)
+	                          	
 	
 	reasoner = ReasonER(generator,showSteps=True)
 
@@ -34,13 +35,23 @@ def runExperiment(i):
 	
 	negatives = NegativesGenERator(reasoner)
 	
+	if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
+	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
+	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
+	if not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
 	writeFile("owl/{}funcSynt.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
-	writeFile("output/{}KB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("output/{}details.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())
+	for j in range(0,len(reasoner.sequenceLog)):
+		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),reasoner.getSequenceLogI(j))
+	for j in range(0,len(reasoner.sequenceLog)):
+		writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBLogI(j))
+	for j in range(len(reasoner.sequenceLog),len(reasoner.KBLog)):
+		writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBLogI(j))
+	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
+	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,20):
+	for i in range(0,10):
 		print(i)
 		runExperiment(i)

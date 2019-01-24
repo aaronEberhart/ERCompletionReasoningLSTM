@@ -1,4 +1,5 @@
 from Statement import *
+from GenERator import *
 
 """
 Completion rules:
@@ -19,10 +20,15 @@ Completion rules:
 
 class HardGenERator:
 	
-	def __init__(self,difficulty=50):
+	def __init__(self,rGenerator=GenERator(),difficulty=50):
 		self.seed = "N/A"
-		self.conceptNamespace = 50
-		self.roleNamespace = 50	
+		self.conceptNamespace = (difficulty * 3) + 2
+		self.roleNamespace = self.conceptNamespace + 1
+		self.hConceptNamespace = (difficulty * 3) + 2
+		self.hRoleNamespace = self.conceptNamespace + 1		
+		self.rGenerator = rGenerator
+		if rGenerator != None and not self.rGenerator.hasRun: self.rGenerator.genERate()		
+		if rGenerator != None: self.shiftRGenerator()
 		self.CTypeNull = []
 		self.CType1 = []
 		self.CType2 = []
@@ -32,6 +38,44 @@ class HardGenERator:
 		self.roleChains = []
 		self.difficulty = difficulty
 		self.hasRun = False
+		
+	def shiftRGenerator(self):
+		for x in self.rGenerator.CTypeNull:
+			x.antecedent.name = x.antecedent.name + self.conceptNamespace
+			x.consequent.name = x.consequent.name + self.conceptNamespace
+		for x in self.rGenerator.CType1:
+			x.antecedent.name = x.antecedent.name + self.conceptNamespace
+			x.consequent.name = x.consequent.name + self.conceptNamespace
+		for x in self.rGenerator.CType2:
+			x.antecedent.antecedent.name = x.antecedent.antecedent.name + self.conceptNamespace
+			x.antecedent.consequent.name = x.antecedent.consequent.name + self.conceptNamespace
+			x.consequent.name = x.consequent.name + self.conceptNamespace
+		for x in self.rGenerator.CType3:
+			x.antecedent.name = x.antecedent.name + self.conceptNamespace
+			x.consequent.role.name = x.consequent.role.name + self.roleNamespace
+			x.consequent.concept.name = x.consequent.concept.name + self.conceptNamespace
+		for x in self.rGenerator.CType4:
+			x.antecedent.role.name = x.antecedent.role.name + self.roleNamespace
+			x.antecedent.concept.name = x.antecedent.concept.name + self.conceptNamespace
+			x.consequent.name = x.consequent.name + self.conceptNamespace
+		for x in self.rGenerator.roleSubs:
+			x.antecedent.name = x.antecedent.name + self.roleNamespace
+			x.consequent.name = x.consequent.name + self.roleNamespace
+		for x in self.rGenerator.roleChains:
+			x.antecedent.roles[0].name = x.antecedent.roles[0].name + self.roleNamespace
+			x.antecedent.roles[1].name = x.antecedent.roles[1].name + self.roleNamespace
+			x.consequent.name = x.consequent.name + self.roleNamespace	
+			
+	def spliceGenERators(self):
+		self.conceptNamespace = self.conceptNamespace + self.rGenerator.conceptNamespace
+		self.roleNamespace = self.roleNamespace + self.rGenerator.roleNamespace
+		self.CTypeNull = self.CTypeNull + self.rGenerator.CTypeNull
+		self.CType1 = self.CType1 + self.rGenerator.CType1
+		self.CType2 = self.CType2 + self.rGenerator.CType2
+		self.CType3 = self.CType3 + self.rGenerator.CType3
+		self.CType4 = self.CType4 + self.rGenerator.CType4
+		self.roleSubs = self.roleSubs + self.rGenerator.roleSubs
+		self.roleChains = self.roleChains + self.rGenerator.roleChains	
 		
 	def genERate(self):
 		
@@ -43,6 +87,8 @@ class HardGenERator:
 		for i in range(0,self.difficulty):
 			self.unwantedDeductions(i*3)
 			self.genERateSequence(i)
+		
+		if self.rGenerator != None: self.spliceGenERators()
 			
 		self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
 		self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
@@ -121,7 +167,7 @@ class HardGenERator:
 	def toString(self):
 		ret = "Original KB"
 		#for statement in self.CTypeNull:
-			#ret = ret + statement.toString() + "\n"
+			#ret = ret + "\n" +statement.toString()
 		for statement in self.CType1:
 			ret = ret + "\n" + statement.toString()
 		for statement in self.CType2:
@@ -137,7 +183,20 @@ class HardGenERator:
 		return ret	
 	
 	def toFunctionalSyntax(self):
-		return ""
+		ret = ""
+		for statement in self.CType1:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType2:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType3:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.CType4:
+			ret = ret + "\n" + statement.toFunctionalSyntax()	
+		for statement in self.roleSubs:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		for statement in self.roleChains:
+			ret = ret + "\n" + statement.toFunctionalSyntax()
+		return ret
 	
 	def getStatistics(self):
 
