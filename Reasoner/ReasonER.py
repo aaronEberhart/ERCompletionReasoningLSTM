@@ -32,7 +32,8 @@ class ReasonER:
 		self.knownCType3 = []
 		self.numKnownCType3 = 0
 		self.log = []
-		self.KBLog = [] 
+		self.KBsLog = [] 
+		self.KBaLog = [] 
 		self.sequenceLog = []
 		self.rulesCount = [0,0,0,0,0,0]
 	
@@ -83,8 +84,12 @@ class ReasonER:
 				self.knownCType3.append(rule[0])
 				c3Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
-		if len(logis) != 0: self.sequenceLog.append(logis)
-		self.KBLog.append(logik)
+		if len(logis) != 0: 
+			self.sequenceLog.append(logis)
+			if len(logik) != 0:
+				self.KBsLog.append(logik)
+		elif len(logik) != 0:
+			self.KBaLog.append(logik)
 		self.newCType1 = []
 		self.newCType3 = []
 	
@@ -180,10 +185,13 @@ class ReasonER:
 		return "Reasoner Steps\n"+"\n".join(self.log)
 	
 	def getKBLog(self):
-		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.KBLog])
+		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.KBsLog + self.KBaLog])
 	
-	def getKBLogI(self,i):
-		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBLog[i]])
+	def getKBaLogI(self,i):
+		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBaLog[i]])
+	
+	def getKBsLogI(self,i):
+		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBsLog[i]])
 	
 	def getSequenceLog(self):
 		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.sequenceLog])
@@ -193,12 +201,12 @@ class ReasonER:
 	
 	def inSequence(self,statement):
 		if isinstance(statement, ConceptStatement):
-			if isinstance(statement.consequent, ConceptRole) and isinstance(statement.antecedent, Concept):
-				if statement.consequent.role.name < self.syntheticData.hRoleNamespace and statement.consequent.concept.name < self.syntheticData.hConceptNamespace and statement.antecedent.name <= self.syntheticData.hConceptNamespace: return True
-				return False			
-			elif isinstance(statement.antecedent, Concept) and isinstance(statement.consequent, Concept):
-				if statement.antecedent.name < self.syntheticData.hConceptNamespace and statement.consequent.name <= self.syntheticData.hConceptNamespace: return True
-				return False
+			if isinstance(statement.consequent, ConceptRole):
+				if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name > self.syntheticData.hConceptNamespace: return False
+				return True			
+			else:
+				if statement.antecedent.name > self.syntheticData.hConceptNamespace - 1 or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
+				return True
 	
 	def toString(self):
 		ret = "\nExtended KB"

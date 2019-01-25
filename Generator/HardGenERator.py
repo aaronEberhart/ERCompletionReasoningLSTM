@@ -23,9 +23,9 @@ class HardGenERator:
 	def __init__(self,rGenerator=GenERator(),difficulty=50):
 		self.seed = "N/A"
 		self.conceptNamespace = (difficulty * 3) + 2
-		self.roleNamespace = self.conceptNamespace + 1
+		self.roleNamespace = self.conceptNamespace - 1
 		self.hConceptNamespace = (difficulty * 3) + 2
-		self.hRoleNamespace = self.conceptNamespace + 1		
+		self.hRoleNamespace = self.conceptNamespace - 1		
 		self.rGenerator = rGenerator
 		if rGenerator != None and not self.rGenerator.hasRun: self.rGenerator.genERate()		
 		if rGenerator != None: self.shiftRGenerator()
@@ -106,7 +106,7 @@ class HardGenERator:
 		cs.complete('⊑')
 		self.CType3.append(cs)
 		
-		cs = ConceptStatement(len(self.CType4),True,Concept(1,[0]),ConceptRole('e',Role(i+6,[0,1]),Concept(i+7,[1])))
+		cs = ConceptStatement(len(self.CType4),True,Concept(1,[0]),ConceptRole('e',Role(i+3,[0,1]),Concept(i+4,[1])))
 		cs.complete('⊑')
 		self.CType3.append(cs)
 	
