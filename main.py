@@ -3,6 +3,7 @@ me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
 sys.path.insert(0,me+"/Reasoner")
 
+from HardGenERator2 import *
 from HardGenERator import *
 from GenERator import *
 from ReasonER import *
@@ -38,7 +39,8 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
 	if len(reasoner.KBaLog) < 1: print("after error")
-	if len(reasoner.sequenceLog) != 200: print("seq error")
+	if len(reasoner.sequenceLog) != 40: print("seq error")
+
 def runExperiment(i,diff):
 	
 	start = 0
@@ -49,7 +51,7 @@ def runExperiment(i,diff):
 		
 		start = time.time()
 		
-		generator = HardGenERator(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=200,roleNamespace=40),difficulty=diff)
+		generator = HardGenERator2(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=100,roleNamespace=20),difficulty=diff)
 		
 		reasoner = ReasonER(generator,showSteps=True)	
 		
@@ -64,6 +66,6 @@ def runExperiment(i,diff):
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1000):
+	for i in range(0,1):
 		print(i)
-		runExperiment(i,100)
+		runExperiment(i,20)

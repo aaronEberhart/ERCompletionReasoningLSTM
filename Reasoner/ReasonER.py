@@ -200,6 +200,15 @@ class ReasonER:
 		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.sequenceLog[i]])	
 	
 	def inSequence(self,statement):
+		if self.syntheticData.rGenerator == None: return True
+		if isinstance(statement, ConceptStatement):
+			if isinstance(statement.consequent, ConceptRole):
+				if statement.consequent.role.name > self.syntheticData.rGenerator.roleNamespace or statement.consequent.concept.name > self.syntheticData.rGenerator.conceptNamespace or statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
+				return False			
+			else:
+				if statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace-1 and statement.consequent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
+				return False		
+		"""
 		if isinstance(statement, ConceptStatement):
 			if isinstance(statement.consequent, ConceptRole):
 				if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name >= self.syntheticData.hConceptNamespace: return False
@@ -207,6 +216,7 @@ class ReasonER:
 			else:
 				if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
 				return True
+		"""
 	
 	def toString(self):
 		ret = "\nExtended KB"
