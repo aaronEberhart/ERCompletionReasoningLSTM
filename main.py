@@ -51,7 +51,7 @@ def runExperiment(i,diff):
 		
 		start = time.time()
 		
-		generator = HardGenERator2(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=100,roleNamespace=20),difficulty=diff)
+		generator = HardGenERator(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=100,roleNamespace=20),difficulty=diff)
 		
 		reasoner = ReasonER(generator,showSteps=True)	
 		
