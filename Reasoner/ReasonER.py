@@ -203,7 +203,7 @@ class ReasonER:
 		if self.syntheticData.rGenerator == None: return True
 		if isinstance(statement, ConceptStatement):
 			if isinstance(statement.consequent, ConceptRole):
-				if statement.consequent.role.name >= self.syntheticData.rGenerator.roleNamespace and statement.consequent.concept.name >= self.syntheticData.rGenerator.conceptNamespace and statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
+				if statement.consequent.role.name >= self.syntheticData.rGenerator.roleNamespace and statement.consequent.concept.name >= self.syntheticData.rGenerator.conceptNamespace - 1 and statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace - 1: return True
 				return False			
 			else:
 				if statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace-1 and statement.consequent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
