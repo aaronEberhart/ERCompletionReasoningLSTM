@@ -202,10 +202,10 @@ class ReasonER:
 	def inSequence(self,statement):
 		if isinstance(statement, ConceptStatement):
 			if isinstance(statement.consequent, ConceptRole):
-				if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name > self.syntheticData.hConceptNamespace: return False
+				if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name >= self.syntheticData.hConceptNamespace: return False
 				return True			
 			else:
-				if statement.antecedent.name > self.syntheticData.hConceptNamespace - 1 or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
+				if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
 				return True
 	
 	def toString(self):

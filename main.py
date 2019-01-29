@@ -34,10 +34,11 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	for j in range(0,len(reasoner.KBsLog)):
 		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBsLogI(j))
 	for j in range(0,len(reasoner.KBaLog)):
-		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBaLogI(j))
+		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
-
+	if len(reasoner.KBaLog) < 1: print("after error")
+	if len(reasoner.sequenceLog) != 200: print("seq error")
 def runExperiment(i,diff):
 	
 	start = 0
@@ -48,7 +49,7 @@ def runExperiment(i,diff):
 		
 		start = time.time()
 		
-		generator = HardGenERator(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNamespace=15),difficulty=diff)  #GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=75,roleNamespace=15)
+		generator = HardGenERator(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=200,roleNamespace=40),difficulty=diff)
 		
 		reasoner = ReasonER(generator,showSteps=True)	
 		
@@ -65,4 +66,4 @@ if __name__ == "__main__":
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1000):
 		print(i)
-		runExperiment(i,20)
+		runExperiment(i,100)
