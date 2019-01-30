@@ -28,19 +28,19 @@ def keepTrying(listy,y):
 	return not any(x.consequent.name == y for x in listy)
 
 def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
-	if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
-	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
-	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
-	if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
+	if not os.path.isdir("output2/{}".format(i)): os.mkdir("output2/{}".format(i))
+	if not os.path.isdir("output2/{}/sequence".format(i)): os.mkdir("output2/{}/sequence".format(i))
+	if not os.path.isdir("output2/{}/KB during sequence".format(i)): os.mkdir("output2/{}/KB during sequence".format(i))
+	if len(reasoner.KBaLog) > 0 and not os.path.isdir("output2/{}/KB after sequence".format(i)): os.mkdir("output2/{}/KB after sequence".format(i))
 	writeFile("owl/{}funcSynt.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
 	for j in range(0,len(reasoner.sequenceLog)):
-		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),reasoner.getSequenceLogI(j))
+		writeFile("output2/{}/sequence/reasonerStep{}.txt".format(i,j),reasoner.getSequenceLogI(j))
 	for j in range(0,len(reasoner.KBsLog)):
-		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBsLogI(j))
+		if len(reasoner.KBsLog[j]) > 0: writeFile("output2/{}/KB during sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBsLogI(j))
 	for j in range(0,len(reasoner.KBaLog)):
-		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
-	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
+		if len(reasoner.KBaLog[j]) > 0: writeFile("output2/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
+	writeFile("output2/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
+	writeFile("output2/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
 	#if len(reasoner.KBaLog) < 1: print("after error")
 	if len(reasoner.sequenceLog) != 40: print("seq error")
 
@@ -69,8 +69,8 @@ def runExperiment(i,diff):
 	writeFileI(i,generator,reasoner,reasonerSteps,negatives,start)	
 
 if __name__ == "__main__":
-	if not os.path.isdir("output"): os.mkdir("output")
-	if not os.path.isdir("owl"): os.mkdir("owl")
+	if not os.path.isdir("output2"): os.mkdir("output2")
+	if not os.path.isdir("owl2"): os.mkdir("owl2")
 	for i in range(0,1):
 		print(i)
 		runExperiment(i,20)

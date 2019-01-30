@@ -1,4 +1,5 @@
 from Statement import *
+from HardGenERator2 import *
 
 """
 Completion rules:
@@ -201,22 +202,23 @@ class ReasonER:
 	
 	def inSequence(self,statement):
 		if self.syntheticData.rGenerator == None: return True
-		if isinstance(statement, ConceptStatement):
-			if isinstance(statement.consequent, ConceptRole):
-				if statement.consequent.role.name >= self.syntheticData.rGenerator.roleNamespace and statement.consequent.concept.name >= self.syntheticData.rGenerator.conceptNamespace - 1 and statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace - 1: return True
-				return False			
-			else:
-				if statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace-1 and statement.consequent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
-				return False		
-		"""
-		if isinstance(statement, ConceptStatement):
-			if isinstance(statement.consequent, ConceptRole):
-				if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name >= self.syntheticData.hConceptNamespace: return False
-				return True			
-			else:
-				if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
-				return True
-		"""
+		if isinstance(self.syntheticData, HardGenERator2):
+			if isinstance(statement, ConceptStatement):
+				if isinstance(statement.consequent, ConceptRole):
+					if statement.consequent.role.name >= self.syntheticData.rGenerator.roleNamespace and statement.consequent.concept.name >= self.syntheticData.rGenerator.conceptNamespace - 1 and statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace - 1: return True
+					return False			
+				else:
+					if statement.antecedent.name >= self.syntheticData.rGenerator.conceptNamespace-1 and statement.consequent.name >= self.syntheticData.rGenerator.conceptNamespace: return True
+					return False		
+		elif isinstance(self.syntheticData, HardGenERator):
+			if isinstance(statement, ConceptStatement):
+				if isinstance(statement.consequent, ConceptRole):
+					if statement.consequent.role.name > self.syntheticData.hRoleNamespace or statement.consequent.concept.name > self.syntheticData.hConceptNamespace or statement.antecedent.name >= self.syntheticData.hConceptNamespace: return False
+					return True			
+				else:
+					if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
+					return True
+		
 	
 	def toString(self):
 		ret = "\nExtended KB"
