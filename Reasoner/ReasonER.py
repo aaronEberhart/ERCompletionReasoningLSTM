@@ -1,5 +1,6 @@
 from Statement import *
 from HardGenERator2 import *
+from HardGenERator import *
 
 """
 Completion rules:
