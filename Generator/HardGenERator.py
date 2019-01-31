@@ -21,13 +21,13 @@ Completion rules:
 class HardGenERator:
 	
 	def __init__(self,rGenerator=GenERator(),difficulty=50):
-		self.seed = "N/A"
 		self.conceptNamespace = (difficulty * 3) + 2
 		self.roleNamespace = self.conceptNamespace - 1
 		self.hConceptNamespace = (difficulty * 3) + 2
 		self.hRoleNamespace = self.conceptNamespace - 1		
 		self.rGenerator = rGenerator
-		if rGenerator != None and not self.rGenerator.hasRun: self.rGenerator.genERate()		
+		if rGenerator != None and not self.rGenerator.hasRun: self.rGenerator.genERate()
+		self.seed = "N/A" if rGenerator == None else self.rGenerator.seed
 		if rGenerator != None: self.shiftRGenerator()
 		self.CTypeNull = []
 		self.CType1 = []

@@ -190,7 +190,7 @@ class ReasonER:
 		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.KBsLog + self.KBaLog])
 	
 	def getKBaLogI(self,i):
-		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBaLog[i]])
+		return "Reasoner Step {}\n".format(i+len(self.sequenceLog))+"\n".join([x for x in self.KBaLog[i]])
 	
 	def getKBsLogI(self,i):
 		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBsLog[i]])
@@ -228,6 +228,15 @@ class ReasonER:
 		for statement in self.knownCType3:
 			ret = ret + "\n" + statement.toString()
 		return ret
+	
+	def genToFunctionalSyntax(self,IRI):
+		s = "Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n"
+		for i in range(0,self.syntheticData.conceptNamespace):
+			s = s + "Declaration( Class( :C" +  str(i) + " ) )\n"
+		for i in range(0,self.syntheticData.roleNamespace):
+			s = s + "Declaration( ObjectProperty( :R" + str(i)   + " ) )\n";
+		s = s + "\n" + self.syntheticData.toFunctionalSyntax()
+		return s + "\n\n)"		
 	
 	def toFunctionalSyntax(self,IRI):
 		s = "Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n"

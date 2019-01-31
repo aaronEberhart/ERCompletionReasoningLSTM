@@ -32,7 +32,8 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
 	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
 	if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
-	writeFile("owl/{}funcSynt.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
+	writeFile("owl/{}funcSyntKB.owl".format(i),reasoner.genToFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
+	writeFile("owl/{}funcSyntKBCompleted.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
 	for j in range(0,len(reasoner.sequenceLog)):
 		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),reasoner.getSequenceLogI(j))
 	for j in range(0,len(reasoner.KBsLog)):
@@ -42,7 +43,7 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
 	#if len(reasoner.KBaLog) < 1: print("after error")
-	if len(reasoner.sequenceLog) != 200: print("seq error")
+	if len(reasoner.sequenceLog) != 100: print("seq error")
 
 def runExperiment(i,diff):
 	
@@ -54,11 +55,11 @@ def runExperiment(i,diff):
 		
 		start = time.time()
 		
-		generator = HardGenERator(rGenerator=GenERator(numCType1=50,numCType2=50,numCType3=50,numCType4=50,numRoleSub=20,numRoleChains=20,conceptNamespace=200,roleNamespace=40),difficulty=diff)
+		generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)
 		
 		generator.genERate()
 		
-		tryAgain = keepTrying(generator.CType1,generator.rGenerator.conceptNamespace-1) #not len(reasoner.KBaLog) > 0#
+		tryAgain = keepTrying(generator.CType1,generator.rGenerator.conceptNamespace-1) # not len(reasoner.KBaLog) > 0 #
 		
 	reasoner = ReasonER(generator,showSteps=True)	 
 	
@@ -71,6 +72,6 @@ def runExperiment(i,diff):
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1):
+	for i in range(0,1000):
 		print(i)
-		runExperiment(i,100)
+		runExperiment(i,50)
