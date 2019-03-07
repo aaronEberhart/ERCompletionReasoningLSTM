@@ -43,7 +43,7 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
 	#if len(reasoner.KBaLog) < 1: print("after error")
-	if len(reasoner.sequenceLog) != 100: print("seq error")
+	if len(reasoner.sequenceLog) != 50: print("seq error")
 
 def runExperiment(i,diff):
 	
@@ -72,6 +72,6 @@ def runExperiment(i,diff):
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1000):
+	for i in range(0,1):
 		print(i)
-		runExperiment(i,50)
+		runExperiment(i,25)

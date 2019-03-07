@@ -72,8 +72,8 @@ class ReasonER:
 			if not self.alreadyKnown(c1Known,rule[0]):
 				if self.showSteps: 
 					self.log.append(rule[0].toString())
-					if self.inSequence(rule[0]):logis.append(rule[0].toString())
-					else:logik.append(rule[0].toString())
+					if self.inSequence(rule[0]):logis.append(rule[0].toString()+": "+rule[2])
+					else:logik.append(rule[0].toString()+": "+rule[2])
 				self.knownCType1.append(rule[0])
 				c1Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
@@ -81,8 +81,8 @@ class ReasonER:
 			if not self.alreadyKnown(c3Known,rule[0]):
 				if self.showSteps:
 					self.log.append(rule[0].toString())
-					if self.inSequence(rule[0]):logis.append(rule[0].toString())
-					else:logik.append(rule[0].toString())
+					if self.inSequence(rule[0]):logis.append(rule[0].toString()+": "+rule[2])
+					else:logik.append(rule[0].toString()+": "+rule[2])
 				self.knownCType3.append(rule[0])
 				c3Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
@@ -112,7 +112,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')
-				self.newCType1.append([cs,0])
+				self.newCType1.append([cs,0,"(1)"+candidate2.toString()+","+candidate1.toString()])
 				
 				
 	
@@ -128,7 +128,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,candidate1.antecedent,conjunction.consequent)
 					cs.complete('⊑')					
-					self.newCType1.append([cs,1])
+					self.newCType1.append([cs,1,"(2)"+candidate1.toString()+","+candidate2.toString()+","+conjunction.toString()])
 	
 	def solveRule3(self):
 		""" C ⊑ ∃R.D, A ⊑ C ⊨ A ⊑ ∃R.D """
@@ -140,7 +140,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')				
-				self.newCType3.append([cs,2])
+				self.newCType3.append([cs,2,"(3)"+candidate2.toString()+","+candidate1.toString()])
 	
 	def solveRule4(self):
 		""" ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C ⊨ A ⊑ D """
@@ -155,7 +155,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,Concept(candidate3.antecedent.name,[0]),Concept(candidate1.consequent.name,[0]))
 					cs.complete('⊑')					
-					self.newCType1.append([cs,3])
+					self.newCType1.append([cs,3,"(4)"+candidate2.toString()+","+candidate3.toString()+","+candidate1.toString()])
 	
 	def solveRule5(self):
 		""" R ⊑ S, A ⊑ ∃R.B ⊨ A ⊑ ∃S.B """
@@ -166,7 +166,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent,ConceptRole('e',roleStatement.consequent,matchingConceptStatement.consequent.concept))
 				cs.complete('⊑')				
-				self.newCType3.append([cs,4])
+				self.newCType3.append([cs,4,"(5)"+matchingConceptStatement.toString()+","+roleStatement.toString()])
 	
 	def solveRule6(self):
 		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C ⊨ A ⊑ ∃R.C """
@@ -178,7 +178,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent,ConceptRole('e',Role(roleChain.consequent.name,[0,1]),matchingConceptStatement2.consequent.concept))
 					cs.complete('⊑')					
-					self.newCType3.append([cs,5])
+					self.newCType3.append([cs,5,"(6)"+matchingConceptStatement1.toString()+","+roleChain.toString()+","+matchingConceptStatement2.toString()])
 					
 	def alreadyKnown(self,statements,s):
 		return any(x.equals(s) for x in statements)
