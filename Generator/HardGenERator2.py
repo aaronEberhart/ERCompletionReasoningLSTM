@@ -80,7 +80,7 @@ class HardGenERator2:
 
         self.setup()
 
-        for i in range(0,self.conceptNamespace):
+        for i in range(2,self.conceptNamespace):
             self.makeCTypeNull(i)
 
         for i in range(0,self.difficulty):
@@ -91,6 +91,7 @@ class HardGenERator2:
             self.shiftSGenerator() 
             self.spliceGenERators()
 
+        self.CTypeNull.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
         self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
         self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
         self.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
@@ -167,8 +168,8 @@ class HardGenERator2:
 
     def toString(self):
         ret = "Original KB"
-        #for statement in self.CTypeNull:
-            #ret = ret + "\n" +statement.toString()
+        for statement in self.CTypeNull:
+            ret = ret + "\n" + statement.toString()
         for statement in self.CType1:
             ret = ret + "\n" + statement.toString()
         for statement in self.CType2:
@@ -185,6 +186,7 @@ class HardGenERator2:
 
     def toFunctionalSyntax(self):
         ret = ""
+             
         for statement in self.CType1:
             ret = ret + "\n" + statement.toFunctionalSyntax()
         for statement in self.CType2:
