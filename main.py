@@ -27,7 +27,7 @@ def formatStatistics(start,gen,reas,neg):
 def keepTrying(listy,y):
 	return not any(x.consequent.name == y for x in listy)
 
-def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
+def writeFileI(i,generator,reasoner,reasonerJustifications,negatives,start):
 	if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
 	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
 	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
@@ -41,7 +41,7 @@ def writeFileI(i,generator,reasoner,reasonerSteps,negatives,start):
 	for j in range(0,len(reasoner.KBaLog)):
 		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerSteps.toString())	
+	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerJustifications.toString())	
 	#if len(reasoner.KBaLog) < 1: print("after error")
 	if len(reasoner.sequenceLog) != 50: print("seq error")
 
@@ -63,11 +63,11 @@ def runExperiment(i,diff):
 		
 	reasoner = ReasonER(generator,showSteps=True)	 
 	
-	reasonerSteps = StepFindER(reasoner)
+	reasonerJustifications = JustificationFindER(reasoner)
 	
 	negatives = NegativesGenERator(reasoner)
 	
-	writeFileI(i,generator,reasoner,reasonerSteps,negatives,start)	
+	writeFileI(i,generator,reasoner,reasonerJustifications,negatives,start)	
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")

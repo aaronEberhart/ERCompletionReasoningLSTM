@@ -1,4 +1,4 @@
-class StepFindER:
+class JustificationFindER:
     
     def __init__(self,reasonER):
         if not reasonER.hasRun:
