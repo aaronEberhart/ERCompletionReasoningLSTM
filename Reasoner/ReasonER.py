@@ -149,7 +149,7 @@ class ReasonER:
 		
 		for candidate1 in self.syntheticData.CType4:
 			for candidate2 in list(filter(lambda x: candidate1.antecedent.concept.name == x.consequent.name,type1Candidates)):
-				for candidate3 in list(filter(lambda x: x.consequent.concept.name == candidate2.antecedent.name,type3Candidates)):
+				for candidate3 in list(filter(lambda x: x.consequent.concept.name == candidate2.antecedent.name and x.consequent.role.name == candidate1.antecedent.role.name,type3Candidates)):
 					
 					if candidate3.antecedent.name == candidate1.consequent.name: continue
 					
