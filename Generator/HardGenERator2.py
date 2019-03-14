@@ -26,7 +26,11 @@ class HardGenERator2:
         self.hConceptNamespace = (difficulty * 3) + 2
         self.hRoleNamespace = self.conceptNamespace - 1		
         self.rGenerator = rGenerator
-        if rGenerator != None and not self.rGenerator.hasRun: self.rGenerator.genERate()
+        tryAgain = True if rGenerator != None else False
+        while tryAgain or not self.rGenerator.hasRun: 
+                self.rGenerator.genERate()
+                tryAgain = self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1)
+                if tryAgain: print("oops")		
         self.seed = "N/A" if rGenerator == None else self.rGenerator.seed
         self.CTypeNull = []
         self.CType1 = []
@@ -37,6 +41,9 @@ class HardGenERator2:
         self.roleChains = []
         self.difficulty = difficulty
         self.hasRun = False
+
+    def keepTrying(self,listy,y):
+        return not any(x.consequent.name == y for x in listy)
 
     def shiftSGenerator(self):
         for x in self.CTypeNull:
@@ -66,9 +73,9 @@ class HardGenERator2:
             x.consequent.name = x.consequent.name + self.rGenerator.roleNamespace-1
 
     def spliceGenERators(self):
-        self.conceptNamespace = self.conceptNamespace + self.rGenerator.conceptNamespace
+        self.conceptNamespace = self.conceptNamespace + self.rGenerator.conceptNamespace - 1
         self.roleNamespace = self.roleNamespace + self.rGenerator.roleNamespace
-        self.CTypeNull = self.CTypeNull + self.rGenerator.CTypeNull
+        self.CTypeNull = self.CTypeNull + self.rGenerator.CTypeNull    
         self.CType1 = self.CType1 + self.rGenerator.CType1
         self.CType2 = self.CType2 + self.rGenerator.CType2
         self.CType3 = self.CType3 + self.rGenerator.CType3
@@ -80,18 +87,18 @@ class HardGenERator2:
 
         self.setup()
 
-        for i in range(2,self.conceptNamespace):
+        for i in range(2,self.conceptNamespace+1):
             self.makeCTypeNull(i)
 
         for i in range(0,self.difficulty):
             self.unwantedDeductions(i*3)
-            self.genERateSequence(i)
+            self.genERateSequence(i)       
 
         if self.rGenerator != None: 
             self.shiftSGenerator() 
-            self.spliceGenERators()
+            self.spliceGenERators()              
 
-        self.CTypeNull.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+        self.CTypeNull.sort(key=lambda x: (x.antecedent.name, x.consequent.name))            
         self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
         self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
         self.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))

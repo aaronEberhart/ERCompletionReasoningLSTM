@@ -8,7 +8,7 @@ from HardGenERator import *
 from GenERator import *
 from ReasonER import *
 from NegativesGenERator import *
-from StepFindER import *
+from JustificationFindER import *
 
 def writeFile(filename,data):
 	file = open(filename,"w")
@@ -27,7 +27,7 @@ def formatStatistics(start,gen,reas,neg):
 def keepTrying(listy,y):
 	return not any(x.consequent.name == y for x in listy)
 
-def writeFileI(i,generator,reasoner,reasonerJustifications,negatives,start):
+def writeFileI(i,diff,generator,reasoner,reasonerJustifications,negatives,start):
 	if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
 	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
 	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
@@ -42,8 +42,8 @@ def writeFileI(i,generator,reasoner,reasonerJustifications,negatives,start):
 		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
 	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
 	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerJustifications.toString())	
-	#if len(reasoner.KBaLog) < 1: print("after error")
-	if len(reasoner.sequenceLog) != 50: print("seq error")
+	if len(reasoner.KBaLog) < 1: print("after error")
+	if len(reasoner.sequenceLog) != 2 * diff: print("seq error")
 
 def runExperiment(i,diff):
 	
@@ -55,23 +55,29 @@ def runExperiment(i,diff):
 		
 		start = time.time()
 		
-		generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)
+		generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)#
 		
 		generator.genERate()
 		
 		tryAgain = keepTrying(generator.CType1,generator.rGenerator.conceptNamespace-1) # not len(reasoner.KBaLog) > 0 #
+
+		if tryAgain: print("poops")
 		
-	reasoner = ReasonER(generator,showSteps=True)	 
+	reasoner = ReasonER(generator,showSteps=False)	 
 	
-	reasonerJustifications = JustificationFindER(reasoner)
+	writeFile("owl/funcSyntKB.owl",reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
+	writeFile("output/KB.txt",generator.toString())
+	writeFile("output/details.txt","Time: {}\nSeed: {}".format(time.time()-start,generator.seed))		
 	
-	negatives = NegativesGenERator(reasoner)
+	#reasonerJustifications = JustificationFindER(reasoner)
 	
-	writeFileI(i,generator,reasoner,reasonerJustifications,negatives,start)	
+	#negatives = NegativesGenERator(reasoner)
+	
+	#writeFileI(i,diff,generator,reasoner,reasonerJustifications,negatives,start)	
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		print(i)
-		runExperiment(i,25)
+		runExperiment(i,9999)
