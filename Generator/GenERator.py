@@ -191,7 +191,21 @@ class GenERator:
 			ret = ret + "\n" + statement.toFunctionalSyntax()
 		for statement in self.roleChains:
 			ret = ret + "\n" + statement.toFunctionalSyntax()
-		return ret		
+		return ret
+	
+	def toFunctionalSyntaxFile(self,file):
+		for statement in self.CType1:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.CType2:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.CType3:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.CType4:
+			file.write(statement.toFunctionalSyntax())	
+		for statement in self.roleSubs:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.roleChains:
+			file.write(statement.toFunctionalSyntax())	
 
 	def getStatistics(self):
 		

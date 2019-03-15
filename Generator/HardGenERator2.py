@@ -26,11 +26,9 @@ class HardGenERator2:
         self.hConceptNamespace = (difficulty * 3) + 2
         self.hRoleNamespace = self.conceptNamespace - 1		
         self.rGenerator = rGenerator
-        tryAgain = True if rGenerator != None else False
-        while tryAgain or not self.rGenerator.hasRun: 
+        if rGenerator != None and not self.rGenerator.hasRun: 
                 self.rGenerator.genERate()
-                tryAgain = self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1)
-                if tryAgain: print("oops")		
+                if self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1): self.rGenerator.CType1[0].consequent.name == self.rGenerator.conceptNamespace-1
         self.seed = "N/A" if rGenerator == None else self.rGenerator.seed
         self.CTypeNull = []
         self.CType1 = []
@@ -84,7 +82,9 @@ class HardGenERator2:
         self.roleChains = self.roleChains + self.rGenerator.roleChains	
 
     def genERate(self):
-
+        
+        if self.hasRun: return
+        
         self.setup()
 
         for i in range(2,self.conceptNamespace+1):
@@ -189,7 +189,26 @@ class HardGenERator2:
             ret = ret + "\n" + statement.toString()
         for statement in self.roleChains:
             ret = ret + "\n" + statement.toString()
-        return ret	
+        return ret
+    
+    def toStringFile(self,filename):
+        file = open(filename,"w")
+        file.write("KB")
+        for statement in self.CTypeNull:
+            file.write("\n"+statement.toString())
+        for statement in self.CType1:
+            file.write("\n"+statement.toString())
+        for statement in self.CType2:
+            file.write("\n"+statement.toString())
+        for statement in self.CType3:
+            file.write("\n"+statement.toString())
+        for statement in self.CType4:
+            file.write("\n"+statement.toString())	
+        for statement in self.roleSubs:
+            file.write("\n"+statement.toString())
+        for statement in self.roleChains:
+            file.write("\n"+statement.toString())
+        file.close()  
 
     def toFunctionalSyntax(self):
         ret = ""
@@ -207,6 +226,28 @@ class HardGenERator2:
         for statement in self.roleChains:
             ret = ret + "\n" + statement.toFunctionalSyntax()
         return ret
+    
+    def toFunctionalSyntaxFile(self,IRI,filename): 
+        file = open(filename,"w")
+        file.write("Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n")
+        for i in range(0,self.conceptNamespace):
+            file.write("Declaration( Class( :C{} ) )\n".format(i))
+        for i in range(0,self.roleNamespace):
+            file.write("Declaration( ObjectProperty( :R{} ) )\n".format(i))        
+        for statement in self.CType1:
+            file.write(statement.toFunctionalSyntax())
+        for statement in self.CType2:
+            file.write(statement.toFunctionalSyntax())
+        for statement in self.CType3:
+            file.write(statement.toFunctionalSyntax())
+        for statement in self.CType4:
+            file.write(statement.toFunctionalSyntax())	
+        for statement in self.roleSubs:
+            file.write(statement.toFunctionalSyntax())
+        for statement in self.roleChains:
+            file.write(statement.toFunctionalSyntax())  
+        file.write("\n\n)")
+        file.close()         
 
     def getStatistics(self):
 

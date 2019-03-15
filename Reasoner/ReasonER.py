@@ -227,16 +227,7 @@ class ReasonER:
 			ret = ret + "\n" + statement.toString()
 		for statement in self.knownCType3:
 			ret = ret + "\n" + statement.toString()
-		return ret
-	
-	def genToFunctionalSyntax(self,IRI):
-		s = "Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n"
-		for i in range(0,self.syntheticData.conceptNamespace):
-			s = s + "Declaration( Class( :C" +  str(i) + " ) )\n"
-		for i in range(0,self.syntheticData.roleNamespace):
-			s = s + "Declaration( ObjectProperty( :R" + str(i)   + " ) )\n";
-		s = s + "\n" + self.syntheticData.toFunctionalSyntax()
-		return s + "\n\n)"		
+		return ret	
 	
 	def toFunctionalSyntax(self,IRI):
 		s = "Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n"

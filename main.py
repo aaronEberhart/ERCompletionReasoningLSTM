@@ -48,25 +48,21 @@ def writeFileI(i,diff,generator,reasoner,reasonerJustifications,negatives,start)
 def runExperiment(i,diff):
 	
 	start = 0
+		
+	start = time.time()
+		
+	generator = HardGenERator2(rGenerator=GenERator(numCType1=250,numCType2=250,numCType3=250,numCType4=250,numRoleSub=100,numRoleChains=100,conceptNamespace=1000,roleNamespace=200),difficulty=diff)#
 	
-	tryAgain = True 
+	print("generating")
 	
-	while tryAgain:
+	generator.genERate()
 		
-		start = time.time()
-		
-		generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)#
-		
-		generator.genERate()
-		
-		tryAgain = keepTrying(generator.CType1,generator.rGenerator.conceptNamespace-1) # not len(reasoner.KBaLog) > 0 #
-
-		if tryAgain: print("poops")
-		
-	reasoner = ReasonER(generator,showSteps=False)	 
+	#reasoner = ReasonER(generator,showSteps=True)	 
 	
-	writeFile("owl/funcSyntKB.owl",reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
-	writeFile("output/KB.txt",generator.toString())
+	print("writing files")
+	
+	generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/not/a/real/IRI/>","owl/funcSyntKB.owl")
+	generator.toStringFile("output/KB.txt")
 	writeFile("output/details.txt","Time: {}\nSeed: {}".format(time.time()-start,generator.seed))		
 	
 	#reasonerJustifications = JustificationFindER(reasoner)
@@ -80,4 +76,4 @@ if __name__ == "__main__":
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		print(i)
-		runExperiment(i,9999)
+		runExperiment(i,100)
