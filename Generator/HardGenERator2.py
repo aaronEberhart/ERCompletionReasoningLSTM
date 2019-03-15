@@ -7,11 +7,11 @@ Completion rules:
 (1) C ⊑ D,A ⊑ C                         ⊨ A ⊑ D
 
 (2) C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2         ⊨ A ⊑ D
-
+    uses Null
 (3) C ⊑ ∃R.D, A ⊑ C                     ⊨ A ⊑ ∃R.D
 
 (4) ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C           ⊨ A ⊑ D
-
+    uses Null
 (5) R ⊑ S, A ⊑ ∃R.B                     ⊨ A ⊑ ∃S.B
 
 (6) R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C   ⊨ A ⊑ ∃R.C
@@ -28,7 +28,9 @@ class HardGenERator2:
         self.rGenerator = rGenerator
         if rGenerator != None and not self.rGenerator.hasRun: 
                 self.rGenerator.genERate()
-                if self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1): self.rGenerator.CType1[0].consequent.name == self.rGenerator.conceptNamespace-1
+                if self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1): 
+                    self.rGenerator.CType1[0].consequent.name = self.rGenerator.conceptNamespace-1
+                    if self.rGenerator.CType1[0].antecedent.name == self.rGenerator.CType1[0].consequent.name: self.rGenerator.CType1[0].antecedent.name = random.randint(0,self.conceptNamespace-2)
         self.seed = "N/A" if rGenerator == None else self.rGenerator.seed
         self.CTypeNull = []
         self.CType1 = []
@@ -195,19 +197,19 @@ class HardGenERator2:
         file = open(filename,"w")
         file.write("KB")
         for statement in self.CTypeNull:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         for statement in self.CType1:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         for statement in self.CType2:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         for statement in self.CType3:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         for statement in self.CType4:
-            file.write("\n"+statement.toString())	
+            file.write("\n{}".format(statement.toString()))
         for statement in self.roleSubs:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         for statement in self.roleChains:
-            file.write("\n"+statement.toString())
+            file.write("\n{}".format(statement.toString()))
         file.close()  
 
     def toFunctionalSyntax(self):
@@ -290,4 +292,7 @@ class HardGenERator2:
         return [["both",["unique",len(uniqueConceptNames)+len(uniqueRoleNames)],["all",allConceptNames+allRoleNames]],["concept",["unique",len(uniqueConceptNames)],["all",allConceptNames]],["role",["unique",len(uniqueRoleNames)],["all",allRoleNames]]]
 
     def alreadyKnown(self,statements,s):
-        return any(x.equals(s) for x in statements)    
+        return any(x.equals(s) for x in statements) 
+    
+    def getAllExpressions(self):
+        return [self.CType1,self.CType2,self.CType3,self.CType4,self.roleSubs,self.roleChains]

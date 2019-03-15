@@ -71,18 +71,16 @@ class ReasonER:
 		for rule in self.newCType1:
 			if not self.alreadyKnown(c1Known,rule[0]):
 				if self.showSteps: 
-					self.log.append(rule[0].toString())
-					if self.inSequence(rule[0]):logis.append(rule[0].toString()+": "+rule[2])
-					else:logik.append(rule[0].toString()+": "+rule[2])
+					if self.inSequence(rule[0]):logis.append(rule)
+					else:logik.append(rule)
 				self.knownCType1.append(rule[0])
 				c1Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
 		for rule in self.newCType3:
 			if not self.alreadyKnown(c3Known,rule[0]):
 				if self.showSteps:
-					self.log.append(rule[0].toString())
-					if self.inSequence(rule[0]):logis.append(rule[0].toString()+": "+rule[2])
-					else:logik.append(rule[0].toString()+": "+rule[2])
+					if self.inSequence(rule[0]):logis.append(rule)
+					else:logik.append(rule)
 				self.knownCType3.append(rule[0])
 				c3Known.append(rule[0])
 				self.rulesCount[rule[1]] = self.rulesCount[rule[1]] + 1
@@ -94,6 +92,9 @@ class ReasonER:
 			self.KBaLog.append(logik)
 		self.newCType1 = []
 		self.newCType3 = []
+	
+	def ruleToStr(self,rule):
+		return "{}: ({}){}".format(rule[0].toString(),str(rule[1]),",".join([x.toString() for x in rule[2]]))
 	
 	def hasGrown(self):
 		if len(self.knownCType1) == self.numKnownCType1 and len(self.knownCType3) == self.numKnownCType3: return False
@@ -112,7 +113,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')
-				self.newCType1.append([cs,0,"(1)"+candidate2.toString()+","+candidate1.toString()])
+				self.newCType1.append([cs,0,[candidate2,candidate1]])
 				
 				
 	
@@ -128,7 +129,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,candidate1.antecedent,conjunction.consequent)
 					cs.complete('⊑')					
-					self.newCType1.append([cs,1,"(2)"+candidate1.toString()+","+candidate2.toString()+","+conjunction.toString()])
+					self.newCType1.append([cs,1,[candidate1,candidate2,conjunction]])
 	
 	def solveRule3(self):
 		""" C ⊑ ∃R.D, A ⊑ C ⊨ A ⊑ ∃R.D """
@@ -140,7 +141,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,candidate2.antecedent,candidate1.consequent)
 				cs.complete('⊑')				
-				self.newCType3.append([cs,2,"(3)"+candidate2.toString()+","+candidate1.toString()])
+				self.newCType3.append([cs,2,[candidate2,candidate1]])
 	
 	def solveRule4(self):
 		""" ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C ⊨ A ⊑ D """
@@ -155,7 +156,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,Concept(candidate3.antecedent.name,[0]),Concept(candidate1.consequent.name,[0]))
 					cs.complete('⊑')					
-					self.newCType1.append([cs,3,"(4)"+candidate2.toString()+","+candidate3.toString()+","+candidate1.toString()])
+					self.newCType1.append([cs,3,[candidate2,candidate3,candidate1]])
 	
 	def solveRule5(self):
 		""" R ⊑ S, A ⊑ ∃R.B ⊨ A ⊑ ∃S.B """
@@ -166,7 +167,7 @@ class ReasonER:
 				
 				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent,ConceptRole('e',roleStatement.consequent,matchingConceptStatement.consequent.concept))
 				cs.complete('⊑')				
-				self.newCType3.append([cs,4,"(5)"+matchingConceptStatement.toString()+","+roleStatement.toString()])
+				self.newCType3.append([cs,4,[matchingConceptStatement,roleStatement]])
 	
 	def solveRule6(self):
 		""" R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C ⊨ A ⊑ ∃R.C """
@@ -178,7 +179,7 @@ class ReasonER:
 					
 					cs = ConceptStatement(0,True,matchingConceptStatement1.antecedent,ConceptRole('e',Role(roleChain.consequent.name,[0,1]),matchingConceptStatement2.consequent.concept))
 					cs.complete('⊑')					
-					self.newCType3.append([cs,5,"(6)"+matchingConceptStatement1.toString()+","+roleChain.toString()+","+matchingConceptStatement2.toString()])
+					self.newCType3.append([cs,5,[matchingConceptStatement1,roleChain,matchingConceptStatement2]])
 					
 	def alreadyKnown(self,statements,s):
 		return any(x.equals(s) for x in statements)
@@ -190,16 +191,16 @@ class ReasonER:
 		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.KBsLog + self.KBaLog])
 	
 	def getKBaLogI(self,i):
-		return "Reasoner Step {}\n".format(i+len(self.sequenceLog))+"\n".join([x for x in self.KBaLog[i]])
+		return "Reasoner Step {}\n".format(i+len(self.sequenceLog))+"\n".join([self.ruleToStr(x) for x in self.KBaLog[i]])
 	
 	def getKBsLogI(self,i):
-		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.KBsLog[i]])
+		return "Reasoner Step {}\n".format(i)+"\n".join([self.ruleToStr(x) for x in self.KBsLog[i]])
 	
 	def getSequenceLog(self):
 		return "Reasoner Steps"+"\n".join(["\n".join(x) for x in self.sequenceLog])
 	
 	def getSequenceLogI(self,i):
-		return "Reasoner Step {}\n".format(i)+"\n".join([x for x in self.sequenceLog[i]])	
+		return "Reasoner Step {}\n".format(i)+"\n".join([self.ruleToStr(x) for x in self.sequenceLog[i]])	
 	
 	def inSequence(self,statement):
 		if self.syntheticData.rGenerator == None: return True
@@ -219,8 +220,7 @@ class ReasonER:
 				else:
 					if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
 					return True
-		
-	
+				
 	def toString(self):
 		ret = "\nExtended KB"
 		for statement in self.knownCType1:
@@ -228,6 +228,15 @@ class ReasonER:
 		for statement in self.knownCType3:
 			ret = ret + "\n" + statement.toString()
 		return ret	
+	
+	def toStringFile(self,filename):
+		file = open(filename,"a")
+		file.write("\nExtended KB")
+		for statement in self.knownCType1:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.knownCType3:
+			file.write("\n{}".format(statement.toString()))
+		file.close()  	
 	
 	def toFunctionalSyntax(self,IRI):
 		s = "Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n"
@@ -240,7 +249,33 @@ class ReasonER:
 			s = s + "\n" + statement.toFunctionalSyntax()
 		for statement in self.knownCType3:
 			s = s + "\n" + statement.toFunctionalSyntax()
-		return s + "\n\n)"		
+		return s + "\n\n)"
+	
+	def toFunctionalSyntaxFile(self,IRI,filename): 
+		file = open(filename,"w")
+		file.write("Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n")
+		for i in range(0,self.syntheticData.conceptNamespace):
+			file.write("Declaration( Class( :C{} ) )\n".format(i))
+		for i in range(0,self.syntheticData.roleNamespace):
+			file.write("Declaration( ObjectProperty( :R{} ) )\n".format(i))        
+		for statement in self.syntheticData.CType1:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.syntheticData.CType2:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.syntheticData.CType3:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.syntheticData.CType4:
+			file.write(statement.toFunctionalSyntax())	
+		for statement in self.syntheticData.roleSubs:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.syntheticData.roleChains:
+			file.write(statement.toFunctionalSyntax()) 
+		for statement in self.knownCType1:
+			file.write(statement.toFunctionalSyntax())
+		for statement in self.knownCType3:
+			file.write(statement.toFunctionalSyntax())		
+		file.write("\n\n)")
+		file.close()  	
 	
 	def getRuleCountString(self):
 		return "\nRule Usage Counts:\n(1) : {:<9} C ⊑ D,A ⊑ C ⊨ A ⊑ D\n(2) : {:<9} C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 ⊨ A ⊑ D\n(3) : {:<9} C ⊑ ∃R.D, A ⊑ C ⊨ A ⊑ ∃R.D\n(4) : {:<9} ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C ⊨ A ⊑ D\n(5) : {:<9} R ⊑ S, A ⊑ ∃R.B ⊨ A ⊑ ∃S.B\n(6) : {:<9} R1 ∘ R2 ⊑ R, A ⊑ ∃R1.B, B ⊑ ∃R2.C ⊨ A ⊑ ∃R.C\n".format(self.rulesCount[0],self.rulesCount[1],self.rulesCount[2],self.rulesCount[3],self.rulesCount[4],self.rulesCount[5])

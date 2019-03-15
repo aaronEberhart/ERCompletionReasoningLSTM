@@ -9,6 +9,7 @@ from GenERator import *
 from ReasonER import *
 from NegativesGenERator import *
 from JustificationFindER import *
+from DependencyReducer import *
 
 def writeFile(filename,data):
 	file = open(filename,"w")
@@ -27,21 +28,23 @@ def formatStatistics(start,gen,reas,neg):
 def keepTrying(listy,y):
 	return not any(x.consequent.name == y for x in listy)
 
-def writeFileI(i,diff,generator,reasoner,reasonerJustifications,negatives,start):
+def writeFileI(i,diff,generator,reasoner,reasonerJustifications,dependencies,negatives,start):
 	if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
 	if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
 	if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
 	if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
-	writeFile("owl/{}funcSyntKB.owl".format(i),reasoner.genToFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
-	writeFile("owl/{}funcSyntKBCompleted.owl".format(i),reasoner.toFunctionalSyntax("<http://www.randomOntology.com/not/a/real/IRI/>"))
-	for j in range(0,len(reasoner.sequenceLog)):
-		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),reasoner.getSequenceLogI(j))
-	for j in range(0,len(reasoner.KBsLog)):
-		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),reasoner.getKBsLogI(j))
-	for j in range(0,len(reasoner.KBaLog)):
-		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),reasoner.getKBaLogI(j))
-	writeFile("output/{}/completedKB.txt".format(i),generator.toString()+reasoner.toString()+negatives.toString())
-	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+reasoner.getLog()+reasonerJustifications.toString())	
+	generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/not/a/real/IRI/>","owl/{}funcSyntKB.owl".format(i))
+	reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/not/a/real/IRI/>","owl/{}funcSyntKBCompleted.owl".format(i))
+	for j in range(0,len(dependencies.donelogs[0])):
+		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
+	for j in range(0,len(dependencies.donelogs[1])):
+		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
+	for j in range(0,len(dependencies.donelogs[2])):
+		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[0][j]))
+	generator.toStringFile("output/{}/completedKB.txt".format(i))
+	reasoner.toStringFile("output/{}/completedKB.txt".format(i))
+	negatives.toStringFile("output/{}/completedKB.txt".format(i))
+	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString())#+reasonerJustifications.toString())	
 	if len(reasoner.KBaLog) < 1: print("after error")
 	if len(reasoner.sequenceLog) != 2 * diff: print("seq error")
 
@@ -51,29 +54,23 @@ def runExperiment(i,diff):
 		
 	start = time.time()
 		
-	generator = HardGenERator2(rGenerator=GenERator(numCType1=250,numCType2=250,numCType3=250,numCType4=250,numRoleSub=100,numRoleChains=100,conceptNamespace=1000,roleNamespace=200),difficulty=diff)#
-	
-	print("generating")
-	
-	generator.genERate()
+	generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)#
 		
-	#reasoner = ReasonER(generator,showSteps=True)	 
+	#generator.genERate()
+		
+	reasoner = ReasonER(generator,showSteps=True)	 
 	
-	print("writing files")
+	reasonerJustifications = None#JustificationFindER(reasoner)
 	
-	generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/not/a/real/IRI/>","owl/funcSyntKB.owl")
-	generator.toStringFile("output/KB.txt")
-	writeFile("output/details.txt","Time: {}\nSeed: {}".format(time.time()-start,generator.seed))		
+	negatives = NegativesGenERator(reasoner)
 	
-	#reasonerJustifications = JustificationFindER(reasoner)
+	dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
 	
-	#negatives = NegativesGenERator(reasoner)
-	
-	#writeFileI(i,diff,generator,reasoner,reasonerJustifications,negatives,start)	
+	writeFileI(i,diff,generator,reasoner,reasonerJustifications,dependencies,negatives,start)	
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		print(i)
-		runExperiment(i,100)
+		runExperiment(i,10)

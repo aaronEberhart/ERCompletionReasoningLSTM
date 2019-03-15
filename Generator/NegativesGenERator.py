@@ -190,6 +190,23 @@ class NegativesGenERator:
         
         return ret
     
+    def toStringFile(self,filename):
+        file = open(filename,"a")
+        file.write("\nNegative Examples" if self.hasRun else "")
+        for statement in self.CType1:
+            file.write("\n{}".format(statement.toString()))
+        for statement in self.CType2:
+            file.write("\n{}".format(statement.toString()))
+        for statement in self.CType3:
+            file.write("\n{}".format(statement.toString()))
+        for statement in self.CType4:
+            file.write("\n{}".format(statement.toString()))
+        for statement in self.roleSubs:
+            file.write("\n{}".format(statement.toString()))
+        for statement in self.roleChains:
+            file.write("\n{}".format(statement.toString()))
+        file.close()     
+    
     def getStatistics(self):
 
         uniqueConceptNames = []

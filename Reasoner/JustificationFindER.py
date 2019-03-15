@@ -87,3 +87,12 @@ class JustificationFindER:
         for statement in self.newType3:
             ret = ret + "\n{}: {}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else " ; ".join([x for x in statement[1]])))
         return ret    
+    
+    def toStringFile(self,filename):
+        file = open(filename,"a")
+        file.write("\nExtended KB w/ Justifications")
+        for statement in self.newType1:
+            file.write("\n{}: {}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else " ; ".join([x for x in statement[1]]))))
+        for statement in self.newType3:
+            file.write("\n{}: {}".format(statement[0].toString(),"" if len(statement[1]) == 0 else (statement[1][0] if len(statement[1]) == 1 else " ; ".join([x for x in statement[1]]))))
+        file.close()      
