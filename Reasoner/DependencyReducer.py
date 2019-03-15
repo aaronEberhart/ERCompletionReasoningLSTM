@@ -32,12 +32,12 @@ class DependencyReducer:
                 thisType = []
                 for log in logType:
                     for i in range(0,len(log[2])):
-                        if not self.inKB(self.determineType(log[2][i]),log[2][i]):
-                            print(log[2][i].toString())                            
+                        if not self.inKB(self.determineType(log[2][i]),log[2][i]):                         
                             x = self.fixTerm(log[2][i],thisType,thisIter)
                             log[2].remove(log[2][i])
+                            for item in x:
+                                if item in log[2]: x.remove(item)                         
                             log[2] = log[2] + x
-                            print(log[2][i].toString())
                     thisType.append(log)
                 thisIter.append(thisType)
             self.donelogs.append(thisIter)

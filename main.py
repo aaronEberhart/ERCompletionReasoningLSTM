@@ -38,9 +38,9 @@ def writeFileI(i,diff,generator,reasoner,reasonerJustifications,dependencies,neg
 	for j in range(0,len(dependencies.donelogs[0])):
 		writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
 	for j in range(0,len(dependencies.donelogs[1])):
-		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
+		if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
 	for j in range(0,len(dependencies.donelogs[2])):
-		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[0][j]))
+		if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
 	generator.toStringFile("output/{}/completedKB.txt".format(i))
 	reasoner.toStringFile("output/{}/completedKB.txt".format(i))
 	negatives.toStringFile("output/{}/completedKB.txt".format(i))
