@@ -44,7 +44,7 @@ def writeFileI(i,diff,generator,reasoner,reasonerJustifications,dependencies,neg
 	generator.toStringFile("output/{}/completedKB.txt".format(i))
 	reasoner.toStringFile("output/{}/completedKB.txt".format(i))
 	negatives.toStringFile("output/{}/completedKB.txt".format(i))
-	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString())#+reasonerJustifications.toString())	
+	writeFile("output/{}/completedReasonerDetails.txt".format(i),formatStatistics(start,generator,reasoner,negatives)+reasoner.getRuleCountString()+("" if reasonerJustifications == None else reasonerJustifications.toString()))	
 	if len(reasoner.KBaLog) < 1: print("after error")
 	if len(reasoner.sequenceLog) != 2 * diff: print("seq error")
 
@@ -54,23 +54,19 @@ def runExperiment(i,diff):
 		
 	start = time.time()
 		
-	generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)#
+	generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20),difficulty=diff)
 		
-	#generator.genERate()
-		
-	reasoner = ReasonER(generator,showSteps=True)	 
-	
-	reasonerJustifications = None#JustificationFindER(reasoner)
+	reasoner = ReasonER(generator,showSteps=True)
 	
 	negatives = NegativesGenERator(reasoner)
 	
 	dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
 	
-	writeFileI(i,diff,generator,reasoner,reasonerJustifications,dependencies,negatives,start)	
+	writeFileI(i,diff,generator,reasoner,JustificationFindER(reasoner),dependencies,negatives,start)	
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1):
+	for i in range(0,5):
 		print(i)
-		runExperiment(i,10)
+		runExperiment(i,25)

@@ -33,7 +33,7 @@ class JustificationFindER:
         return matches
     
     def findMatchesRule2(self,statement):
-        """ C1 ⊓ C2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
+        """ C1 ⊓ CNone2 ⊑ D, A ⊑ C1, A ⊑ C2 |= A ⊑ D """
         matches = []
         for candidate1 in list(filter(lambda x: statement.consequent.name == x.consequent.name,self.allType2)):
             for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name and x.consequent.name == candidate1.antecedent.antecedent.name,self.allType1+self.nullType)):
@@ -42,11 +42,11 @@ class JustificationFindER:
         return matches
     
     def findMatchesRule4(self,statement):
-        """ ∃R.C ⊑ D, A ⊑ ∃R.B, B ⊑ C |= A ⊑ D """
+        """ ∃R.C None⊑ D, A ⊑ ∃R.B, B ⊑ C |= A ⊑ D """
         matches = []
         for candidate1 in list(filter(lambda x: statement.consequent.name == x.consequent.name,self.allType4)):
             for candidate2 in list(filter(lambda x: statement.antecedent.name == x.antecedent.name, self.allType3)):
-                for candidate3 in list(filter(lambda x: x.antecedent.name == candidate2.consequent.concept.name and x.consequent.name == candidate1.antecedent.concept.name,self.allType1+self.nullType)):
+                for candidate3 in list(filter(lambda x: x.antecedent.name == candidate2.consequent.concept.name and candidate2.consequent.role.name == candidate1.antecedent.role.name and x.consequent.name == candidate1.antecedent.concept.name,self.allType1+self.nullType)):
                     matches.append("(4){},{},{}".format(candidate2.toString(),candidate3.toString(),candidate1.toString()))
         return matches
     
