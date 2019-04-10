@@ -11,6 +11,9 @@ class NegativesGenERator:
         self.CType2 = reasonER.syntheticData.CType2
         self.CType3 = reasonER.syntheticData.CType3 + reasonER.knownCType3
         self.CType4 = reasonER.syntheticData.CType4
+        if reasonER.syntheticData.rGenerator != None:
+            self.CType1 = self.CType1 + reasonER.syntheticData.rGenerator.CType1
+            self.CType4 = self.CType4 + reasonER.syntheticData.rGenerator.CType4
         self.allC = self.CType1 + self.CType2 + self.CType3 + self.CType4
         self.roleSubs = reasonER.syntheticData.roleSubs
         self.roleChains = reasonER.syntheticData.roleChains
@@ -193,17 +196,17 @@ class NegativesGenERator:
     def toStringFile(self,filename):
         file = open(filename,"a")
         file.write("\nNegative Examples" if self.hasRun else "")
-        for statement in self.CType1:
+        for statement in self.notCType1:
             file.write("\n{}".format(statement.toString()))
-        for statement in self.CType2:
+        for statement in self.notCType2:
             file.write("\n{}".format(statement.toString()))
-        for statement in self.CType3:
+        for statement in self.notCType3:
             file.write("\n{}".format(statement.toString()))
-        for statement in self.CType4:
+        for statement in self.notCType4:
             file.write("\n{}".format(statement.toString()))
-        for statement in self.roleSubs:
+        for statement in self.notRoleSubs:
             file.write("\n{}".format(statement.toString()))
-        for statement in self.roleChains:
+        for statement in self.notRoleChains:
             file.write("\n{}".format(statement.toString()))
         file.close()     
     
