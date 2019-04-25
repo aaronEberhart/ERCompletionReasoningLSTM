@@ -1,5 +1,5 @@
 from Statement import *
-
+from numpy import array
 """
 Completion rules:
 
@@ -75,7 +75,7 @@ class DependencyReducer:
                 for log in logType:
                     if self.equals(types,term,log[0]):
                         return log[2]
-        raise Exception("BAH")
+        print("NOOOOOOOOOOO")
     
     def equals(self,types,item1,item2):
         if types != self.determineType(item2): return False
@@ -95,3 +95,38 @@ class DependencyReducer:
     def toString(self,rules):
         return "\n".join(["{}: ({}){}".format(rule[0].toString(),str(rule[1]+1),",".join([x.toString() for x in rule[2]])) for rule in rules])
         
+    def toVector(self,concepts,roles):
+        ans = []
+        vec = []
+        maxa = 0
+        maxv = 0
+        for i in range(0,len(self.donelogs[0])):
+            itera = []
+            iterb = []
+            for j in range(0,max(len(self.donelogs[0][i]),len(self.donelogs[1][i]))):
+                if j < len(self.donelogs[0][i]): itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[0][i][j][2]]
+                if j < len(self.donelogs[1][i]): itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[1][i][j][2]]
+                if j < len(self.donelogs[0][i]) and j < len(self.donelogs[1][i]):
+                    iterb.append(self.donelogs[0][i][j][0].toVector(concepts,roles))
+                    iterb.append(self.donelogs[1][i][j][0].toVector(concepts,roles))
+                elif j < len(self.donelogs[0][i]):
+                    iterb.append(self.donelogs[0][i][j][0].toVector(concepts,roles))
+                elif j < len(self.donelogs[1][i]):
+                    iterb.append(self.donelogs[1][i][j][0].toVector(concepts,roles))
+            if len(itera) > maxv: maxv = len(itera)
+            if len(iterb) > maxa: maxa = len(iterb)
+            vec.append(itera)
+            ans.append(iterb)
+        for i in range(0,len(self.donelogs[2])):
+            itera = []
+            iterb = []
+            for j in range(0,len(self.donelogs[2][i])): 
+                itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[2][i][j][2]]
+                iterb.append(self.donelogs[2][i][j][0].toVector(concepts,roles))
+        if len(itera) > maxv: maxv = len(itera)
+        if len(iterb) > maxa: maxa = len(iterb)
+        vec.append(itera)
+        ans.append(iterb)
+        
+        
+        return vec,maxv,ans,maxa

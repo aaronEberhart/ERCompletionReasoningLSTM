@@ -55,10 +55,6 @@ def runExperiment(i,diff):
 	start = time.time()
 		
 	generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=diff)
-	
-	#generator.genERate()
-	
-	#generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/not/a/real/IRI/>","owl/{}funcSyntKB.owl".format(i))
 		
 	reasoner = ReasonER(generator,showSteps=True)
 	
@@ -67,10 +63,22 @@ def runExperiment(i,diff):
 	dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
 	
 	writeFileI(i,diff,generator,reasoner,None,dependencies,negatives,start)	
+	
+
+def sequenceTrial(diff):
+	
+	generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=25),difficulty=diff)
+		
+	reasoner = ReasonER(generator,showSteps=True)
+	
+	negatives = NegativesGenERator(reasoner)
+	
+	dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
+		
 
 if __name__ == "__main__":
 	if not os.path.isdir("output"): os.mkdir("output")
 	if not os.path.isdir("owl"): os.mkdir("owl")
-	for i in range(0,1000):
+	for i in range(0,1):
 		print(i)
-		runExperiment(i,20)
+		sequenceTrial(1)

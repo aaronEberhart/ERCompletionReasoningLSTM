@@ -44,6 +44,9 @@ class Concept(Predicate):
 	def toFunctionalSyntax(self):
 		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","C" if isinstance(self.name,int) else "",self.name," )" if self.negated else "")
 	
+	def toVector(self):
+		return float(self.name) if isinstance(self.name,int) else self.name
+	
 class Role(Predicate):
 
 	def __init__(self,ID,args,negated=False,showTerms=False):
@@ -58,6 +61,9 @@ class Role(Predicate):
 
 	def toFunctionalSyntax(self):
 		return "{}{}{}{}".format("ObjectComplementOf( :" if self.negated else ":","R" if isinstance(self.name,int) else "",self.name," )" if self.negated else "")
+	
+	def toVector(self):
+		return float(-self.name) if isinstance(self.name,int) else self.name
 	
 class ConceptRole(Concept):
 	

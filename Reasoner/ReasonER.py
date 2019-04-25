@@ -220,6 +220,14 @@ class ReasonER:
 				else:
 					if statement.antecedent.name >= self.syntheticData.hConceptNamespace or statement.consequent.name > self.syntheticData.hConceptNamespace: return False
 					return True
+	
+	def toVector(self):
+		vec = self.syntheticData.toVector()
+		for statement in self.knownCType1:
+			vec.append(statement.toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+		for statement in self.knownCType3:
+			vec.append(statement.toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))	
+		return vec
 				
 	def toString(self):
 		ret = "\nExtended KB"
@@ -299,4 +307,3 @@ class ReasonER:
 			allRoleNames = allRoleNames + 1
 			
 		return [["both",["unique",len(uniqueConceptNames)+len(uniqueRoleNames)],["all",allConceptNames+allRoleNames]],["concept",["unique",len(uniqueConceptNames)],["all",allConceptNames]],["role",["unique",len(uniqueRoleNames)],["all",allRoleNames]]]
-	

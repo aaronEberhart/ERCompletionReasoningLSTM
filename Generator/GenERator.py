@@ -61,8 +61,8 @@ class GenERator:
 		
 	def makeCType1(self):
 		""" C ⊑ D """
-		left = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		left = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		right = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		while left == right:
 			right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		cs = ConceptStatement(len(self.CType1),True,Concept(left,[0]),Concept(right,[0]))
@@ -75,13 +75,13 @@ class GenERator:
 			
 	def makeCType2(self):
 		""" C ⊓ D ⊑ E """
-		left1 = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		left2 = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		left1 = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		left2 = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		while left1 == left2:
 			left2 = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		cs1 = ConceptStatement(0,True,Concept(left1,[0]),Concept(left2,[0]))
+		cs1 = ConceptStatement(1,True,Concept(left1,[0]),Concept(left2,[0]))
 		cs1.complete('⊓')
-		right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		right = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		while left1 == right or right == left2:
 			right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
 		cs = ConceptStatement(len(self.CType2),True,cs1,Concept(right,[0]))
@@ -94,9 +94,9 @@ class GenERator:
 	
 	def makeCType3(self):
 		""" C ⊑ ∃R.D """
-		left = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		rightC = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		rightR = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		left = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		rightC = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		rightR = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		cs = ConceptStatement(len(self.CType3),True,Concept(left,[0]),ConceptRole('e',Role(rightR,[0,1]),Concept(rightC,[1])))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType3,cs):
@@ -107,9 +107,9 @@ class GenERator:
 		
 	def makeCType4(self):
 		""" ∃R.C ⊑ D """
-		right = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		leftC = random.randint(0,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
-		leftR = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		right = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		leftC = random.randint(1,self.conceptNamespace-1) if self.conceptNamespace > 0 else random.randint(self.conceptNamespace,-1)
+		leftR = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		cs = ConceptStatement(len(self.CType4),True,ConceptRole('e',Role(leftR,[0,1]),Concept(leftC,[1])),Concept(right,[0]))
 		cs.complete('⊑')
 		if self.alreadyGenERated(self.CType4,cs):
@@ -130,8 +130,8 @@ class GenERator:
 		
 	def makeRTypeT(self):
 		""" R ⊑ S """
-		left = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
-		right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		left = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		right = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		while left == right:
 			right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		rs = RoleStatement(len(self.roleSubs),True,Role(left,[0,1]),Role(right,[0,1]))
@@ -144,9 +144,9 @@ class GenERator:
 
 	def makeRTypeC(self):
 		""" R1 ∘ R2 ⊑ S """
-		leftR1 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
-		leftR2 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
-		right = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		leftR1 = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		leftR2 = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
+		right = random.randint(1,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		while leftR1 == leftR2:
 			leftR2 = random.randint(0,self.roleNamespace-1) if self.roleNamespace > 0 else random.randint(self.roleNamespace,-1) 
 		rs = RoleStatement(len(self.roleChains),True,RoleChain(0,Role(leftR1,[0,1]),Role(leftR2,[1,2])),Role(right,[0,2]))
@@ -206,7 +206,23 @@ class GenERator:
 		for statement in self.roleSubs:
 			file.write(statement.toFunctionalSyntax())
 		for statement in self.roleChains:
-			file.write(statement.toFunctionalSyntax())	
+			file.write(statement.toFunctionalSyntax())
+	
+	def toVector(self):
+		vec = []
+		for statement in self.CType1:
+			vec.append(statement.toFunctionalSyntax())
+		for statement in self.CType2:
+			vec.append(statement.toFunctionalSyntax())
+		for statement in self.CType3:
+			vec.append(statement.toFunctionalSyntax())
+		for statement in self.CType4:
+			vec.append(statement.toFunctionalSyntax())	
+		for statement in self.roleSubs:
+			vec.append(statement.toFunctionalSyntax())
+		for statement in self.roleChains:
+			vec.append(statement.toFunctionalSyntax())	
+		return vec
 
 	def getStatistics(self):
 		

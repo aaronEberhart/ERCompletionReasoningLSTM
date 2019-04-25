@@ -73,8 +73,8 @@ class HardGenERator2:
             x.consequent.name = x.consequent.name + self.rGenerator.roleNamespace-1
 
     def spliceGenERators(self):
-        self.conceptNamespace = self.conceptNamespace + self.rGenerator.conceptNamespace - 1
-        self.roleNamespace = self.roleNamespace + self.rGenerator.roleNamespace
+        self.conceptNamespace = self.conceptNamespace + self.rGenerator.conceptNamespace - 2
+        self.roleNamespace = self.roleNamespace + self.rGenerator.roleNamespace -  1
         self.CTypeNull = self.CTypeNull + self.rGenerator.CTypeNull    
         self.CType1 = self.CType1 + self.rGenerator.CType1
         self.CType2 = self.CType2 + self.rGenerator.CType2
@@ -94,8 +94,8 @@ class HardGenERator2:
 
         for i in range(0,self.difficulty):
             self.unwantedDeductions(i*3)
-            self.genERateSequence(i)       
-
+            self.genERateSequence(i)    
+        
         if self.rGenerator != None: 
             self.shiftSGenerator() 
             self.spliceGenERators()              
@@ -250,6 +250,22 @@ class HardGenERator2:
             file.write(statement.toFunctionalSyntax())  
         file.write("\n\n)")
         file.close()         
+
+    def toVector(self):
+        vec = []
+        for statement in self.CType1:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+        for statement in self.CType2:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+        for statement in self.CType3:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+        for statement in self.CType4:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))	
+        for statement in self.roleSubs:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+        for statement in self.roleChains:
+            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))	
+        return vec        
 
     def getStatistics(self):
 

@@ -50,6 +50,16 @@ class ConceptStatement(Concept):
     
     def toFunctionalSyntax(self):
         return "{}( {} {} )".format("SubClassOf" if self.operator == "⊑" else ("ObjectIntersectionOf" if self.operator == "⊓" else "ObjectUnionOf"), self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())
+    
+    def toVector(self,concepts,roles):
+        if isinstance(self.antecedent,ConceptRole):
+            return [self.antecedent.role.toVector()/roles, self.antecedent.concept.toVector()/concepts, self.consequent.toVector()/concepts, 0.0]
+        elif isinstance(self.consequent,ConceptRole):
+            return [0.0, self.antecedent.toVector()/concepts, self.consequent.role.toVector()/roles, self.consequent.concept.toVector()/concepts]
+        elif isinstance(self.antecedent,ConceptStatement):
+            return [self.antecedent.antecedent.toVector()/concepts, self.antecedent.consequent.toVector()/concepts, self.consequent.toVector()/concepts, 0.0]
+        else:
+            return [0.0, self.antecedent.toVector()/concepts, self.consequent.toVector()/concepts, 0.0]
         
 class RoleStatement(Role):
     
@@ -127,4 +137,10 @@ class RoleStatement(Role):
         self.terms = None if self.antecedent == None and self.consequent == None else (Terms([self.antecedent.terms.getTerm(0),self.antecedent.terms.getTerm(1)]) if self.antecedent != None else Terms([self.consequent.terms.getTerm(0),self.consequent.terms.getTerm(1)]))
     
     def toFunctionalSyntax(self):
-        return "SubObjectPropertyOf( {} {} )".format(self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())    
+        return "SubObjectPropertyOf( {} {} )".format(self.antecedent.toFunctionalSyntax(),self.consequent.toFunctionalSyntax())   
+    
+    def toVector(self,concepts,roles):
+        if isinstance(self.antecedent,RoleChain):
+            return [self.antecedent.roles[0].toVector()/roles, self.antecedent.roles[1].toVector()/roles, self.consequent.toVector()/roles, 0.0]
+        else:
+            return [0.0, self.antecedent.toVector()/roles, self.consequent.toVector()/roles, 0.0]
