@@ -72,6 +72,10 @@ def pad(arr,maxlen=0):
 
     return newarr
 
+def acc(train,iteri):
+    return tf.reduce_sum(train - iteri)
+
+
 X,y = getDataFromFile()#makeData(1000)#
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
@@ -83,27 +87,27 @@ X_test = pad(X_test,X_train.shape[2])
 
 print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
+print(y_train)
+
+learning_rate = 0.001
 n_epochs = 2
 train_size = X_train.shape[0]
 n_neurons = y_train.shape[2]# * X_train.shape[2]
 n_layers = 1
 
 X = tf.placeholder(tf.float32, shape=X_train.shape)
-y = tf.placeholder(tf.int32, shape=y_train.shape)
+y = tf.placeholder(tf.float32, shape=y_train.shape)
 
 basic_cell = tf.contrib.rnn.LSTMCell(num_units=n_neurons,use_peepholes=True)
 multi_layer_cell = tf.contrib.rnn.MultiRNNCell([basic_cell] * n_layers)
 outputs, states = tf.nn.dynamic_rnn(multi_layer_cell, X, dtype=tf.float32)
 
-
 init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     init.run()
-    for epoch in range(n_epochs):
-        for iteration in range(train_size):    
-            sess.run(outputs,feed_dict={X: X_train,y: y_train})
-            print(outputs)
-        acc_train = accuracy.eval(feed_dict={X: X_train, y: y_train})
-        acc_test = accuracy.eval(feed_dict={X: X_test, y: y_test})
-        print(epoch, "Train accuracy:", acc_train, "Test accuracy:", acc_test)        
+    for epoch in range(n_epochs):    
+        outputs_val, states_val = sess.run([outputs,states],feed_dict={X: X_train,y: y_train})
+            
+        
+
