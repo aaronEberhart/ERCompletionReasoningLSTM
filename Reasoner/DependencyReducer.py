@@ -154,3 +154,4 @@ class DependencyReducer:
             a.append(array(itera))            
         
         return array(v),array(a)
+    
