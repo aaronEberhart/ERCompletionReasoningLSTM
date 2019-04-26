@@ -1,5 +1,7 @@
 from Statement import *
 from numpy import array
+import numpy
+
 """
 Completion rules:
 
@@ -34,8 +36,11 @@ class DependencyReducer:
                     removals = []
                     for term in log[2]:
                         types = self.determineType(term)
-                        if not self.inKB(types,term):                         
-                            log[2] = log[2] + self.fixTerm(types,term,thisType,thisIter)
+                        if not self.inKB(types,term):   
+                            thing = self.fixTerm(types,term,thisType,thisIter)
+                            if thing == None:
+                                pass
+                            log[2] = log[2] + thing
                             removals.append(term)             
                     for i in range(0,len(log[2])):
                         for j in range(i+1,len(log[2])):
@@ -94,6 +99,9 @@ class DependencyReducer:
     
     def toString(self,rules):
         return "\n".join(["{}: ({}){}".format(rule[0].toString(),str(rule[1]+1),",".join([x.toString() for x in rule[2]])) for rule in rules])
+    
+    def correctRange(self,log1,log2):
+        return(max(log1,log2))
         
     def toVector(self,concepts,roles):
         ans = []
@@ -103,16 +111,18 @@ class DependencyReducer:
         for i in range(0,len(self.donelogs[0])):
             itera = []
             iterb = []
-            for j in range(0,max(len(self.donelogs[0][i]),len(self.donelogs[1][i]))):
-                if j < len(self.donelogs[0][i]): itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[0][i][j][2]]
-                if j < len(self.donelogs[1][i]): itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[1][i][j][2]]
+            if (i > len(self.donelogs[1])):
+                print(self.kb.toString())
+            for j in range(0,self.correctRange(len(self.donelogs[0][i]),len(self.donelogs[1][i]))):
+                if j < len(self.donelogs[0][i]): itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[0][i][j][2]]
+                if j < len(self.donelogs[1][i]): itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[1][i][j][2]]
                 if j < len(self.donelogs[0][i]) and j < len(self.donelogs[1][i]):
-                    iterb.append(self.donelogs[0][i][j][0].toVector(concepts,roles))
-                    iterb.append(self.donelogs[1][i][j][0].toVector(concepts,roles))
+                    iterb.append(array(self.donelogs[0][i][j][0].toVector(concepts,roles)))
+                    iterb.append(array(self.donelogs[1][i][j][0].toVector(concepts,roles)))
                 elif j < len(self.donelogs[0][i]):
-                    iterb.append(self.donelogs[0][i][j][0].toVector(concepts,roles))
+                    iterb.append(array(self.donelogs[0][i][j][0].toVector(concepts,roles)))
                 elif j < len(self.donelogs[1][i]):
-                    iterb.append(self.donelogs[1][i][j][0].toVector(concepts,roles))
+                    iterb.append(array(self.donelogs[1][i][j][0].toVector(concepts,roles)))
             if len(itera) > maxv: maxv = len(itera)
             if len(iterb) > maxa: maxa = len(iterb)
             vec.append(itera)
@@ -121,12 +131,26 @@ class DependencyReducer:
             itera = []
             iterb = []
             for j in range(0,len(self.donelogs[2][i])): 
-                itera = itera + [x.toVector(concepts,roles) for x in self.donelogs[2][i][j][2]]
-                iterb.append(self.donelogs[2][i][j][0].toVector(concepts,roles))
+                itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[2][i][j][2]]
+                iterb.append(array(self.donelogs[2][i][j][0].toVector(concepts,roles)))
         if len(itera) > maxv: maxv = len(itera)
         if len(iterb) > maxa: maxa = len(iterb)
         vec.append(itera)
         ans.append(iterb)
         
+        v = []
+        a = []
+        for i in range(0,len(vec)):
+            itera = vec[i][0]
+            for j in range(1,maxv):
+                if j < len(vec[i]): itera = numpy.concatenate((itera,vec[i][j]),axis=None)
+                else: itera = numpy.concatenate((itera,array([0.0,0.0,0.0,0.0])),axis=None)
+            v.append(array(itera))
+        for i in range(0,len(ans)):
+            itera = ans[i][0]
+            for j in range(1,maxa):
+                if j < len(ans[i]): itera = numpy.concatenate((itera,ans[i][j]),axis=None)
+                else: itera = numpy.concatenate((itera,array([0.0,0.0,0.0,0.0])),axis=None)
+            a.append(array(itera))            
         
-        return vec,maxv,ans,maxa
+        return array(v),array(a)
