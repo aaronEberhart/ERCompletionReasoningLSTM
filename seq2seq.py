@@ -72,9 +72,6 @@ def pad(arr,maxlen=0):
 
     return newarr
 
-def acc(train,iteri):
-    return tf.reduce_sum(train - iteri)
-
 
 X,y = getDataFromFile()#makeData(1000)#
 
@@ -89,25 +86,32 @@ print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
 print(y_train)
 
-learning_rate = 0.001
-n_epochs = 2
+learning_rate = 0.01
+n_epochs = 1000
 train_size = X_train.shape[0]
 n_neurons = y_train.shape[2]# * X_train.shape[2]
 n_layers = 1
 
-X = tf.placeholder(tf.float32, shape=X_train.shape)
-y = tf.placeholder(tf.float32, shape=y_train.shape)
+X = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
+y = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
 
 basic_cell = tf.contrib.rnn.LSTMCell(num_units=n_neurons,use_peepholes=True)
 multi_layer_cell = tf.contrib.rnn.MultiRNNCell([basic_cell] * n_layers)
 outputs, states = tf.nn.dynamic_rnn(multi_layer_cell, X, dtype=tf.float32)
+accuracy = tf.metrics.accuracy(y_train,y)
+
+learning_rate = 0.001
+loss = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.abs(outputs - y))))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+training_op = optimizer.minimize(loss)
 
 init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     init.run()
     for epoch in range(n_epochs):    
-        outputs_val, states_val = sess.run([outputs,states],feed_dict={X: X_train,y: y_train})
-            
-        
-
+        sess.run(training_op,feed_dict={X: X_train,y: y_train})
+        print(loss.eval(feed_dict={X: X_train, y: y_train}))
+    y_pred = sess.run(outputs,feed_dict={X: X_test})
+    z = sum(sum(sum(numpy.absolute(y_test - y_pred))))/(len(y_test)*len(y_test[0])*len(y_test[0][0]))
+    print("Average error of new data: {}\n{}\n{}".format(z,y_pred,numpy.absolute(y_test - y_pred)))
