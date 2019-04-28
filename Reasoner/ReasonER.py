@@ -262,9 +262,9 @@ class ReasonER:
 	def toFunctionalSyntaxFile(self,IRI,filename): 
 		file = open(filename,"w")
 		file.write("Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n")
-		for i in range(0,self.syntheticData.conceptNamespace):
+		for i in range(1,self.syntheticData.conceptNamespace):
 			file.write("Declaration( Class( :C{} ) )\n".format(i))
-		for i in range(0,self.syntheticData.roleNamespace):
+		for i in range(1,self.syntheticData.roleNamespace):
 			file.write("Declaration( ObjectProperty( :R{} ) )\n".format(i))        
 		for statement in self.syntheticData.CType1:
 			file.write(statement.toFunctionalSyntax())

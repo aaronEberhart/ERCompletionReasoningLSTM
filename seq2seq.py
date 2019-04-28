@@ -48,22 +48,21 @@ def writeVectorFile(filename,vector):
         file.write("\n")
     file.close()
     
-def makeData(trials):
+def makeData(trials,easy):
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
     if not os.path.isdir("output"): os.mkdir("output")
      
     for i in range(0,trials):
         
-        
-
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=2,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1)     
+        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=2,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1) if easy else \
+            HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
         
         reasoner = ReasonER(generator,showSteps=True)
         
         reasoner.ERason()
-        #negatives = NegativesGenERator(reasoner)    
-        print(i,generator.conceptNamespace,generator.roleNamespace)
+          
+        #print(i,generator.conceptNamespace,generator.roleNamespace)
 	
         dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
         
@@ -82,12 +81,12 @@ def makeData(trials):
         for j in range(0,len(dependencies.donelogs[2])):
             if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
             
-    numpy.savez("dataEasy", seq_in,seq_out)
+    numpy.savez("dataEasy" if easy else 'data', seq_in,seq_out)
     
     return seq_in,seq_out
 
-def getDataFromFile():
-    data = numpy.load('data.npz',allow_pickle=True)
+def getDataFromFile(easy):
+    data = numpy.load('dataEasy.npz' if easy else 'data.npz',allow_pickle=True)
     return data['arr_0'],data['arr_1']
 
 def pad(arr,maxlen1=0,maxlen2=0):
@@ -105,7 +104,7 @@ def pad(arr,maxlen1=0,maxlen2=0):
 
     return newarr
 
-def vecToStatements(vec):    
+def vecToStatements(vec,easy):    
     four = []
     statements = []
     
@@ -116,7 +115,7 @@ def vecToStatements(vec):
             for k in range(len(vec[i][j])):
                 if len(four) == 3:
                     four.append(vec[i][j][k])
-                    stri = convertToStatement(four)
+                    stri = convertToStatement(four,easy)
                     if stri != None: step.append(stri)
                     four = []                    
                 else:
@@ -128,12 +127,12 @@ def vecToStatements(vec):
         
     return statements
 
-def convertToStatement(four):
-    concepts = 106#13#
-    roles = 56#7#
+def convertToStatement(four,easy):
+    concepts = 13 if easy else 106
+    roles = 7 if easy else 56
     new = []
-    threshc = 1 / concepts
-    threshr = -1 / roles
+    threshc = 0.5 / concepts
+    threshr = -0.5 / roles
     for number in four:
         if isinstance(number,numpy.float32): 
             number = number.item()
@@ -162,28 +161,28 @@ def splitTensors(inputs,outputs, size):
     outTest, outTrain = numpy.split(outputs,[int(len(outputs)*size)])
     return inTrain, inTest, outTrain, outTest
 
-X,y = getDataFromFile()#makeData(1000)#
+easy = True
+fileShapes = [6,760,152] if easy else [8,2116,324]
 
-#numpy.random.shuffle(X)
-#numpy.random.shuffle(y)
+X,y = getDataFromFile(easy)#makeData(1000,easy)#
 
 X_train, X_test, y_train, y_test = splitTensors(X, y, 0.33)
 
-X_train = pad(X_train)
-X_test = pad(X_test,maxlen1=X_train.shape[1],maxlen2=X_train.shape[2])#
+X_train = pad(X_train,maxlen1=fileShapes[0],maxlen2=fileShapes[1])
+X_test = pad(X_test,maxlen1=fileShapes[0],maxlen2=fileShapes[1])
 
-y_train = pad(y_train)
-y_test = pad(y_test,maxlen1=X_train.shape[1],maxlen2=y_train.shape[2])#
+y_train = pad(y_train,maxlen1=fileShapes[0],maxlen2=fileShapes[2])
+y_test = pad(y_test,maxlen1=fileShapes[0],maxlen2=fileShapes[2])
 
 print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
 
-writeVectorFile("targetIn.txt",vecToStatements(X_test))
-writeVectorFile("targetOut.txt",vecToStatements(y_test))
+writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",vecToStatements(X_test,easy))
+writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",vecToStatements(y_test,easy))
 
-learning_rate = 0.0001
-n_epochs = 100000
+learning_rate = 0.01
+n_epochs = 1000
 train_size = X_train.shape[0]
-n_neurons = y_train.shape[2]# * X_train.shape[2]
+n_neurons = y_train.shape[2]
 n_layers = 1
 
 X = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
@@ -192,9 +191,8 @@ y = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
 basic_cell = tf.contrib.rnn.LSTMCell(num_units=n_neurons,use_peepholes=True)
 multi_layer_cell = tf.contrib.rnn.MultiRNNCell([basic_cell] * n_layers)
 outputs, states = tf.nn.dynamic_rnn(multi_layer_cell, X, dtype=tf.float32)
-accuracy = tf.metrics.accuracy(y_train,y)
 
-loss = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
+loss = tf.losses.mean_squared_error(y,outputs)#tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 training_op = optimizer.minimize(loss)
 
@@ -204,9 +202,19 @@ saver = tf.train.Saver()
 
 with tf.Session() as sess:
     init.run()
+    mse0 = 0
+    mseL = 0
     for epoch in range(n_epochs):  
-        sess.run(training_op,feed_dict={X: X_train,y: y_train})
-        print("Epoch: {}\tMean Squared Error: {}".format(epoch,loss.eval(feed_dict={X: X_train, y: y_train})))#epoch)#
+        ynew,a = sess.run([outputs,training_op],feed_dict={X: X_train,y: y_train})
+        mse = loss.eval(feed_dict={outputs: ynew, y: y_train})
+        if epoch == 0: mse0 = mse
+        if epoch == n_epochs - 1: mseL = mse
+        print("Epoch: {}\tMean Squared Error:\t{}".format(epoch,mse))
+        if mse < 0.0001:
+            mseL = mse
+            break
     y_pred = sess.run(outputs,feed_dict={X: X_test})
-    writeVectorFile("predictedOut.txtS",vecToStatements(y_pred))
-    saver.save(sess, "model")
+    mseNew = loss.eval(feed_dict={outputs: y_pred, y: y_test})
+    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tPercent Change MSE:\t{}".format(numpy.float32(mseNew),mse0-mseL,(mseL - mse0)/mse0*100))
+    writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",vecToStatements(y_pred,easy))
+    saver.save(sess, "model.easy" if easy else "model")

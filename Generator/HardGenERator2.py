@@ -88,9 +88,13 @@ class HardGenERator2:
         if self.hasRun: return
         
         self.setup()
-
-        for i in range(2,self.conceptNamespace+1):
-            self.makeCTypeNull(i)
+        
+        if self.rGenerator != None:
+            for i in range(2,self.conceptNamespace+1):
+                self.makeCTypeNull(i)
+        else:
+            for i in range(1,self.conceptNamespace+1):
+                self.makeCTypeNull(i)            
 
         for i in range(0,self.difficulty):
             self.unwantedDeductions(i*3)
@@ -232,9 +236,9 @@ class HardGenERator2:
     def toFunctionalSyntaxFile(self,IRI,filename): 
         file = open(filename,"w")
         file.write("Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n")
-        for i in range(0,self.conceptNamespace):
+        for i in range(1,self.conceptNamespace):
             file.write("Declaration( Class( :C{} ) )\n".format(i))
-        for i in range(0,self.roleNamespace):
+        for i in range(1,self.roleNamespace):
             file.write("Declaration( ObjectProperty( :R{} ) )\n".format(i))        
         for statement in self.CType1:
             file.write(statement.toFunctionalSyntax())

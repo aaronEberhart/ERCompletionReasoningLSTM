@@ -67,13 +67,15 @@ def runExperiment(i,diff):
 
 def sequenceTrial(diff):
 	
-	generator = HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=25),difficulty=diff)
+	generator = HardGenERator2(rGenerator=None,difficulty=diff)#GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=25),difficulty=diff)
 		
 	reasoner = ReasonER(generator,showSteps=True)
 	
 	negatives = NegativesGenERator(reasoner)
 	
 	dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
+	
+	writeFileI(i,diff,generator,reasoner,None,dependencies,negatives,0)	
 		
 
 if __name__ == "__main__":
@@ -81,4 +83,4 @@ if __name__ == "__main__":
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		print(i)
-		sequenceTrial(1)
+		sequenceTrial(50)
