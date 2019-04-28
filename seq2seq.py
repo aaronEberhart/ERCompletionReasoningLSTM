@@ -32,7 +32,12 @@ from keras.layers import LSTM
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
-def writeFile(filename,vector):
+def writeFile(filename,data):
+    file = open(filename,"w")
+    file.write(data)
+    file.close()    
+
+def writeVectorFile(filename,vector):
     file = open(filename,"w")
     for i in range(len(vector)):
         file.write("Trial: {}\n".format(i))
@@ -50,14 +55,15 @@ def makeData(trials):
      
     for i in range(0,trials):
         
-        print(i)
+        
 
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1)     
+        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=2,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1)     
         
         reasoner = ReasonER(generator,showSteps=True)
         
         reasoner.ERason()
         #negatives = NegativesGenERator(reasoner)    
+        print(i,generator.conceptNamespace,generator.roleNamespace)
 	
         dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
         
@@ -67,6 +73,8 @@ def makeData(trials):
         if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
         if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
         if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
+        generator.toStringFile("output/{}/completedKB.txt".format(i))
+        reasoner.toStringFile("output/{}/completedKB.txt".format(i))        
         for j in range(0,len(dependencies.donelogs[0])):
             writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
         for j in range(0,len(dependencies.donelogs[1])):
@@ -79,7 +87,7 @@ def makeData(trials):
     return seq_in,seq_out
 
 def getDataFromFile():
-    data = numpy.load('dataEasy.npz',allow_pickle=True)
+    data = numpy.load('data.npz',allow_pickle=True)
     return data['arr_0'],data['arr_1']
 
 def pad(arr,maxlen1=0,maxlen2=0):
@@ -121,8 +129,8 @@ def vecToStatements(vec):
     return statements
 
 def convertToStatement(four):
-    concepts = 13#106
-    roles = 7#56
+    concepts = 106#13#
+    roles = 56#7#
     new = []
     threshc = 1 / concepts
     threshr = -1 / roles
@@ -131,9 +139,11 @@ def convertToStatement(four):
             number = number.item()
             if (number > 0 and number < threshc) or (number < 0 and number > threshr): number = 0
         if number < 0:
-            new.append("R{}".format(int(number * roles * -1)))
+            if int(number * roles * -1) == 0: pass
+            else: new.append("R{}".format(int(number * roles * -1)))
         elif number > 0:
-            new.append("C{}".format(int(number * concepts)))   
+            if int(number * concepts) == 0: pass
+            else: new.append("C{}".format(int(number * concepts)))   
             
     if len(new) == 2:
         return " ⊑ ".join(new)
@@ -154,21 +164,24 @@ def splitTensors(inputs,outputs, size):
 
 X,y = getDataFromFile()#makeData(1000)#
 
+#numpy.random.shuffle(X)
+#numpy.random.shuffle(y)
+
 X_train, X_test, y_train, y_test = splitTensors(X, y, 0.33)
 
-X_test = pad(X_test)#,maxlen1=X_train.shape[1],maxlen2=X_train.shape[2])
-X_train = pad(X_train,maxlen2=X_test.shape[2])
+X_train = pad(X_train)
+X_test = pad(X_test,maxlen1=X_train.shape[1],maxlen2=X_train.shape[2])#
 
-y_test = pad(y_test,maxlen1=X_train.shape[1])#,maxlen2=y_train.shape[2])#
-y_train = pad(y_train,maxlen2=y_test.shape[2])
+y_train = pad(y_train)
+y_test = pad(y_test,maxlen1=X_train.shape[1],maxlen2=y_train.shape[2])#
 
 print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
 
-writeFile("targetIn",vecToStatements(X_test))
-writeFile("targetOut",vecToStatements(y_test))
+writeVectorFile("targetIn.txt",vecToStatements(X_test))
+writeVectorFile("targetOut.txt",vecToStatements(y_test))
 
-learning_rate = 0.01
-n_epochs = 1000
+learning_rate = 0.0001
+n_epochs = 100000
 train_size = X_train.shape[0]
 n_neurons = y_train.shape[2]# * X_train.shape[2]
 n_layers = 1
@@ -195,5 +208,5 @@ with tf.Session() as sess:
         sess.run(training_op,feed_dict={X: X_train,y: y_train})
         print("Epoch: {}\tMean Squared Error: {}".format(epoch,loss.eval(feed_dict={X: X_train, y: y_train})))#epoch)#
     y_pred = sess.run(outputs,feed_dict={X: X_test})
-    writeFile("predictedOut",vecToStatements(y_pred))
-    saver.save(sess, "model.easy")
+    writeVectorFile("predictedOut.txtS",vecToStatements(y_pred))
+    saver.save(sess, "model")
