@@ -32,39 +32,64 @@ from keras.layers import LSTM
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
+def writeFile(filename,vector):
+    file = open(filename,"w")
+    for i in range(len(vector)):
+        file.write("Trial: {}\n".format(i))
+        for j in range(len(vector[i])):
+            file.write("\tStep: {}\n".format(j))
+            for k in range(len(vector[i][j])):
+                file.write("\t\t{}\n".format(vector[i][j][k]))
+        file.write("\n")
+    file.close()
+    
 def makeData(trials):
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
-    
+    if not os.path.isdir("output"): os.mkdir("output")
+     
     for i in range(0,trials):
         
         print(i)
-        
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=2,numCType2=2,numCType3=2,numCType4=2,numRoleSub=2,numRoleChains=2,conceptNamespace=10,roleNamespace=6),difficulty=2)
+
+        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1)     
         
         reasoner = ReasonER(generator,showSteps=True)
         
-        negatives = NegativesGenERator(reasoner)
-        
+        reasoner.ERason()
+        #negatives = NegativesGenERator(reasoner)    
+	
         dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
         
         seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
-    
-    numpy.savez("data", seq_in,seq_out)
+        
+        if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
+        if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
+        if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
+        if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
+        for j in range(0,len(dependencies.donelogs[0])):
+            writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
+        for j in range(0,len(dependencies.donelogs[1])):
+            if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
+        for j in range(0,len(dependencies.donelogs[2])):
+            if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
+            
+    numpy.savez("dataEasy", seq_in,seq_out)
     
     return seq_in,seq_out
 
 def getDataFromFile():
-    data = numpy.load('data.npz',allow_pickle=True)
+    data = numpy.load('dataEasy.npz',allow_pickle=True)
     return data['arr_0'],data['arr_1']
 
-def pad(arr,maxlen=0):
+def pad(arr,maxlen1=0,maxlen2=0):
 
     for i in range(0,len(arr)):
-        if len(arr[i][0]) > maxlen: maxlen = len(arr[i][0])
-        
+        if len(arr[i]) > maxlen1: maxlen1 = len(arr[i])
+        for j in range(0,len(arr[i])):
+            if len(arr[i][j]) > maxlen2: maxlen2 = len(arr[i][j])
     
-    newarr = numpy.empty(shape=(len(arr),len(arr[0]),maxlen),dtype=float)
+    newarr = numpy.empty(shape=(len(arr),maxlen1,maxlen2),dtype=float)
     for i in range(0,len(arr)):
         for j in range(0,len(arr[i])):
             for k in range(0,len(arr[i][j])):
@@ -72,19 +97,75 @@ def pad(arr,maxlen=0):
 
     return newarr
 
+def vecToStatements(vec):    
+    four = []
+    statements = []
+    
+    for i in range(len(vec)):
+        trial = []
+        for j in range(len(vec[i])):
+            step = []
+            for k in range(len(vec[i][j])):
+                if len(four) == 3:
+                    four.append(vec[i][j][k])
+                    stri = convertToStatement(four)
+                    if stri != None: step.append(stri)
+                    four = []                    
+                else:
+                    four.append(vec[i][j][k])
+            if len(step) > 0: 
+                trial.append(step)
+                four = []                
+        statements.append(trial)
+        
+    return statements
+
+def convertToStatement(four):
+    concepts = 13#106
+    roles = 7#56
+    new = []
+    threshc = 1 / concepts
+    threshr = -1 / roles
+    for number in four:
+        if isinstance(number,numpy.float32): 
+            number = number.item()
+            if (number > 0 and number < threshc) or (number < 0 and number > threshr): number = 0
+        if number < 0:
+            new.append("R{}".format(int(number * roles * -1)))
+        elif number > 0:
+            new.append("C{}".format(int(number * concepts)))   
+            
+    if len(new) == 2:
+        return " ⊑ ".join(new)
+    elif len(new) == 3:
+        if four[1] > 0 and four[2] < 0 and four[3] > 0:
+            return "{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
+        elif four[1] > 0 and four[0] > 0 and four[2] > 0:
+            return "{} ⊓ {} ⊑ {}".format(new[0],new[1],new[2])
+        elif four[1] < 0 and four[0] < 0 and four[2] < 0:
+            return "{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
+    else:
+        return None
+    
+def splitTensors(inputs,outputs, size):
+    inTest, inTrain = numpy.split(inputs,[int(len(inputs)*size)])
+    outTest, outTrain = numpy.split(outputs,[int(len(outputs)*size)])
+    return inTrain, inTest, outTrain, outTest
 
 X,y = getDataFromFile()#makeData(1000)#
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+X_train, X_test, y_train, y_test = splitTensors(X, y, 0.33)
 
-y_train = pad(y_train)
-y_test = pad(y_test,y_train.shape[2])
-X_train = pad(X_train)
-X_test = pad(X_test,X_train.shape[2])
+X_test = pad(X_test)#,maxlen1=X_train.shape[1],maxlen2=X_train.shape[2])
+X_train = pad(X_train,maxlen2=X_test.shape[2])
 
-print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+y_test = pad(y_test,maxlen1=X_train.shape[1])#,maxlen2=y_train.shape[2])#
+y_train = pad(y_train,maxlen2=y_test.shape[2])
 
-print(y_train)
+print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
+
+writeFile("targetIn",vecToStatements(X_test))
+writeFile("targetOut",vecToStatements(y_test))
 
 learning_rate = 0.01
 n_epochs = 1000
@@ -100,18 +181,19 @@ multi_layer_cell = tf.contrib.rnn.MultiRNNCell([basic_cell] * n_layers)
 outputs, states = tf.nn.dynamic_rnn(multi_layer_cell, X, dtype=tf.float32)
 accuracy = tf.metrics.accuracy(y_train,y)
 
-learning_rate = 0.001
-loss = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.abs(outputs - y))))
+loss = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 training_op = optimizer.minimize(loss)
 
 init = tf.global_variables_initializer()
 
+saver = tf.train.Saver()
+
 with tf.Session() as sess:
     init.run()
-    for epoch in range(n_epochs):    
+    for epoch in range(n_epochs):  
         sess.run(training_op,feed_dict={X: X_train,y: y_train})
-        print(loss.eval(feed_dict={X: X_train, y: y_train}))
+        print("Epoch: {}\tMean Squared Error: {}".format(epoch,loss.eval(feed_dict={X: X_train, y: y_train})))#epoch)#
     y_pred = sess.run(outputs,feed_dict={X: X_test})
-    z = sum(sum(sum(numpy.absolute(y_test - y_pred))))/(len(y_test)*len(y_test[0])*len(y_test[0][0]))
-    print("Average error of new data: {}\n{}\n{}".format(z,y_pred,numpy.absolute(y_test - y_pred)))
+    writeFile("predictedOut",vecToStatements(y_pred))
+    saver.save(sess, "model.easy")

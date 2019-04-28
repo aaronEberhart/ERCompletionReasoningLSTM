@@ -126,17 +126,17 @@ class DependencyReducer:
             if len(itera) > maxv: maxv = len(itera)
             if len(iterb) > maxa: maxa = len(iterb)
             vec.append(itera)
-            ans.append(iterb)
+            ans.append(iterb)   
         for i in range(0,len(self.donelogs[2])):
             itera = []
             iterb = []
             for j in range(0,len(self.donelogs[2][i])): 
                 itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[2][i][j][2]]
                 iterb.append(array(self.donelogs[2][i][j][0].toVector(concepts,roles)))
-        if len(itera) > maxv: maxv = len(itera)
-        if len(iterb) > maxa: maxa = len(iterb)
-        vec.append(itera)
-        ans.append(iterb)
+            if len(itera) > maxv: maxv = len(itera)
+            if len(iterb) > maxa: maxa = len(iterb)
+            vec.append(itera)
+            ans.append(iterb)
         
         v = []
         a = []
