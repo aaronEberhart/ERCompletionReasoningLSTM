@@ -55,8 +55,8 @@ def makeData(trials,easy):
      
     for i in range(0,trials):
         
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=2,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1) if easy else \
-            HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
+        generator = HardGenERator2(rGenerator=GenERator(numCType1=2,numCType2=1,numCType3=2,numCType4=1,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1) if easy else \
+                    HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
         
         reasoner = ReasonER(generator,showSteps=True)
         
@@ -96,7 +96,7 @@ def pad(arr,maxlen1=0,maxlen2=0):
         for j in range(0,len(arr[i])):
             if len(arr[i][j]) > maxlen2: maxlen2 = len(arr[i][j])
     
-    newarr = numpy.empty(shape=(len(arr),maxlen1,maxlen2),dtype=float)
+    newarr = numpy.zeros(shape=(len(arr),maxlen1,maxlen2),dtype=float)
     for i in range(0,len(arr)):
         for j in range(0,len(arr[i])):
             for k in range(0,len(arr[i][j])):
@@ -137,10 +137,10 @@ def convertToStatement(four,easy):
         if isinstance(number,numpy.float32): 
             number = number.item()
             if (number > 0 and number < threshc) or (number < 0 and number > threshr): number = 0
-        if number < 0:
+        if number < 0 and number >= -1:
             if int(number * roles * -1) == 0: pass
             else: new.append("R{}".format(int(number * roles * -1)))
-        elif number > 0:
+        elif number > 0 and number <= 1:
             if int(number * concepts) == 0: pass
             else: new.append("C{}".format(int(number * concepts)))   
             
@@ -149,6 +149,8 @@ def convertToStatement(four,easy):
     elif len(new) == 3:
         if four[1] > 0 and four[2] < 0 and four[3] > 0:
             return "{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
+        elif four[1] > 0 and four[0] < 0 and four[2] > 0:
+            return "∃{}.{} ⊑ {}".format(new[0],new[1],new        [2])
         elif four[1] > 0 and four[0] > 0 and four[2] > 0:
             return "{} ⊓ {} ⊑ {}".format(new[0],new[1],new[2])
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
@@ -161,8 +163,8 @@ def splitTensors(inputs,outputs, size):
     outTest, outTrain = numpy.split(outputs,[int(len(outputs)*size)])
     return inTrain, inTest, outTrain, outTest
 
-easy = True
-fileShapes = [6,760,152] if easy else [8,2116,324]
+easy = False
+fileShapes = [4,336,80] if easy else [8,2116,324]
 
 X,y = getDataFromFile(easy)#makeData(1000,easy)#
 
@@ -179,8 +181,8 @@ print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
 writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",vecToStatements(X_test,easy))
 writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",vecToStatements(y_test,easy))
 
-learning_rate = 0.01
-n_epochs = 1000
+learning_rate = 0.001 if easy else 0.01
+n_epochs = 10000 if easy else 1000
 train_size = X_train.shape[0]
 n_neurons = y_train.shape[2]
 n_layers = 1
@@ -188,7 +190,7 @@ n_layers = 1
 X = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
 y = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
 
-basic_cell = tf.contrib.rnn.LSTMCell(num_units=n_neurons,use_peepholes=True)
+basic_cell = tf.contrib.rnn.LSTMCell(num_units=n_neurons)#,use_peepholes=True)
 multi_layer_cell = tf.contrib.rnn.MultiRNNCell([basic_cell] * n_layers)
 outputs, states = tf.nn.dynamic_rnn(multi_layer_cell, X, dtype=tf.float32)
 
@@ -215,6 +217,6 @@ with tf.Session() as sess:
             break
     y_pred = sess.run(outputs,feed_dict={X: X_test})
     mseNew = loss.eval(feed_dict={outputs: y_pred, y: y_test})
-    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tPercent Change MSE:\t{}".format(numpy.float32(mseNew),mse0-mseL,(mseL - mse0)/mse0*100))
+    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
     writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",vecToStatements(y_pred,easy))
     saver.save(sess, "model.easy" if easy else "model")

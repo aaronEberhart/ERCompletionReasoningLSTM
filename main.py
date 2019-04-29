@@ -83,4 +83,4 @@ if __name__ == "__main__":
 	if not os.path.isdir("owl"): os.mkdir("owl")
 	for i in range(0,1):
 		print(i)
-		sequenceTrial(50)
+		sequenceTrial(1)
