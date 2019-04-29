@@ -163,7 +163,7 @@ def splitTensors(inputs,outputs, size):
     outTest, outTrain = numpy.split(outputs,[int(len(outputs)*size)])
     return inTrain, inTest, outTrain, outTest
 
-easy = False
+easy = True
 fileShapes = [4,336,80] if easy else [8,2116,324]
 
 X,y = getDataFromFile(easy)#makeData(1000,easy)#
