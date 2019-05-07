@@ -163,6 +163,61 @@ def splitTensors(inputs,outputs, size):
     outTest, outTrain = numpy.split(outputs,[int(len(outputs)*size)])
     return inTrain, inTest, outTrain, outTest
 
+#https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
+def levenshtein(s1, s2):
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    # len(s1) >= len(s2)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1       # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return previous_row[-1]
+
+
+def finalDistance(newStatements,trueStatements,easy):
+    
+    rando = []
+    
+    for i in range(0,len(trueStatements)):
+        kb = []
+        for j in range(0,len(trueStatements[i])):
+            step = []
+            gen = GenERator(numCType1=len(trueStatements[i][j])//2,numCType2=0,numCType3=len(trueStatements[i][j]) - len(trueStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=13,roleNamespace=7) if easy else GenERator(numCType1=len(trueStatements)/2,numCType2=0,numCType3=len(trueStatements)/2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=106,roleNamespace=56)
+            gen.genERate()
+            for k in range(0,len(gen.CType1)):
+                step.append(gen.CType1[k].toString())
+            for k in range(0,len(gen.CType3)):
+                step.append(gen.CType3[k].toString())
+            kb.append(step)
+        rando.append(kb)
+        
+    trueStr = [["\t".join([z for z in y]) for y in x] for x in trueStatements]
+    newStr = [["\t".join([z for z in y]) for y in x] for x in newStatements]
+    randoStr = [["\t".join([z for z in y]) for y in x] for x in rando]
+    
+    levTR = 0
+    levNR = 0
+    levTN = 0
+    
+    for i in range(len(trueStr)):
+        for j in range(len(trueStr[i])):
+            levTR = levTR + levenshtein(trueStr[i][j],randoStr[i][j])
+            levNR = levNR + (levenshtein(newStr[i][j],randoStr[i][j]) if len(newStr[i]) > j else levenshtein("",randoStr[i][j]))
+            levTN = levTN + (levenshtein(trueStr[i][j],newStr[i][j]) if len(newStr[i]) > j else levenshtein(trueStr[i][j],""))
+    
+    return levTR,levNR,levTN
+
 easy = True
 fileShapes = [4,336,80] if easy else [8,2116,324]
 
@@ -178,8 +233,10 @@ y_test = pad(y_test,maxlen1=fileShapes[0],maxlen2=fileShapes[2])
 
 print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
 
+trueStatements = vecToStatements(y_test,easy)
+
 writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",vecToStatements(X_test,easy))
-writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",vecToStatements(y_test,easy))
+writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
 
 learning_rate = 0.001 if easy else 0.01
 n_epochs = 10000 if easy else 1000
@@ -217,6 +274,13 @@ with tf.Session() as sess:
             break
     y_pred = sess.run(outputs,feed_dict={X: X_test})
     mseNew = loss.eval(feed_dict={outputs: y_pred, y: y_test})
-    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
-    writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",vecToStatements(y_pred,easy))
+    newStatements = vecToStatements(y_pred,easy)
+    distTRan,distRRan,distRReal = finalDistance(newStatements,trueStatements,easy)
+    
+    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
+    
+    print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
+    
+    writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",newStatements)
+    
     saver.save(sess, "model.easy" if easy else "model")
