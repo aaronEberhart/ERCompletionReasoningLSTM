@@ -201,7 +201,7 @@ class HardGenERator2:
         file = open(filename,"w")
         file.write("KB")
         for statement in self.CTypeNull:
-            file.write("\n{}".format(statement.toString()))
+            file.antecedentwrite("\n{}".format(statement.toString()))
         for statement in self.CType1:
             file.write("\n{}".format(statement.toString()))
         for statement in self.CType2:

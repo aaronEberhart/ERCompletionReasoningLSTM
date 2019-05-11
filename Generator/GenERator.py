@@ -211,17 +211,17 @@ class GenERator:
 	def toVector(self):
 		vec = []
 		for statement in self.CType1:
-			vec.append(statement.toFunctionalSyntax())
+			vec.append(statement.toVector())
 		for statement in self.CType2:
-			vec.append(statement.toFunctionalSyntax())
+			vec.append(statement.toVector())
 		for statement in self.CType3:
-			vec.append(statement.toFunctionalSyntax())
+			vec.append(statement.toVector())
 		for statement in self.CType4:
-			vec.append(statement.toFunctionalSyntax())	
+			vec.append(statement.toVector())	
 		for statement in self.roleSubs:
-			vec.append(statement.toFunctionalSyntax())
+			vec.append(statement.toVector())
 		for statement in self.roleChains:
-			vec.append(statement.toFunctionalSyntax())	
+			vec.append(statement.toVector())	
 		return vec
 
 	def getStatistics(self):

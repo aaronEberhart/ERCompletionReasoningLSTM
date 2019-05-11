@@ -106,26 +106,32 @@ def pad(arr,maxlen1=0,maxlen2=0):
 
 def vecToStatements(vec,easy):    
     four = []
-    statements = []
+    statementStr = []
+    statementPred = []
     
     for i in range(len(vec)):
-        trial = []
+        trialStr = []
+        trialPred = []
         for j in range(len(vec[i])):
-            step = []
+            stepStr = []
+            stepPred = []
             for k in range(len(vec[i][j])):
                 if len(four) == 3:
                     four.append(vec[i][j][k])
-                    stri = convertToStatement(four,easy)
-                    if stri != None: step.append(stri)
+                    pred,stri = convertToStatement(four,easy)
+                    if stri != None: stepStr.append(stri)
+                    if pred != None: stepPred.append(pred)
                     four = []                    
                 else:
                     four.append(vec[i][j][k])
-            if len(step) > 0: 
-                trial.append(step)
-                four = []                
-        statements.append(trial)
+            if len(stepStr) > 0: 
+                trialStr.append(stepStr) 
+            if len(stepPred) > 0: 
+                trialPred.append(stepPred)          
+        statementStr.append(trialStr)
+        statementPred.append(trialPred)
         
-    return statements
+    return statementPred,statementStr
 
 def convertToStatement(four,easy):
     concepts = 13 if easy else 106
@@ -143,20 +149,24 @@ def convertToStatement(four,easy):
         elif number > 0 and number <= 1:
             if int(number * concepts) == 0: pass
             else: new.append("C{}".format(int(number * concepts)))   
-            
-    if len(new) == 2:
-        return " ⊑ ".join(new)
+    
+    if  len(new) == 0:
+        return None,None
+    elif len(new) == 1:
+        return new,new[0]
+    elif len(new) == 2:
+        return new," ⊑ ".join(new)
     elif len(new) == 3:
         if four[1] > 0 and four[2] < 0 and four[3] > 0:
-            return "{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
+            return new,"{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
         elif four[1] > 0 and four[0] < 0 and four[2] > 0:
-            return "∃{}.{} ⊑ {}".format(new[0],new[1],new        [2])
+            return new,"∃{}.{} ⊑ {}".format(new[0],new[1],new        [2])
         elif four[1] > 0 and four[0] > 0 and four[2] > 0:
-            return "{} ⊓ {} ⊑ {}".format(new[0],new[1],new[2])
+            return new,"{} ⊓ {} ⊑ {}".format(new[0],new[1],new[2])
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
-            return "{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
-    else:
-        return None
+            return new,"{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
+    
+    return new," x ".join(new)
     
 def splitTensors(inputs,outputs, size):
     inTest, inTrain = numpy.split(inputs,[int(len(inputs)*size)])
@@ -185,7 +195,7 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 
-def finalDistance(newStatements,trueStatements,easy):
+def levDistance(newStatements,trueStatements,easy):
     
     rando = []
     
@@ -193,7 +203,7 @@ def finalDistance(newStatements,trueStatements,easy):
         kb = []
         for j in range(0,len(trueStatements[i])):
             step = []
-            gen = GenERator(numCType1=len(trueStatements[i][j])//2,numCType2=0,numCType3=len(trueStatements[i][j]) - len(trueStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=13,roleNamespace=7) if easy else GenERator(numCType1=len(trueStatements)/2,numCType2=0,numCType3=len(trueStatements)/2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=106,roleNamespace=56)
+            gen = GenERator(numCType1=len(trueStatements[i][j])//2,numCType2=0,numCType3=len(trueStatements[i][j]) - len(trueStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=13,roleNamespace=7) if easy else GenERator(numCType1=len(trueStatements[i][j])//2,numCType2=0,numCType3=len(trueStatements[i][j]) - len(trueStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=106,roleNamespace=56)
             gen.genERate()
             for k in range(0,len(gen.CType1)):
                 step.append(gen.CType1[k].toString())
@@ -202,9 +212,9 @@ def finalDistance(newStatements,trueStatements,easy):
             kb.append(step)
         rando.append(kb)
         
-    trueStr = [["\t".join([z for z in y]) for y in x] for x in trueStatements]
-    newStr = [["\t".join([z for z in y]) for y in x] for x in newStatements]
-    randoStr = [["\t".join([z for z in y]) for y in x] for x in rando]
+    trueStr = [["".join([z for z in y]) for y in x] for x in trueStatements]
+    newStr = [["".join([z for z in y]) for y in x] for x in newStatements]
+    randoStr = [["".join([z for z in y]) for y in x] for x in rando]
     
     levTR = 0
     levNR = 0
@@ -217,6 +227,58 @@ def finalDistance(newStatements,trueStatements,easy):
             levTN = levTN + (levenshtein(trueStr[i][j],newStr[i][j]) if len(newStr[i]) > j else levenshtein(trueStr[i][j],""))
     
     return levTR,levNR,levTN
+
+def custom(s1, s2, easy):
+   
+    if len(s1) < len(s2): return custom(s2,s1,easy)
+    
+    dist = 0
+    
+    for k in range(len(s1)):
+        string1 = s1[k]
+        string2 = s2[k] if len(s2) > k else ""
+        if string2 == "":
+            dist = dist + (20 if easy else 166) + int(''.join(x for x in string1 if x.isdigit()))
+        else:
+            if (string1[0] == 'C' and string2[0] == 'R') or (string1[0] == 'R' and string2[0] == 'C'): dist = dist + (20 if easy else 166)
+            dist = dist + abs(int(''.join(x for x in string1 if x.isdigit())) -  int(''.join(x for x in string2 if x.isdigit())))
+                
+    
+    return dist
+
+def customDistance(newPred,truePred,easy):
+    
+    rando = []
+    
+    for i in range(0,len(truePred)):
+        kb = []
+        for j in range(0,len(truePred[i])):
+            step = []
+            gen = GenERator(numCType1=len(truePred[i][j])//2,numCType2=0,numCType3=len(truePred[i][j]) - len(truePred[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=13,roleNamespace=7) if easy else GenERator(numCType1=len(truePred[i][j])//2,numCType2=0,numCType3=len(truePred[i][j]) - len(truePred[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=106,roleNamespace=56)
+            gen.genERate()
+            for k in range(0,len(gen.CType1)):
+                step.append([gen.CType1[k].antecedent.toString(),gen.CType1[k].consequent.toString()])
+            for k in range(0,len(gen.CType3)):
+                step.append([gen.CType3[k].antecedent.toString(),gen.CType3[k].consequent.role.toString(),gen.CType3[k].consequent.concept.toString()])
+            kb.append(step)
+        rando.append(kb)
+    
+    custTR = 0
+    custNR = 0
+    custTN = 0
+    
+    for i in range(len(truePred)):
+        for j in range(len(truePred[i])):
+            for k in range(len(truePred[i][j])):
+                custTR = custTR + custom(truePred[i][j][k],rando[i][j][k],easy)
+                custTN = custTN + (custom(truePred[i][j][k],newPred[i][j][k],easy) if (len(newPred[i]) > j and len(newPred[i][j]) > k) else custom(truePred[i][j][k],"",easy))
+    for i in range(len(newPred)):
+        for j in range(len(newPred[i])):
+            for k in range(len(newPred[i][j])):
+                custNR = custNR + (custom(newPred[i][j][k],rando[i][j][k],easy) if (len(rando[i]) > j and len(rando[i][j]) > k) else custom(newPred[i][j][k],"",easy))
+                
+    
+    return custTR,custNR,custTN
 
 easy = True
 fileShapes = [4,336,80] if easy else [8,2116,324]
@@ -233,12 +295,13 @@ y_test = pad(y_test,maxlen1=fileShapes[0],maxlen2=fileShapes[2])
 
 print(X_train.shape, X_test.shape, y_train.shape,  y_test.shape)
 
-trueStatements = vecToStatements(y_test,easy)
+preds,trueStatements = vecToStatements(y_test,easy)
+placeholder,inputs = vecToStatements(X_test,easy)
 
-writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",vecToStatements(X_test,easy))
+writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
 writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
 
-learning_rate = 0.001 if easy else 0.01
+learning_rate = 0.0005 if easy else 0.005
 n_epochs = 10000 if easy else 1000
 train_size = X_train.shape[0]
 n_neurons = y_train.shape[2]
@@ -274,12 +337,15 @@ with tf.Session() as sess:
             break
     y_pred = sess.run(outputs,feed_dict={X: X_test})
     mseNew = loss.eval(feed_dict={outputs: y_pred, y: y_test})
-    newStatements = vecToStatements(y_pred,easy)
-    distTRan,distRRan,distRReal = finalDistance(newStatements,trueStatements,easy)
+    newPreds,newStatements = vecToStatements(y_pred,easy)
+    distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
+    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)
     
     print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
     
     print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
+    
+    print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
     writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",newStatements)
     
