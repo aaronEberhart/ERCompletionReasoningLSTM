@@ -201,7 +201,7 @@ class HardGenERator2:
         file = open(filename,"w")
         file.write("KB")
         for statement in self.CTypeNull:
-            file.antecedentwrite("\n{}".format(statement.toString()))
+            file.write("\n{}".format(statement.toString()))
         for statement in self.CType1:
             file.write("\n{}".format(statement.toString()))
         for statement in self.CType2:
@@ -258,17 +258,17 @@ class HardGenERator2:
     def toVector(self):
         vec = []
         for statement in self.CType1:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
         for statement in self.CType2:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
         for statement in self.CType3:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
         for statement in self.CType4:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))	
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))	
         for statement in self.roleSubs:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
         for statement in self.roleChains:
-            vec.append(statement.toVector(self.conceptNamespace,self.roleNamespace))	
+            vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))	
         return vec        
 
     def getStatistics(self):
