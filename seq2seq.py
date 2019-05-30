@@ -312,18 +312,16 @@ y_test = pad(y_test,maxlen1=fileShapes1[0],maxlen2=fileShapes1[2])
 
 print("",KBs.shape,"\n",KBs_train.shape,KBs_test.shape,'\n',X_train.shape,X_test.shape,"\n",y_train.shape,y_test.shape)
 
-
 KBvec,KBstr = vecToStatements(KBs_test,easy)
 preds,trueStatements = vecToStatements(y_test,easy)
 placeholder,inputs = vecToStatements(X_test,easy)
 
-
 writeVectorFile("KBsInEasy.txt" if easy else "KBsIn.txt",KBstr)
-#writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
-#writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
+writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
+writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
 
 learning_rate0 = 0.0005 if easy else 0.005
-n_epochs0 = 10 if easy else 1000
+n_epochs0 = 10000 if easy else 1000
 train_size0 = KBs_train.shape[0]
 n_neurons0 = X_train.shape[2]
 n_layers0 = 1
@@ -340,25 +338,6 @@ optimizer0 = tf.train.AdamOptimizer(learning_rate=learning_rate0)
 training_op0 = optimizer0.minimize(loss0)
 
 init0 = tf.global_variables_initializer()
-
-learning_rate1 = 0.0005 if easy else 0.005
-n_epochs1 = 10 if easy else 1000
-train_size1 = X_train.shape[0]
-n_neurons1 = y_train.shape[2]
-n_layers1 = 1
-
-X1 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
-y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
-
-basic_cell1 = tf.contrib.rnn.LSTMCell(num_units=n_neurons1)
-multi_layer_cell1 = tf.contrib.rnn.MultiRNNCell([basic_cell1] * n_layers1)
-outputs1, states1 = tf.nn.dynamic_rnn(multi_layer_cell1, X1, dtype=tf.float32)
-
-loss1 = tf.losses.mean_squared_error(y1,outputs1)#tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
-optimizer1 = tf.train.AdamOptimizer(learning_rate=learning_rate1)
-training_op1 = optimizer1.minimize(loss1)
-
-init1 = tf.global_variables_initializer()
 
 saver = tf.train.Saver()
 
@@ -377,44 +356,88 @@ with tf.Session() as sess:
             mseL = mse
             break
     y_pred = sess.run(outputs0,feed_dict={X0: KBs_test})
-    mseNew = loss.eval(feed_dict0={outputs: y_pred, y0: y_test})
+    numpy.savez("halfwayEasy" if easy else "halfway",y_pred)
+    mseNew = loss0.eval(feed_dict={outputs0: y_pred, y0: X_test})
+    
+    print("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
+    
+    print("\nEvaluating Model\n")
+    
     newPreds,newStatements = vecToStatements(y_pred,easy)
-    distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
-    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)
-    
-    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
-    
+    distTRan,distRRan,distRReal = levDistance(newStatements,inputs,easy)
+    cdistTRan,cdistRRan,cdistRReal = 0,0,0#customDistance(newPreds,X_test,easy)    
+        
     print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
     writeVectorFile("KBFitEasy.txt" if easy else "KBFit.txt",newStatements)
-
     
+tf.reset_default_graph()
+
+learning_rate1 = 0.0005 if easy else 0.005
+n_epochs1 = 10000 if easy else 1000
+train_size1 = X_train.shape[0]
+n_neurons1 = y_train.shape[2]
+n_layers1 = 1
+
+X1 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
+y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
+
+basic_cell1 = tf.contrib.rnn.LSTMCell(num_units=n_neurons1)
+multi_layer_cell1 = tf.contrib.rnn.MultiRNNCell([basic_cell1] * n_layers1)
+outputs1, states1 = tf.nn.dynamic_rnn(multi_layer_cell1, X1, dtype=tf.float32)
+
+loss1 = tf.losses.mean_squared_error(y1,outputs1)#tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
+optimizer1 = tf.train.AdamOptimizer(learning_rate=learning_rate1)
+training_op1 = optimizer1.minimize(loss1)
+
+init1 = tf.global_variables_initializer()
+
+with tf.Session() as sess:    
     init1.run()
     mse0 = 0
     mseL = 0
     for epoch in range(n_epochs1):  
-        ynew,a = sess.run([outputs1,training_op1],feed_dict={X1: X_train,y: y_train})
-        mse = loss.eval(feed_dict={outputs1: ynew, y1: y_train})
+        ynew,a = sess.run([outputs1,training_op1],feed_dict={X1: X_train,y1: y_train})
+        mse = loss1.eval(feed_dict={outputs1: ynew, y1: y_train})
         if epoch == 0: mse0 = mse
         if epoch == n_epochs1 - 1: mseL = mse
         print("Epoch: {}\tMean Squared Error:\t{}".format(epoch,mse))
         if mse < 0.0001:
             mseL = mse
             break
-    y_pred = sess.run(outputs1,feed_dict={X1: X_test})
-    mseNew = loss.eval(feed_dict={outputs: y_pred, y1: y_test})
+    
+    y_pred = sess.run(outputs1,feed_dict={X1: X_test})  
+    mseNew = loss1.eval(feed_dict={outputs1: y_pred, y1: y_test})
+    print("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
+    
+    print("\nTESTING HOLDOUT DATA\n")    
+      
     newPreds,newStatements = vecToStatements(y_pred,easy)
     distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
-    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)
-    
-    print("\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
+    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)   
     
     print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    #writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",newStatements)
+    writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",newStatements)
     
-    #saver.save(sess, "model.easy" if easy else "model")    
+    #saver.save(sess, "model.easy" if easy else "model")  
+    
+    data = numpy.load("halfwayEasy.npz" if easy else "halfway.npz",allow_pickle=True)
+    data = data['arr_0'] 
+    
+    print("TESTING PIPELINE DATA\n")
+    
+    y_pred = sess.run(outputs1,feed_dict={X1: data})
+    newPreds,newStatements = vecToStatements(y_pred,easy)
+    distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
+    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)
+    
+    print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
+    
+    print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
+    
+    writeVectorFile("predictedOutFitEasy.txt" if easy else "predictedOutFit.txt",newStatements)
