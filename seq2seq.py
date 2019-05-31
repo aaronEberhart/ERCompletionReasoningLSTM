@@ -74,7 +74,7 @@ def makeData(trials,easy):
         
         seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
         
-        '''
+        
         if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
         if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
         if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
@@ -87,7 +87,7 @@ def makeData(trials,easy):
             if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
         for j in range(0,len(dependencies.donelogs[2])):
             if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
-        '''
+        
             
     numpy.savez("dataEasyX" if easy else 'dataX', kbs,seq_in,seq_out)
     
@@ -145,36 +145,38 @@ def convertToStatement(four,easy):
     concepts = 13 if easy else 106
     roles = 7 if easy else 56
     new = []
-    threshc = 0.5 / concepts
-    threshr = -0.5 / roles
+    threshc = 0.45 / concepts
+    threshr = -0.45 / roles
     for number in four:
         if isinstance(number,numpy.float32): 
             number = number.item()
-            if (number > 0 and number < threshc) or (number < 0 and number > threshr): number = 0
+            #if (number > 0 and number < threshc) or (number < 0 and number > threshr): number = 0
         if number < 0 and number >= -1:
             if int(number * roles * -1) == 0: pass
             else: new.append("R{}".format(int(number * roles * -1)))
         elif number > 0 and number <= 1:
             if int(number * concepts) == 0: pass
             else: new.append("C{}".format(int(number * concepts)))   
-    
+
     if  len(new) == 0:
         return None,None
     elif len(new) == 1:
-        return new,new[0]
-    elif len(new) == 2:
+        return new,None 
+    elif len(new) == 2 and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
         return new," ⊑ ".join(new)
+    elif len(new) == 2:
+        return new,None
     elif len(new) == 3:
         if four[1] > 0 and four[2] < 0 and four[3] > 0:
             return new,"{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
         elif four[1] > 0 and four[0] < 0 and four[2] > 0:
-            return new,"∃{}.{} ⊑ {}".format(new[0],new[1],new        [2])
+            return new,"∃{}.{} ⊑ {}".format(new[0],new[1],new[2])
         elif four[1] > 0 and four[0] > 0 and four[2] > 0:
             return new,"{} ⊓ {} ⊑ {}".format(new[0],new[1],new[2])
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
             return new,"{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
     
-    return new," x ".join(new)
+    return new,None#" x ".join(new)
     
 def splitTensors(inputs,outputs, size):
     inTest, inTrain = numpy.split(inputs,[int(len(inputs)*size)])
@@ -201,7 +203,6 @@ def levenshtein(s1, s2):
         previous_row = current_row
 
     return previous_row[-1]
-
 
 def levDistance(newStatements,trueStatements,easy):
     
@@ -320,8 +321,8 @@ writeVectorFile("KBsInEasy.txt" if easy else "KBsIn.txt",KBstr)
 writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
 writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
 
-learning_rate0 = 0.0005 if easy else 0.005
-n_epochs0 = 10000 if easy else 1000
+learning_rate0 = 0.0001 if easy else 0.005
+n_epochs0 = 50000 if easy else 5000
 train_size0 = KBs_train.shape[0]
 n_neurons0 = X_train.shape[2]
 n_layers0 = 1
@@ -329,7 +330,7 @@ n_layers0 = 1
 X0 = tf.placeholder(tf.float32, shape=[None,KBs_train.shape[1],KBs_train.shape[2]])
 y0 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
 
-basic_cell0 = tf.contrib.rnn.LSTMCell(num_units=n_neurons0)
+basic_cell0 = tf.contrib.rnn.GRUCell(num_units=n_neurons0)
 multi_layer_cell0 = tf.contrib.rnn.MultiRNNCell([basic_cell0] * n_layers0)
 outputs0, states0 = tf.nn.dynamic_rnn(multi_layer_cell0, X0, dtype=tf.float32)
 
@@ -376,7 +377,7 @@ with tf.Session() as sess:
 tf.reset_default_graph()
 
 learning_rate1 = 0.0005 if easy else 0.005
-n_epochs1 = 10000 if easy else 1000
+n_epochs1 = 50000 if easy else 5000
 train_size1 = X_train.shape[0]
 n_neurons1 = y_train.shape[2]
 n_layers1 = 1
@@ -384,7 +385,7 @@ n_layers1 = 1
 X1 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
 y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
 
-basic_cell1 = tf.contrib.rnn.LSTMCell(num_units=n_neurons1)
+basic_cell1 = tf.contrib.rnn.GRUCell(num_units=n_neurons1)
 multi_layer_cell1 = tf.contrib.rnn.MultiRNNCell([basic_cell1] * n_layers1)
 outputs1, states1 = tf.nn.dynamic_rnn(multi_layer_cell1, X1, dtype=tf.float32)
 
