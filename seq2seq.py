@@ -322,7 +322,7 @@ writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
 writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
 
 learning_rate0 = 0.0001 if easy else 0.005
-n_epochs0 = 50000 if easy else 5000
+n_epochs0 = 100000 if easy else 5000
 train_size0 = KBs_train.shape[0]
 n_neurons0 = X_train.shape[2]
 n_layers0 = 1
@@ -330,7 +330,7 @@ n_layers0 = 1
 X0 = tf.placeholder(tf.float32, shape=[None,KBs_train.shape[1],KBs_train.shape[2]])
 y0 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
 
-basic_cell0 = tf.contrib.rnn.GRUCell(num_units=n_neurons0)
+basic_cell0 = tf.contrib.rnn.LSTMBlockCell(num_units=n_neurons0)
 multi_layer_cell0 = tf.contrib.rnn.MultiRNNCell([basic_cell0] * n_layers0)
 outputs0, states0 = tf.nn.dynamic_rnn(multi_layer_cell0, X0, dtype=tf.float32)
 
@@ -365,7 +365,7 @@ with tf.Session() as sess:
     print("\nEvaluating Model\n")
     
     newPreds,newStatements = vecToStatements(y_pred,easy)
-    distTRan,distRRan,distRReal = levDistance(newStatements,inputs,easy)
+    distTRan,distRRan,distRReal = 0,0,0#levDistance(newStatements,inputs,easy)
     cdistTRan,cdistRRan,cdistRReal = 0,0,0#customDistance(newPreds,X_test,easy)    
         
     print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
@@ -376,8 +376,8 @@ with tf.Session() as sess:
     
 tf.reset_default_graph()
 
-learning_rate1 = 0.0005 if easy else 0.005
-n_epochs1 = 50000 if easy else 5000
+learning_rate1 = 0.0001 if easy else 0.005
+n_epochs1 = 100000 if easy else 5000
 train_size1 = X_train.shape[0]
 n_neurons1 = y_train.shape[2]
 n_layers1 = 1
@@ -385,7 +385,7 @@ n_layers1 = 1
 X1 = tf.placeholder(tf.float32, shape=[None,X_train.shape[1],X_train.shape[2]])
 y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
 
-basic_cell1 = tf.contrib.rnn.GRUCell(num_units=n_neurons1)
+basic_cell1 = tf.contrib.rnn.LSTMBlockCell(num_units=n_neurons1)
 multi_layer_cell1 = tf.contrib.rnn.MultiRNNCell([basic_cell1] * n_layers1)
 outputs1, states1 = tf.nn.dynamic_rnn(multi_layer_cell1, X1, dtype=tf.float32)
 
@@ -442,3 +442,73 @@ with tf.Session() as sess:
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
     
     writeVectorFile("predictedOutFitEasy.txt" if easy else "predictedOutFit.txt",newStatements)
+
+tf.reset_default_graph()
+
+learning_rate2 = 0.0001 if easy else 0.005
+n_epochs2 = 100000 if easy else 5000
+train_size2 = X_train.shape[0]
+n_neurons2 = y_train.shape[2]
+n_layers2 = 1
+
+X0 = tf.placeholder(tf.float32, shape=[None,KBs_train.shape[1],KBs_train.shape[2]])
+y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
+
+basic_cell1 = [tf.contrib.rnn.LSTMBlockCell(num_units=X_train.shape[2]),tf.contrib.rnn.LSTMBlockCell(num_units=y_train.shape[2])]
+multi_layer_cell2 = tf.contrib.rnn.MultiRNNCell(basic_cell1)
+outputs2, states2 = tf.nn.dynamic_rnn(multi_layer_cell2, X0, dtype=tf.float32)
+
+loss2 = tf.losses.mean_squared_error(y1,outputs2)#tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(tf.math.square(outputs - y))))/(tf.to_float(tf.size(y)))
+optimizer2 = tf.train.AdamOptimizer(learning_rate=learning_rate2)
+training_op2 = optimizer2.minimize(loss2)
+
+init2 = tf.global_variables_initializer()
+
+with tf.Session() as sess:    
+    init2.run()
+    mse0 = 0
+    mseL = 0
+    for epoch in range(n_epochs2):  
+        ynew,a = sess.run([outputs2,training_op2],feed_dict={X0: KBs_train,y1: y_train})
+        mse = loss2.eval(feed_dict={outputs2: ynew, y1: y_train})
+        if epoch == 0: mse0 = mse
+        if epoch == n_epochs2 - 1: mseL = mse
+        print("Epoch: {}\tMean Squared Error:\t{}".format(epoch,mse))
+        if mse < 0.0001:
+            mseL = mse
+            break
+    
+    y_pred = sess.run(outputs2,feed_dict={X0: KBs_test})  
+    mseNew = loss2.eval(feed_dict={outputs2: y_pred, y1: y_test})
+    print("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
+    
+    print("\nTESTING HOLDOUT DATA\n")    
+      
+    newPreds,newStatements = vecToStatements(y_pred,easy)
+    distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
+    cdistTRan,cdistRRan,cdistRReal = customDistance(newPreds,preds,easy)   
+    
+    print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
+    
+    print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
+    
+    writeVectorFile("predictedOutEasyC.txt" if easy else "predictedOutC.txt",newStatements)
+    
+    #saver.save(sess, "model.easy" if easy else "model")  
+    '''
+    data = numpy.load("halfwayEasy.npz" if easy else "halfway.npz",allow_pickle=True)
+    data = data['arr_0'] 
+    
+    print("TESTING PIPELINE DATA\n")
+    
+    y_pred = sess.run(outputs1,feed_dict={X1: data})
+    newPreds,newStatements = vecToStatements(y_pred,easy)
+    distTRan,distRRan,distRReal = levDistance(newStatements,trueStatements,easy)
+    cdistTRan,cdistRRan,cdistRReal = 0,0,0#customDistance(newPreds,preds,easy)
+    
+    print("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
+    
+    print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
+    
+    writeVectorFile("predictedOutFitEasy.txt" if easy else "predictedOutFit.txt",newStatements)
+    '''
