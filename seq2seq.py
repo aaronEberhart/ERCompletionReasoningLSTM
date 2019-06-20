@@ -359,7 +359,7 @@ with tf.Session() as sess:
             mseL = mse
             break
     y_pred = sess.run(outputs0,feed_dict={X0: KBs_test})
-    numpy.savez("halfwayEasy" if easy else "halfway",y_pred)
+    numpy.savez("saves/halfwayEasy" if easy else "saves/halfway",y_pred)
     mseNew = loss0.eval(feed_dict={outputs0: y_pred, y0: X_test})
     
     print("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
@@ -425,7 +425,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("predictedOutEasy.txt" if easy else "predictedOut.txt",newStatements)
+    writeVectorFile("output/predictedOutEasy.txt" if easy else "output/predictedOut.txt",newStatements)
     
     #saver.save(sess, "model.easy" if easy else "model")  
     
@@ -496,7 +496,7 @@ with tf.Session() as sess:
     
     writeVectorFile("output/predictedOutEasyC.txt" if easy else "output/predictedOutC.txt",newStatements)
     
-    #saver.save(sess, "model.easy" if easy else "model")  
+    saver.save(sess, "saves/modelC.easy" if easy else "saves/modelC")  
     '''
     data = numpy.load("halfwayEasy.npz" if easy else "halfway.npz",allow_pickle=True)
     data = data['arr_0'] 
