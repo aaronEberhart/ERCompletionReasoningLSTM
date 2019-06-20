@@ -89,12 +89,12 @@ def makeData(trials,easy):
             if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
         
             
-    numpy.savez("dataEasyX" if easy else 'dataX', kbs,seq_in,seq_out)
+    numpy.savez("saves/dataEasyX" if easy else 'saves/dataX', kbs,seq_in,seq_out)
     
     return kbs,seq_in,seq_out
 
 def getDataFromFile(easy):
-    data = numpy.load('dataEasyX.npz' if easy else 'data.npz',allow_pickle=True)
+    data = numpy.load('saves/dataEasyX.npz' if easy else 'saves/data.npz',allow_pickle=True)
     return data['arr_0'],data['arr_1'],data['arr_2']
 
 def pad(arr,maxlen1=0,maxlen2=0):
@@ -296,6 +296,8 @@ def repeatAndSplitKBs(kbs,steps,splitSize):
             newKBs[i][j] = kbs[i]
     return numpy.split(newKBs,[int(len(newKBs)*splitSize)])
 
+if not os.path.isdir("saves"): os.mkdir("saves")
+if not os.path.isdir("output"): os.mkdir("output")
 easy = True
 KBs,dependencies,output = getDataFromFile(easy)#makeData(1000,easy)#
 
@@ -317,9 +319,9 @@ KBvec,KBstr = vecToStatements(KBs_test,easy)
 preds,trueStatements = vecToStatements(y_test,easy)
 placeholder,inputs = vecToStatements(X_test,easy)
 
-writeVectorFile("KBsInEasy.txt" if easy else "KBsIn.txt",KBstr)
-writeVectorFile("targetInEasy.txt" if easy else "targetIn.txt",inputs)
-writeVectorFile("targetOutEasy.txt" if easy else "targetOut.txt",trueStatements)
+writeVectorFile("output/KBsInEasy.txt" if easy else "output/KBsIn.txt",KBstr)
+writeVectorFile("output/targetInEasy.txt" if easy else "output/targetIn.txt",inputs)
+writeVectorFile("output/targetOutEasy.txt" if easy else "output/targetOut.txt",trueStatements)
 
 learning_rate0 = 0.0001 if easy else 0.005
 n_epochs0 = 100000 if easy else 5000
@@ -372,7 +374,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("KBFitEasy.txt" if easy else "KBFit.txt",newStatements)
+    writeVectorFile("output/KBFitEasy.txt" if easy else "output/KBFit.txt",newStatements)
     
 tf.reset_default_graph()
 
@@ -427,7 +429,7 @@ with tf.Session() as sess:
     
     #saver.save(sess, "model.easy" if easy else "model")  
     
-    data = numpy.load("halfwayEasy.npz" if easy else "halfway.npz",allow_pickle=True)
+    data = numpy.load("saves/halfwayEasy.npz" if easy else "saves/halfway.npz",allow_pickle=True)
     data = data['arr_0'] 
     
     print("TESTING PIPELINE DATA\n")
@@ -441,7 +443,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
     
-    writeVectorFile("predictedOutFitEasy.txt" if easy else "predictedOutFit.txt",newStatements)
+    writeVectorFile("output/predictedOutFitEasy.txt" if easy else "output/predictedOutFit.txt",newStatements)
 
 tf.reset_default_graph()
 
@@ -492,7 +494,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("predictedOutEasyC.txt" if easy else "predictedOutC.txt",newStatements)
+    writeVectorFile("output/predictedOutEasyC.txt" if easy else "output/predictedOutC.txt",newStatements)
     
     #saver.save(sess, "model.easy" if easy else "model")  
     '''
