@@ -297,16 +297,44 @@ def canEasySplit(line):
     #print(line)
     return False
 
-pattern = re.compile("EquivalentClasses+")
+def normalizeFS():
+    pattern = re.compile("EquivalentClasses+")
+    
+    file = open("SNOMED2012fs.owl","r")
+    file2 = open("SNOrMED2012fs.owl","w")
+    
+    new = {}
+    
+    for line in file:
+        if pattern.match(line) != None: file2.write(EQtoSC(line[18:-2].split(" ",1),new))
+        else: file2.write(line)
+    
+    file.close()
+    file2.close()
+    
+def fsOWLReader(filename):
+    file = open(filename,'r')
+    
+    line = file.readline()
+    while "Declaration" not in line:
+        line = file.readline()
+    
+    classes = 0
+    classDict = {}
+    roles = 0
+    roleDict = {}
+    
+    while "Declaration" in line:
+        if "Class" in line: 
+            classes = classes + 1
+            classDict[line[18:-3]] = classes
+        else: 
+            roles = roles + 1
+            roleDict[line[27:-3]] = roles
+        line = file.readline()
+        
+    print(classes,roles)
+    
 
-file = open("SNOMED2012fs.owl","r")
-file2 = open("SNOrMED2012fs.owl","w")
 
-new = {}
-
-for line in file:
-    if pattern.match(line) != None: file2.write(EQtoSC(line[18:-2].split(" ",1),new))
-    else: file2.write(line)
-
-file.close()
-file2.close()
+fsOWLReader("SNOrMED2012fs.owl")
