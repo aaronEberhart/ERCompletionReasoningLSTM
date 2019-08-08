@@ -11,6 +11,8 @@ from NegativesGenERator import *
 from JustificationFindER import *
 from DependencyReducer import *
 
+import re
+import fileinput
 import numpy
 import tensorflow as tf
 
@@ -33,6 +35,331 @@ from keras.layers import LSTM
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
+def EQtoSC(line,new):
+    if "ObjectIntersectionOf" in line[1]: x = intersectionSplit(line,new)
+    else: x = "SubClassOf({} {})\nSubClassOf({} {})".format(line[0],line[1],line[1],line[0])
+    #print(x)
+    return x
+
+'''
+B ≡ A ⊓ ∃S.D
+
+B ≡ A ⊓ X2
+X2 ≡ ∃S.D
+
+B ⊑ A
+B ⊑ X2
+A ⊓ X2 ⊑ B
+X2 ⊑ ∃S.D
+∃S.D ⊑ X2
+
+
+A ≡ B ⊓ C ⊓ ∃S.D
+
+A ≡ B ⊓ X1
+X1 ≡ C ⊓ X2
+X2 ≡ ∃S.D
+
+A ⊑ B
+A ⊑ X1
+B ⊓ X1 ⊑ A
+X1 ⊑ C
+X1 ⊑ X2
+C ⊓ X2 ⊑ X1
+X2 ⊑ ∃S.D
+∃S.D ⊑ X2
+'''
+def intersectionSplit(line,new):
+    newLine = [line[0]]
+    newLine.extend(line[1][21:-1].split(" ",1))
+    x = ""
+    if canEasySplit(line[1]):
+        #print("easy\t",line)
+                
+        while separable(newLine[-1]):
+            if not "ObjectIntersectionOf" in newLine[-1]:
+                rem = newLine[-1]
+                newLine.extend(newLine[-1].split(" ",1))
+                newLine.remove(rem)
+            else:
+                pass
+        for C in newLine:
+            if C in new.keys(): pass
+            else: new[C] = "sep:X{:05d}".format(len(new)+1)
+        if len(newLine) == 3:
+            '''
+            B ⊑ A
+            B ⊑ X
+            A ⊓ X ⊑ B
+            X ⊑ ∃S.D
+            ∃S.D ⊑ X
+            '''
+            if isExistential(newLine[-1]):
+                x = "SubClassOf({} {})\nSubClassOf({} {})\nSubClassOf(ObjectIntersectionOf({} {}) {})\nSubClassOf({} {})\nSubClassOf({} {})\n".format(newLine[0],newLine[1],newLine[0],new[newLine[-1]],newLine[1],new[newLine[-1]],newLine[0],new[newLine[-1]],newLine[-1],newLine[-1],new[newLine[-1]])
+            else:
+                raise
+        else:
+            '''
+            A ≡ B ⊓ C ⊓ ∃S.D
+            
+            A ⊑ B
+            A ⊑ X1
+            B ⊓ X1 ⊑ A
+            X1 ⊑ C
+            X1 ⊑ X2
+            C ⊓ X2 ⊑ X1
+            X2 ⊑ ∃S.D
+            ∃S.D ⊑ X2
+            '''
+            X1 = "ObjectIntersectionOf({} {})".format(newLine[2],newLine[3])
+            X1r = "ObjectIntersectionOf({} {})".format(newLine[3],newLine[2])
+            
+            if X1 in new.keys() or X1r in new.keys(): pass
+            else: new[X1] = "sep:X{:05d}".format(len(new)+1)
+            
+            X2 = newLine[3]
+            concept = True
+            if isExistential(X2): 
+                concept = False
+                if X2 in new.keys(): pass
+                else: new[X2] = "sep:X{:05d}".format(len(new)+1)
+                '''
+                X2 ⊑ ∃S.D
+                ∃S.D ⊑ X2
+                '''
+                x = x + "SubClassOf({} {})\n".format(new[X2],newLine[3])
+                x = x + "SubClassOf({} {})\n".format(newLine[3],new[X2])                
+                
+            #
+            '''
+            A ⊑ B
+            A ⊑ X1
+            '''
+            x = x + "SubClassOf({} {})\n".format(newLine[0],newLine[1])
+            x = x + "SubClassOf({} {})\n".format(newLine[0],new[X1])
+            '''
+            B ⊓ X1 ⊑ A
+            C ⊓ X2 ⊑ X1
+            '''
+            x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(newLine[1],new[X1],newLine[0])
+            x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(newLine[2],X2 if concept else new[X2],new[X1])            
+            '''
+            X1 ⊑ C
+            X1 ⊑ X2
+            '''
+            x = x + "SubClassOf({} {})\n".format(new[X1],newLine[2])
+            x = x + "SubClassOf({} {})\n".format(new[X1],X2 if concept else new[X2])
+            #print(newLine)#print(x,"\n")
+    else:
+        if newLine[2][0] != 'O':
+            '''
+            A ≡ B ⊓ C ⊓ ∃R.D ⊓ ∃S.E
+            
+            A ⊑ B
+            A ⊑ X1
+            B ⊓ X1 ⊑ A
+            X1 ⊑ C
+            X1 ⊑ X2
+            C ⊓ X2 ⊑ X1
+            X2 ⊑ X3
+            X2 ⊑ X4
+            X3 ⊓ X4 ⊑ X2
+            X3 ⊑ ∃R.D
+            ∃R.D ⊑ X3
+            X4 ⊑ ∃S.E
+            ∃S.E ⊑ X4
+            '''
+            y = newLine[2].split(" ",1)
+            z = y[1].split(" ",2)[-1]
+            y[1] = " ".join(y[1].split(" ",2)[:2])
+            y.append(z)
+            del newLine[2]
+            newLine.extend(y)
+            
+            X3 = newLine[3]
+            if X3 in new.keys(): pass
+            else: new[X3] = "sep:X{:05d}".format(len(new)+1)
+            
+            X4 = newLine[4]
+            if X4 in new.keys(): pass
+            else: new[X4] = "sep:X{:05d}".format(len(new)+1)
+            
+            X2 = "ObjectIntersectionOf({} {})".format(newLine[3],newLine[4])
+            X2r = "ObjectIntersectionOf({} {})".format(newLine[4],newLine[3])
+            
+            if X2 in new.keys() or X2r in new.keys(): pass
+            else: new[X2] = "sep:X{:05d}".format(len(new)+1)
+
+            X1 = "ObjectIntersectionOf({} {})".format(newLine[2],X2)
+            X12 = "ObjectIntersectionOf({} {})".format(newLine[2],X2r)
+            X1r = "ObjectIntersectionOf({} {})".format(X2,newLine[2])
+            X12r = "ObjectIntersectionOf({} {})".format(X2r,newLine[2])
+            
+            if X1 in new.keys() or X1r in new.keys() or X12 in new.keys() or X12r in new.keys(): pass
+            else: new[X1] = "sep:X{:05d}".format(len(new)+1)            
+            
+            '''
+            A ⊑ B
+            A ⊑ X1
+            X1 ⊑ C
+            X1 ⊑ X2
+            X2 ⊑ X3
+            X2 ⊑ X4
+            '''
+            x = x + "SubClassOf({} {})\n".format(newLine[0],newLine[1])
+            x = x + "SubClassOf({} {})\n".format(newLine[0],new[X1])
+            x = x + "SubClassOf({} {})\n".format(new[X1],newLine[2])
+            x = x + "SubClassOf({} {})\n".format(new[X1],new[X2])
+            x = x + "SubClassOf({} {})\n".format(new[X2],new[X3])
+            x = x + "SubClassOf({} {})\n".format(new[X2],new[X4])            
+            '''
+            B ⊓ X1 ⊑ A
+            C ⊓ X2 ⊑ X1
+            X3 ⊓ X4 ⊑ X2
+            '''
+            x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(newLine[1],new[X1],newLine[0])
+            x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(newLine[2],new[X2],new[X1])
+            x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(new[X3],new[X4],new[X2])
+            '''
+            X3 ⊑ ∃R.D
+            ∃R.D ⊑ X3
+            '''
+            x = x + "SubClassOf({} {})\n".format(new[X3],newLine[3])
+            x = x + "SubClassOf({} {})\n".format(newLine[3],new[X3])  
+            '''
+            X4 ⊑ ∃S.E
+            ∃S.E ⊑ X4
+            '''
+            x = x + "SubClassOf({} {})\n".format(new[X4],newLine[4])
+            x = x + "SubClassOf({} {})\n".format(newLine[4],new[X4])
+            
+            #print(newLine)
+        else:
+            
+            while stillSplittable(newLine[-1]):
+                #print(newLine)
+                y = newLine[-1][21:-1].split(" ",1)
+                #print(y)
+                newLine.pop(-1)
+                newLine.append(y[0])
+                newLine.append(y[1])
+                #            
+            
+            if newLine[-1].count(' ') > 1:
+                y = newLine[-1][21:-1].split(" ",1)
+                newLine.pop(-1)
+                newLine.append(y[0])
+                newLine.append(y[1])
+                
+            #print(newLine)
+            
+            last = newLine[-1]
+            if last in new.keys(): pass
+            else: new[last] = "sep:X{:05d}".format(len(new)+1)
+            
+            '''
+            last ⊑ ∃R.C
+            ∃R.C ⊑ last
+            '''
+            x = x + "SubClassOf({} {})\n".format(new[last],newLine[-1])
+            x = x + "SubClassOf({} {})\n".format(newLine[-1],new[last])
+            
+            newLine[-1] = new[last]
+            
+            #print(newLine)
+            
+            while len(newLine) > 2:
+                if len(newLine[-2]) > 7:
+                    Y = "ObjectIntersectionOf({} {})".format(newLine[-2],newLine[-1])
+                    Yr = "ObjectIntersectionOf({} {})".format(newLine[-1],newLine[-2])
+                    
+                    if Y in new.keys() or Yr in new.keys(): pass
+                    else: 
+                        new[Y] = "sep:X{:05d}".format(len(new)+1) 
+                        '''
+                        Y ⊑ B
+                        Y ⊑ X
+                        B ⊓ X ⊑ Y
+                        '''
+                        x = x + "SubClassOf({} {})\n".format(new[Y],newLine[-1])
+                        x = x + "SubClassOf({} {})\n".format(new[Y],newLine[-2])
+                        x = x + "SubClassOf(ObjectIntersectionOf({} {}) {})\n".format(newLine[-2],newLine[-1],new[Y])
+                    
+                    newLine.pop(-1)
+                    newLine[-1] = new[Y]
+                    
+                    #print(newLine)
+                else:
+                    last = "ObjectSomeValuesFrom({} {})".format(newLine[-2],newLine[-1])
+                    if last in new.keys(): pass
+                    else: 
+                        new[last] = "sep:X{:05d}".format(len(new)+1)
+                        '''
+                        last ⊑ ∃R.C
+                        ∃R.C ⊑ last
+                        '''
+                        x = x + "SubClassOf({} {})\n".format(new[last],last)
+                        x = x + "SubClassOf({} {})\n".format(last,new[last])
+                    #print(x)
+                    newLine.pop(-1)
+                    newLine[-1] = new[last]
+                    
+                    #print(newLine)
+            
+            x = x + "SubClassOf({} {})\nSubClassOf({} {})\n".format(newLine[0],newLine[1],newLine[1],newLine[0])#"EquivalentClasses({} {})".format(line[0],line[1])
+    
+    return x
+
+
+def stillSplittable(string):
+    #print(string)
+    pattern1 = re.compile("^.*(ObjectIntersectionOf)+.*$")
+    pattern2 = re.compile("^.*(ObjectSomeValuesFrom){2,}.*$")
+    val = pattern1.match(string) != None or pattern2.match(string) != None   
+    return val
+
+def isExistential(string):
+    return "ObjectSomeValuesFrom" in string
+
+def separable(string):
+    pattern = re.compile("^[a-z]{3}:[A-Z]{1}[0-9]{5}\s")
+    return pattern.match(string) != None
+
+def canEasySplit(line):
+    if not "ObjectSomeValuesFrom" in line: return True
+    if line.count("ObjectSomeValuesFrom") == 1:
+        return line.rfind("ObjectSomeValuesFrom") > line.rfind("ObjectIntersectionOf")
+    #print(line)
+    return False
+
+def normalizeFS(inf,outf):
+    pattern = re.compile("EquivalentClasses+")
+    
+    file = open(inf,"r")
+    file2 = open(outf,"w")
+    
+    new = {}
+    
+    for line in file:
+        if pattern.match(line) != None: file2.write(EQtoSC(line[18:-2].split(" ",1),new))
+        else: file2.write(line)
+    
+    file.close()
+    file2.close()
+    
+    newData = ["Declaration(Class(sep:X{:05d}))\n".format(x) for x in range(1,len(new)+1)]
+    
+    file3 = open(outf,"r")    
+    data = file3.readlines()
+    file3.close()
+    
+    for line in fileinput.FileInput(outf,inplace=1):
+        if "Declaration(Class(sep:fauxP19550))" in line:
+            line = line.replace(line,line+"".join(newData))
+        print (line,end='')
+    
+    return outf
+    
 def writeFile(filename,data):
     file = open(filename,"w")
     file.write(data)
@@ -48,53 +375,9 @@ def writeVectorFile(filename,vector):
                 file.write("\t\t{}\n".format(vector[i][j][k]))
         file.write("\n")
     file.close()
- 
-def makeData(trials,easy):
-    seq_in = numpy.empty(trials,dtype=numpy.ndarray)
-    seq_out = numpy.empty(trials,dtype=numpy.ndarray)
-    kbs = numpy.empty([trials,80 if easy else 588],dtype=numpy.float32)
-    if not os.path.isdir("output"): os.mkdir("output")
-     
-    for i in range(0,trials):
-        
-        print(i)
-        
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=2,numCType2=1,numCType3=2,numCType4=1,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1) if easy else \
-                    HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
-        
-        generator.genERate()
-        
-        kbs[i] = array(generator.toVector())
-        
-        reasoner = ReasonER(generator,showSteps=True)
-        
-        reasoner.ERason()
-	
-        dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
-        
-        seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
-        
-        
-        if not os.path.isdir("output/{}".format(i)): os.mkdir("output/{}".format(i))
-        if not os.path.isdir("output/{}/sequence".format(i)): os.mkdir("output/{}/sequence".format(i))
-        if not os.path.isdir("output/{}/KB during sequence".format(i)): os.mkdir("output/{}/KB during sequence".format(i))
-        if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/{}/KB after sequence".format(i)): os.mkdir("output/{}/KB after sequence".format(i))
-        generator.toStringFile("output/{}/completedKB.txt".format(i))
-        reasoner.toStringFile("output/{}/completedKB.txt".format(i))        
-        for j in range(0,len(dependencies.donelogs[0])):
-            writeFile("output/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
-        for j in range(0,len(dependencies.donelogs[1])):
-            if len(reasoner.KBsLog[j]) > 0: writeFile("output/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
-        for j in range(0,len(dependencies.donelogs[2])):
-            if len(reasoner.KBaLog[j]) > 0: writeFile("output/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
-        
-            
-    numpy.savez("saves/dataEasyX" if easy else 'saves/dataX', kbs,seq_in,seq_out)
-    
-    return kbs,seq_in,seq_out
 
 def getDataFromFile(easy):
-    data = numpy.load('saves/dataEasyX.npz' if easy else 'saves/data.npz',allow_pickle=True)
+    data = numpy.load('ssaves/dataEasyX.npz' if easy else 'ssaves/data.npz',allow_pickle=True)
     return data['arr_0'],data['arr_1'],data['arr_2']
 
 def pad(arr,maxlen1=0,maxlen2=0):
@@ -305,89 +588,241 @@ def fsOWLReader(filename):
     
     classes = 0
     classDict = {}
+    labelDict = {}
     roles = 0
     roleDict = {}
-    existentials = 0    
-    intersections = 0
-    RoleStatements = []
-    ConceptStatements = []
+    CType1=[]
+    CType2=[]
+    CType3=[]
+    CType4=[]
+    roleSubs=[]
+    roleChains=[]
+    
     
     while "Declaration" in line:
         if "Class" in line: 
             classes = classes + 1
             classDict[line[18:-3]] = classes
-        else: 
+        elif 'Object' in line: 
             roles = roles + 1
             roleDict[line[27:-3]] = roles
         line = file.readline()
         
-    info = [['c',classes,classDict],['r',roles,roleDict]]
     
-    r = 0
-    c = 0
     while line:
         if line[0] == '#': pass
+        elif 'AnnotationAssertion(rdfs:label' in line:
+            line = line[31:-2].split(' ',1)
+            labelDict[line[0]] = line[1][1:-1]
         elif 'SubObjectPropertyOf(' in line:
-            r = r + 1
-            line = line[20:-2]
             #print(line)
+            line = line[20:-2]            
             if 'ObjectPropertyChain(' in line:
-                first = " ".join(line.split(" ",2)[:2])
+                first = (" ".join(line.split(" ",2)[:2]))[20:-1].split()
                 last = line.split(" ",2)[2]
-                pass
-            else: pass
-            #print(r)
+                rs = RoleStatement(len(roleSubs),True,RoleChain(0,Role(roleDict[first[0]],[0,1]),Role(roleDict[first[1]],[1,2])),Role(roleDict[last],[0,2]))
+                rs.complete('⊑')
+                roleSubs.append(rs)
+            else: 
+                line = line.split()
+                #print(line)
+                rs = RoleStatement(len(roleChains),True,Role(roleDict[line[0]],[0,1]),Role(roleDict[line[1]],[0,1]))
+                rs.complete('⊑')
+                roleChains.append(rs)
         elif 'TransitiveObjectProperty(' in line:
             '''SubObjectPropertyOf( ObjectPropertyChain( OPE OPE ) OPE )'''
-            r = r + 1
-            #print(r)   
+            role = line[25:-2]
+            rs = RoleStatement(len(roleChains),True,RoleChain(0,Role(roleDict[role],[0,1]),Role(roleDict[role],[1,2])),Role(roleDict[role],[0,2]))
+            rs.complete('⊑')
+            roleChains.append(rs) 
         elif 'SubClassOf(' in line:
             line = line[11:-2]
-            inter = False          
-            c = c + 1
+            inter = False     
             test = 'ObjectSomeValuesFrom(' in line or 'ObjectIntersectionOf(' in line
             first = line.split(" ")[0] if not test or line[0] != 'O' else " ".join(line.split(" ",2)[:2])
             last = line.split(" ",1)[1] if not test  or line[0] != 'O' else line.split(" ",2)[2]
+            
             if test and 'ObjectIntersectionOf(' in first:
                 thiss = first[21:-1].split()
-                print(first,last,line)
-                intersections = intersections + 1
                 inter = True
             elif test and 'ObjectSomeValuesFrom(' in first:
                 thiss = first[21:-1].split()
-                print(first,last,line)
-                existentials = existentials + 1
             elif test and 'ObjectSomeValuesFrom(' in last:
                 thiss = last[21:-1].split()
-                print(first,last,line)
-                existentials = existentials + 1            
+            else:
+                thiss = None
             
             if len(first) <= 14 and len(last) <= 14:
-                cs = ConceptStatement(len(ConceptStatements),True,Concept(classDict[first],[0]),Concept(classDict[last],[0]))
+                cs = ConceptStatement(len(CType1),True,Concept(classDict[first],[0]),Concept(classDict[last],[0]))
+                cs.complete('⊑')
+                CType1.append(cs)
             elif len(first) >= 20 and inter:
                 cs1 = ConceptStatement(1,False,Concept(classDict[thiss[0]],[0]),Concept(classDict[thiss[1]],[0]))
                 cs1.complete('⊓')
-                cs = ConceptStatement(len(ConceptStatements),True,cs1,Concept(classDict[last],[0]))
+                cs = ConceptStatement(len(CType2),True,cs1,Concept(classDict[last],[0]))
+                cs.complete('⊑')
+                CType2.append(cs)
             elif len(first) >= 20:
-                cs = ConceptStatement(len(ConceptStatements),True,ConceptRole('e',Role(roleDict[thiss[0]],[0,1]),Concept(classDict[thiss[1]],[1])),Concept(classDict[last],[0]))
+                cs = ConceptStatement(len(CType3),True,ConceptRole('e',Role(roleDict[thiss[0]],[0,1]),Concept(classDict[thiss[1]],[1])),Concept(classDict[last],[0]))
+                cs.complete('⊑')
+                CType4.append(cs)
             elif len(last) >= 20:
-                cs = ConceptStatement(len(ConceptStatements),True,Concept(classDict[first],[0]),ConceptRole('e',Role(roleDict[thiss[0]],[0,1]),Concept(classDict[thiss[1]],[1])))   
+                cs = ConceptStatement(len(CType4),True,Concept(classDict[first],[0]),ConceptRole('e',Role(roleDict[thiss[0]],[0,1]),Concept(classDict[thiss[1]],[1]))) 
+                cs.complete('⊑')
+                CType3.append(cs)
             else:
                 print("nooooooooo")
-            cs.complete('⊑')  
-            ConceptStatements.append(cs)
-            #print(first,last)
-        else: pass#print(line)
+            
+        else:pass
         line = file.readline()
+    
+    info = [['c',classes,classDict],['r',roles,roleDict],['cs',len(CType1),len(CType2),len(CType3),len(CType4)],['rs',len(roleSubs),len(roleChains)],['l',labelDict]]
+        
+    return [CType1,CType2,CType3,CType4],[roleSubs,roleChains],info
 
-fsOWLReader("SNOMED/SNOrMED2012fs.owl")
 
-'''
+'''TODO'''
+def makeKBFromSamples(concepts,roles,info,easy):
+    
+    start = 0
+    allowedCNames = []
+    allowedRNames = []
+    
+    while isinstance(start,int):
+        start = random.randint(1,info[0][1])
+        for intersection in concepts[1]:
+            if intersection.antecedent.antecedent.name == start or intersection.antecedent.consequent.name == start or intersection.consequent.name == start:
+                start = intersection
+                allowedCNames.append(intersection.antecedent.antecedent.name) 
+                allowedCNames.append(intersection.antecedent.consequent.name)
+                allowedCNames.append(intersection.consequent.name)
+                break
+    
+    #4 2 8 2
+    #2 2
+    
+    numCType1 = 4 if easy else 10
+    numCType2 = 2 if easy else 10
+    numCType3 = 8 if easy else 10
+    numCType4 = 2 if easy else 10
+    numRoleSubs = 2 if easy else 4
+    numRoleChains = 2 if easy else 4
+    
+    CType1 = []
+    CType2 = [start]
+    CType3 = []
+    CType4 = []
+    roleSubs = []
+    roleChains = []
+    
+    while len(CType1) < numCType1:
+        inclusion = random.choice(concepts[0])
+        if inclusion in CType1: pass
+        elif inclusion.antecedent.name in allowedCNames or inclusion.consequent.name in allowedCNames:
+            CType1.append(inclusion)
+            allowedCNames.append(inclusion.antecedent.name)
+            allowedCNames.append(inclusion.consequent.name)
+               
+    allowedCNames = list(dict.fromkeys(allowedCNames))
+    i = 0
+    
+    while len(CType2) < numCType2:
+        intersection = concepts[1][i]
+        if intersection in CType2: i = i + 1
+        elif intersection.antecedent.antecedent.name in allowedCNames or intersection.antecedent.consequent.name in allowedCNames or intersection.consequent.name in allowedCNames:
+            CType2.append(intersection)
+            allowedCNames.append(intersection.antecedent.antecedent.name) 
+            allowedCNames.append(intersection.antecedent.consequent.name)
+            allowedCNames.append(intersection.consequent.name)
+            i = 0
+        elif i < len(concepts[1])-1: i = i + 1
+        else: raise
+            
+    allowedCNames = list(dict.fromkeys(allowedCNames))
+    
+    while len(CType3) < numCType3:
+        restriction = random.choice(concepts[2])
+        if restriction in CType4: pass
+        elif restriction.consequent.concept.name in allowedCNames or restriction.antecedent.name in allowedCNames:
+            CType3.append(restriction)
+            allowedCNames.append(restriction.consequent.concept.name)
+            allowedRNames.append(restriction.consequent.role.name)
+            allowedCNames.append(restriction.antecedent.name)
+            
+    allowedCNames = list(dict.fromkeys(allowedCNames))
+    allowedRNames = list(dict.fromkeys(allowedRNames))          
+            
+    while len(CType4) < numCType4:
+        restriction = random.choice(concepts[3])
+        if restriction in CType4: pass
+        elif restriction.antecedent.concept.name in allowedCNames or restriction.consequent.name in allowedCNames:
+            CType4.append(restriction)
+            allowedCNames.append(restriction.antecedent.concept.name)
+            allowedRNames.append(restriction.antecedent.role.name)
+            allowedCNames.append(restriction.consequent.name)
+    
+    allowedCNames = list(dict.fromkeys(allowedCNames))
+    allowedRNames = list(dict.fromkeys(allowedRNames))
+            
+    
+    
+    generator = HardGenERator2(rGenerator=GenERator(CType1=CType1,CType2=CType2,CType3=CType3,CType4=CType4,roleSubs=roleSubs,roleChains=roleChains))
+    
+    generator.hasRun = True
 
-if not os.path.isdir("saves"): os.mkdir("saves")
-if not os.path.isdir("output"): os.mkdir("output")
+
+    
+def sampleDataHardGenerator2Format(trials,easy,x):
+    concepts,roles,info = x
+    seq_in = numpy.empty(trials,dtype=numpy.ndarray)
+    seq_out = numpy.empty(trials,dtype=numpy.ndarray)
+    kbs = numpy.empty([trials,80 if easy else 588],dtype=numpy.float32)
+    if not os.path.isdir("snoutput"): os.mkdir("snoutput")
+
+    for i in range(0,trials):
+
+        print(i)
+
+        generator = makeKBFromSamples(concepts,roles,info,easy)
+        
+        kbs[i] = array(generator.toVector())
+
+        reasoner = ReasonER(generator,showSteps=True)
+
+        reasoner.ERason()
+
+        dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
+
+        seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
+
+        if not os.path.isdir("snoutput/{}".format(i)): os.mkdir("snoutput/{}".format(i))
+        if not os.path.isdir("snoutput/{}/sequence".format(i)): os.mkdir("snoutput/{}/sequence".format(i))
+        if not os.path.isdir("snoutput/{}/KB during sequence".format(i)): os.mkdir("snoutput/{}/KB during sequence".format(i))
+        if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/{}/KB after sequence".format(i)): os.mkdir("snoutput/{}/KB after sequence".format(i))
+        generator.toStringFile("snoutput/{}/completedKB.txt".format(i))
+        reasoner.toStringFile("snoutput/{}/completedKB.txt".format(i))        
+        for j in range(0,len(dependencies.donelogs[0])):
+            writeFile("snoutput/{}/sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[0][j]))
+        for j in range(0,len(dependencies.donelogs[1])):
+            if len(reasoner.KBsLog[j]) > 0: writeFile("snoutput/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
+        for j in range(0,len(dependencies.donelogs[2])):
+            if len(reasoner.KBaLog[j]) > 0: writeFile("snoutput/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
+
+
+    numpy.savez("ssaves/dataEasyX" if easy else 'ssaves/dataX', kbs,seq_in,seq_out)
+
+    return kbs,seq_in,seq_out    
+    
+
+print()
+
+'''13,7'''
+
+if not os.path.isdir("ssaves"): os.mkdir("ssaves")
+if not os.path.isdir("snoutput"): os.mkdir("snoutput")
 easy = True
-KBs,dependencies,output = getDataFromFile(easy)#makeData(1000,easy)#
+
+KBs,dependencies,output = sampleDataHardGenerator2Format(1000,easy,fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl")))
 
 fileShapes1 = [4,324,84] if easy else [8,2116,324]
 
@@ -407,9 +842,9 @@ KBvec,KBstr = vecToStatements(KBs_test,easy)
 preds,trueStatements = vecToStatements(y_test,easy)
 placeholder,inputs = vecToStatements(X_test,easy)
 
-writeVectorFile("output/KBsInEasy.txt" if easy else "output/KBsIn.txt",KBstr)
-writeVectorFile("output/targetInEasy.txt" if easy else "output/targetIn.txt",inputs)
-writeVectorFile("output/targetOutEasy.txt" if easy else "output/targetOut.txt",trueStatements)
+writeVectorFile("snoutput/KBsInEasy.txt" if easy else "snoutput/KBsIn.txt",KBstr)
+writeVectorFile("snoutput/targetInEasy.txt" if easy else "snoutput/targetIn.txt",inputs)
+writeVectorFile("snoutput/targetOutEasy.txt" if easy else "snoutput/targetOut.txt",trueStatements)
 
 learning_rate0 = 0.0001 if easy else 0.005
 n_epochs0 = 100000 if easy else 5000
@@ -447,7 +882,7 @@ with tf.Session() as sess:
             mseL = mse
             break
     y_pred = sess.run(outputs0,feed_dict={X0: KBs_test})
-    numpy.savez("saves/halfwayEasy" if easy else "saves/halfway",y_pred)
+    numpy.savez("ssaves/halfwayEasy" if easy else "ssaves/halfway",y_pred)
     mseNew = loss0.eval(feed_dict={outputs0: y_pred, y0: X_test})
     
     print("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
@@ -462,7 +897,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("output/KBFitEasy.txt" if easy else "output/KBFit.txt",newStatements)
+    writeVectorFile("snoutput/KBFitEasy.txt" if easy else "snoutput/KBFit.txt",newStatements)
     
 tf.reset_default_graph()
 
@@ -513,11 +948,11 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("output/predictedOutEasy.txt" if easy else "output/predictedOut.txt",newStatements)
+    writeVectorFile("snoutput/predictedOutEasy.txt" if easy else "snoutput/predictedOut.txt",newStatements)
     
     #saver.save(sess, "model.easy" if easy else "model")  
     
-    data = numpy.load("saves/halfwayEasy.npz" if easy else "saves/halfway.npz",allow_pickle=True)
+    data = numpy.load("ssaves/halfwayEasy.npz" if easy else "ssaves/halfway.npz",allow_pickle=True)
     data = data['arr_0'] 
     
     print("TESTING PIPELINE DATA\n")
@@ -531,7 +966,7 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
     
-    writeVectorFile("output/predictedOutFitEasy.txt" if easy else "output/predictedOutFit.txt",newStatements)
+    writeVectorFile("snoutput/predictedOutFitEasy.txt" if easy else "snoutput/predictedOutFit.txt",newStatements)
 
 tf.reset_default_graph()
 
@@ -582,9 +1017,10 @@ with tf.Session() as sess:
     
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
     
-    writeVectorFile("output/predictedOutEasyC.txt" if easy else "output/predictedOutC.txt",newStatements)
+    writeVectorFile("snoutput/predictedOutEasyC.txt" if easy else "snoutput/predictedOutC.txt",newStatements)
     
-    saver.save(sess, "saves/modelC.easy" if easy else "saves/modelC") 
+    saver.save(sess, "ssaves/modelC.easy" if easy else "ssaves/modelC") 
+    '''
     data = numpy.load("halfwayEasy.npz" if easy else "halfway.npz",allow_pickle=True)
     data = data['arr_0'] 
     
@@ -600,5 +1036,4 @@ with tf.Session() as sess:
     print("Custom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))    
     
     writeVectorFile("predictedOutFitEasy.txt" if easy else "predictedOutFit.txt",newStatements)
-   
     '''

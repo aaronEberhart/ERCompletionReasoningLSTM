@@ -4,16 +4,9 @@ import random,time
 class GenERator:
 	
 	def __init__(self,numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=10,numRoleChains=10,conceptNamespace=100,roleNamespace=20,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[],seed=False):
-		self.hasRun = False
+		
 		self.rGenerator = None
-		self.numCType1 = max(numCType1,len(CType1))
-		self.numCType2 = max(numCType2,len(CType2))
-		self.numCType3 = max(numCType3,len(CType3))
-		self.numCType4 = max(numCType4,len(CType4))
-		self.numRoleSub = max(numRoleSub,len(roleSubs))
-		self.numRoleChains = max(numRoleChains,len(roleChains))
-		self.conceptNamespace = conceptNamespace
-		self.roleNamespace = roleNamespace
+		
 		self.CTypeNull = CTypeNull
 		self.CType1 = CType1
 		self.CType2 = CType2
@@ -21,6 +14,18 @@ class GenERator:
 		self.CType4 = CType4
 		self.roleSubs = roleSubs
 		self.roleChains = roleChains
+		
+		self.hasRun = not(len(self.CType1) == 0 and len(self.CType2) == 0 and len(self.CType3) == 0 and len(self.CType4) == 0 and len(self.roleChains) == 0 and len(self.roleSubs) == 0)
+		
+		self.numCType1 = numCType1 if len(CType1) == 0 else len(CType1) 
+		self.numCType2 = numCType2 if len(CType2) == 0 else len(CType2) 
+		self.numCType3 = numCType3 if len(CType3) == 0 else len(CType3) 
+		self.numCType4 = numCType4 if len(CType4) == 0 else len(CType4) 
+		self.numRoleSub = numRoleSub if len(roleSubs) == 0 else len(roleSubs)
+		self.numRoleChains = numRoleChains if len(roleChains) == 0 else len(roleChains) 
+		self.conceptNamespace = conceptNamespace
+		self.roleNamespace = roleNamespace
+		
 		self.seed = time.time() if not seed else seed
 		random.seed(self.seed)
 	

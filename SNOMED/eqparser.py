@@ -284,7 +284,7 @@ def stillSplittable(string):
     return val
 
 def isExistential(string):
-    return "ObjectSomeValuesFrom" in line
+    return "ObjectSomeValuesFrom" in string
 
 def separable(string):
     pattern = re.compile("^[a-z]{3}:[A-Z]{1}[0-9]{5}\s")
@@ -300,8 +300,8 @@ def canEasySplit(line):
 def normalizeFS():
     pattern = re.compile("EquivalentClasses+")
     
-    file = open("SNOMED2012fs.owl","r")
-    file2 = open("SNOrMED2012fs.owl","w")
+    file = open("test.owl","r")
+    file2 = open("test2.owl","w")
     
     new = {}
     
@@ -336,5 +336,5 @@ def fsOWLReader(filename):
     print(classes,roles)
     
 
-
-fsOWLReader("SNOrMED2012fs.owl")
+normalizeFS()
+#fsOWLReader("SNOrMED2012fs.owl")

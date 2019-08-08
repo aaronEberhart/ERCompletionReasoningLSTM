@@ -296,6 +296,8 @@ def repeatAndSplitKBs(kbs,steps,splitSize):
             newKBs[i][j] = kbs[i]
     return numpy.split(newKBs,[int(len(newKBs)*splitSize)])
 
+
+
 if not os.path.isdir("saves"): os.mkdir("saves")
 if not os.path.isdir("output"): os.mkdir("output")
 easy = True
