@@ -28,7 +28,7 @@ class GenERator:
 		
 		self.seed = time.time() if not seed else seed
 		random.seed(self.seed)
-	
+		
 	def genERate(self):
 		if self.hasRun: return
 		

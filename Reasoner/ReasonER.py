@@ -165,7 +165,7 @@ class ReasonER:
 		for roleStatement in self.syntheticData.roleSubs:
 			for matchingConceptStatement in list(filter(lambda x: roleStatement.antecedent.name == x.consequent.role.name,type3Candidates)):
 				
-				cs = ConceptStatement(0,True,matchingConceptStatement.antecedent,ConceptRole('e',roleStatement.consequent,matchingConceptStatement.consequent.concept))
+				cs = ConceptStatement(0,True,Concept(matchingConceptStatement.antecedent.name,[0]),ConceptRole('e',Role(roleStatement.consequent.name,[0,1]),matchingConceptStatement.consequent.concept))
 				cs.complete('⊑')				
 				self.newCType3.append([cs,4,[matchingConceptStatement,roleStatement]])
 	

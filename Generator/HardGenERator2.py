@@ -85,8 +85,28 @@ class HardGenERator2:
 
     def genERate(self):
         
-        if self.hasRun: return
         
+        if self.hasRun and self.rGenerator.hasRun:
+            if len(self.CType1) == 0 and len(self.CType2) == 0 and len(self.CType3) == 0 and len(self.CType4) == 0 and len(self.roleChains) == 0 and len(self.roleSubs) == 0 and not(len(self.rGenerator.CType1) == 0 and len(self.rGenerator.CType2) == 0 and len(self.rGenerator.CType3) == 0 and len(self.rGenerator.CType4) == 0 and len(self.rGenerator.roleChains) == 0 and len(self.rGenerator.roleSubs) == 0):
+                self.CTypeNull = self.rGenerator.CTypeNull
+                self.CType1 = self.rGenerator.CType1
+                self.CType2 = self.rGenerator.CType2
+                self.CType3 = self.rGenerator.CType3
+                self.CType4 = self.rGenerator.CType4
+                self.roleSubs = self.rGenerator.roleSubs
+                self.roleChains = self.rGenerator.roleChains
+        if self.hasRun:
+            self.conceptNamespace = max(self.conceptNamespace,self.rGenerator.conceptNamespace)
+            self.roleNamespace = max(self.roleNamespace,self.rGenerator.roleNamespace)
+            self.CTypeNull.sort(key=lambda x: (x.antecedent.name, x.consequent.name))            
+            self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+            self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
+            self.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
+            self.CType4.sort(key=lambda x: (x.antecedent.role.name, x.antecedent.concept.name, x.consequent.name)) 
+            self.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+            self.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))
+            return
+
         self.setup()
         
         if self.rGenerator != None:
@@ -95,15 +115,15 @@ class HardGenERator2:
         else:
             for i in range(1,self.conceptNamespace+1):
                 self.makeCTypeNull(i)            
-
+        
         for i in range(0,self.difficulty):
             self.unwantedDeductions(i*3)
             self.genERateSequence(i)    
         
         if self.rGenerator != None: 
             self.shiftSGenerator() 
-            self.spliceGenERators()              
-
+            self.spliceGenERators() 
+            
         self.CTypeNull.sort(key=lambda x: (x.antecedent.name, x.consequent.name))            
         self.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
         self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
@@ -181,8 +201,8 @@ class HardGenERator2:
 
     def toString(self):
         ret = "Original KB"
-        for statement in self.CTypeNull:
-            ret = ret + "\n" + statement.toString()
+        #for statement in self.CTypeNull:
+            #ret = ret + "\n" + statement.toString()
         for statement in self.CType1:
             ret = ret + "\n" + statement.toString()
         for statement in self.CType2:

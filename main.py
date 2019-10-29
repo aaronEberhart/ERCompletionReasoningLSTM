@@ -67,8 +67,8 @@ def runExperiment(i,diff):
 
 def sequenceTrial(diff):
 	
-	generator = HardGenERator2(rGenerator=None,difficulty=diff)#GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=25),difficulty=diff)
-		
+	generator = HardGenERator2(rGenerator=None,difficulty=1)#,GenERator(numCType1=3,numCType2=2,numCType3=3,numCType4=2,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4)#GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=25),difficulty=diff)
+	generator.genERate()
 	reasoner = ReasonER(generator,showSteps=True)
 	
 	negatives = NegativesGenERator(reasoner)
