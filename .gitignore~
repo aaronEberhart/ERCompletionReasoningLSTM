@@ -1,0 +1,7 @@
+.gitignore
+*__pycache__
+*.txt
+*.owl
+model*
+checkpoint
+
