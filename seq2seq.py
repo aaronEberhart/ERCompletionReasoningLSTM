@@ -1,7 +1,9 @@
 from commonFunctions import *
 
-
-
+def getDataFromFile(filename,easy):
+    print("Loading data from "+filename)
+    data = numpy.load(filename,allow_pickle=True)
+    return data['arr_0'],data['arr_1'],data['arr_2']
 def makeData(trials,easy):
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
@@ -10,15 +12,20 @@ def makeData(trials,easy):
      
     for i in range(0,trials):
         
-        print(i)
+        print("Making Random-Sequetial KB"+str(i))
         
-        generator = HardGenERator2(rGenerator=GenERator(numCType1=2,numCType2=1,numCType3=2,numCType4=1,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4),difficulty=1) if easy else \
-                    HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
+        if not os.path.isdir("output/Dataset/{}".format(i)): os.mkdir("output/Dataset/{}".format(i))
+        
+        gen = GenERator(numCType1=2,numCType2=1,numCType3=2,numCType4=1,numRoleSub=1,numRoleChains=1,conceptNamespace=10,roleNamespace=4,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[])
+        
+        generator = HardGenERator2(rGenerator=gen,difficulty=1) if easy else HardGenERator2(rGenerator=GenERator(numCType1=25,numCType2=25,numCType3=25,numCType4=25,numRoleSub=15,numRoleChains=10,conceptNamespace=100,roleNamespace=50),difficulty=2)
         
         generator.genERate()
         
         if generator.conceptNamespace != conceptSpace or generator.roleNamespace != roleSpace:
             raise
+        
+        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/KB{}.owl".format(i,i))
         
         kbs[i] = array(generator.toVector())
         
@@ -29,12 +36,11 @@ def makeData(trials,easy):
         dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
         
         seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
-        
-        
-        if not os.path.isdir("output/Dataset/{}".format(i)): os.mkdir("output/Dataset/{}".format(i))
+
         if not os.path.isdir("output/Dataset/{}/sequence".format(i)): os.mkdir("output/Dataset/{}/sequence".format(i))
-        if not os.path.isdir("output/Dataset/{}/KB during sequence".format(i)): os.mkdir("output/Dataset/{}/KB during sequence".format(i))
+        if not os.path.isdir("output/Dataset/{}/KB during sequence".format(i)): os.mkdir("output/Dataset/{}/KB during sequence".format(i))        
         if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/Dataset/{}/KB after sequence".format(i)): os.mkdir("output/Dataset/{}/KB after sequence".format(i))
+        reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/completion{}.owl".format(i,i))
         generator.toStringFile("output/Dataset/{}/completedKB.txt".format(i))
         reasoner.toStringFile("output/Dataset/{}/completedKB.txt".format(i))        
         for j in range(0,len(dependencies.donelogs[0])):
@@ -43,7 +49,6 @@ def makeData(trials,easy):
             if len(reasoner.KBsLog[j]) > 0: writeFile("output/Dataset/{}/KB during sequence/reasonerStep{}.txt".format(i,j),dependencies.toString(dependencies.donelogs[1][j]))
         for j in range(0,len(dependencies.donelogs[2])):
             if len(reasoner.KBaLog[j]) > 0: writeFile("output/Dataset/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
-        
             
     numpy.savez("saves/dataEasy" if easy else 'saves/data', kbs,seq_in,seq_out)
     
@@ -137,7 +142,7 @@ def shallowSystem(n_epochs0,learning_rate0):
         
         log.write("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-        log.write("\nTESTING HOLDOUT JUSTIFICATION DATA\n\n")    
+        log.write("\nTESTING REASONER SUPPORT DATA\n\n")    
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         distTRan,distRReal = levDistance(newStatements,trueStatements,conceptSpace,roleSpace)
@@ -163,7 +168,7 @@ def shallowSystem(n_epochs0,learning_rate0):
         
         log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Actual to Predicted Data: {}\n\n".format(cdistTRan,cdistRReal))    
         
-        writeVectorFile("output/predictedOutFitEasy.txt" if easy else "output/predictedOutFit.txt",newStatements)
+        writeVectorFile("output/predictedOutPEasy.txt" if easy else "output/predictedOutP.txt",newStatements)
         
 def deepSystem(n_epochs2,learning_rate2):
     log.write("Testing Deep LSTM\n\nMapping KB to hidden layer to KB Completion\n\n")
@@ -205,7 +210,7 @@ def deepSystem(n_epochs2,learning_rate2):
         mseNew = loss2.eval(feed_dict={outputs2: y_pred, y1: y_test})
         log.write("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-        log.write("\nTESTING HOLDOUT DATA\n\n")    
+        log.write("\nTESTING HOLDOUT KB DATA\n\n")    
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         distTRan,distRReal = levDistance(newStatements,trueStatements,conceptSpace,roleSpace)
@@ -218,21 +223,30 @@ def deepSystem(n_epochs2,learning_rate2):
         writeVectorFile("output/predictedOutEasyC.txt" if easy else "output/predictedOutC.txt",newStatements)    
     
 if __name__ == "__main__":
+    generate = False
+    easy = True
+    
     if not os.path.isdir("saves"): os.mkdir("saves")
     if not os.path.isdir("output"): os.mkdir("output")
+    if generate and os.path.isdir("output/Dataset"): shutil.rmtree("output/Dataset")
     if not os.path.isdir("output/Dataset"): os.mkdir("output/Dataset")
-    log = open("log.txt","w")
     
-    easy = True
+    log = open("log.txt","w")    
+    
+    trials = 1000
     conceptSpace = 13 if easy else 106
     roleSpace = 7 if easy else 56
     
-    epochs = 100000 if easy else 50000
-    learningRate = 0.0001 if easy else 0.005    
+    if len(sys.argv) == 3:
+        epochs = int(sys.argv[1])
+        learningRate = float(sys.argv[2])
+    else:
+        epochs = 20000 if easy else 5000
+        learningRate = 0.001 if easy else 0.05 
     
-    KBs,dependencies,output = getDataFromFile('saves/dataEasy.npz' if easy else 'saves/data.npz',easy)#makeData(1000,easy)#
+    KBs,dependencies,output = makeData(trials,easy) if generate else getDataFromFile('saves/dataEasy.npz' if easy else 'saves/data.npz',easy)
     
-    fileShapes1 = [3,104,40] if easy else [5,328,160]
+    fileShapes1 = [4,368,92] if easy else [5,328,160]
     
     KBs_test,KBs_train = repeatAndSplitKBs(KBs,fileShapes1[0],0.33)
                             
@@ -255,11 +269,11 @@ if __name__ == "__main__":
     writeVectorFile("output/dependenciesEasy.txt" if easy else "output/dependencies.txt",inputs)
     writeVectorFile("output/targetOutEasy.txt" if easy else "output/targetOut.txt",trueStatements)
     
-    shallowSystem(epochs,learningRate)
+    shallowSystem(int(epochs/2),learningRate)
     
     tf.reset_default_graph()
     
-    deepSystem(epochs*2,learningRate/2)
+    deepSystem(epochs,learningRate/2)
     
     log.close()
     

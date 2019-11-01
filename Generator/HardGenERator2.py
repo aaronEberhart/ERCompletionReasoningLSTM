@@ -26,6 +26,7 @@ class HardGenERator2:
         self.hConceptNamespace = (difficulty * 3) + 2
         self.hRoleNamespace = self.conceptNamespace - 1		
         self.rGenerator = rGenerator
+    
         if rGenerator != None and not self.rGenerator.hasRun: 
                 self.rGenerator.genERate()
                 if self.keepTrying(self.rGenerator.CType1,self.rGenerator.conceptNamespace-1): 
@@ -106,7 +107,7 @@ class HardGenERator2:
             self.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
             self.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))
             return
-
+            
         self.setup()
         
         if self.rGenerator != None:

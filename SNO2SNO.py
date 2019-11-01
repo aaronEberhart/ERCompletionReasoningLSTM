@@ -2,6 +2,11 @@ from commonFunctions import *
 import re
 import fileinput
 
+def getDataFromFile(filename,easy):
+    print("Loading data from "+filename)
+    data = numpy.load(filename,allow_pickle=True)
+    return data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4']
+
 def EQtoSC(line,new):
     if "ObjectIntersectionOf" in line[1]: x = intersectionSplit(line,new)
     else: x = "SubClassOf({} {})\nSubClassOf({} {})".format(line[0],line[1],line[1],line[0])
@@ -305,6 +310,8 @@ def normalizeFS(inf,outf):
     file = open(inf,"r")
     file2 = open(outf,"w")
     
+    print("Normalizing "+inf)
+    
     new = {}
     
     for line in file:
@@ -323,12 +330,16 @@ def normalizeFS(inf,outf):
     for line in fileinput.FileInput(outf,inplace=1):
         if "Declaration(Class(sep:fauxP19550))" in line:
             line = line.replace(line,line+"".join(newData))
-        print (line,end='')
+        print(line,end='')
+    
+    print("Saving as "+outf)
     
     return outf
 
 def fsOWLReader(filename):
     file = open(filename,'r')
+    
+    print("Reading "+filename)
     
     line = file.readline()
     while "Declaration" not in line:
@@ -336,9 +347,11 @@ def fsOWLReader(filename):
     
     classes = 0
     classDict = {}
+    classRetDict = {}
     labelDict = {}
     roles = 0
     roleDict = {}
+    roleRetDict = {}
     CType1=[]
     CType2=[]
     CType3=[]
@@ -350,10 +363,16 @@ def fsOWLReader(filename):
     while "Declaration" in line:
         if "Class" in line: 
             classes = classes + 1
-            classDict[line[18:-3]] = classes
+            st = line[18:-3]
+            classDict[st] = classes
+            classRetDict[classes] = st
+            if "sep:X" in line:
+                labelDict[st] = "Artificial node {}".format(st)
         elif 'Object' in line: 
-            roles = roles + 1
-            roleDict[line[27:-3]] = roles
+            roles = roles - 1
+            st = line[27:-3]
+            roleDict[st] = roles
+            roleRetDict[roles] = st
         line = file.readline()
         
     
@@ -424,6 +443,7 @@ def fsOWLReader(filename):
         else:pass
         line = file.readline()
     
+    print("Shuffling axioms")
     random.shuffle(CType1)
     random.shuffle(CType2)
     random.shuffle(CType3)
@@ -431,7 +451,7 @@ def fsOWLReader(filename):
     random.shuffle(roleSubs)
     random.shuffle(roleChains)
     
-    info = [['c',classes,classDict],['r',roles,roleDict],['cs',len(CType1),len(CType2),len(CType3),len(CType4)],['rs',len(roleSubs),len(roleChains)],['l',labelDict]]
+    info = [['c',classes,classRetDict],['r',roles,roleRetDict],['cs',len(CType1),len(CType2),len(CType3),len(CType4)],['rs',len(roleSubs),len(roleChains)],['l',labelDict]]
     
     return [CType1,CType2,CType3,CType4],[roleSubs,roleChains],info
 
@@ -665,62 +685,63 @@ def shiftNames(CTypeNull,CType1,CType2,CType3,CType4,roleSubs,roleChains,allowed
     newVal = 1
     mapping = {}
     for name in allowedCNames:
-        mapping[name] = newVal
+        mapping[newVal] = name
         for statement in CTypeNull:
             if statement.antecedent.name == name:
-                statement.antecedent.name = mapping[name]
-                statement.consequent.name = mapping[name]
+                statement.antecedent.name = newVal
+                statement.consequent.name = newVal
         for statement in CType1:
             if statement.antecedent.name == name:
-                statement.antecedent.name = mapping[name]
+                statement.antecedent.name = newVal
             if statement.consequent.name == name:
-                statement.consequent.name = mapping[name]
+                statement.consequent.name = newVal
         for statement in CType2:
             if statement.antecedent.antecedent.name == name:
-                statement.antecedent.antecedent.name = mapping[name]
+                statement.antecedent.antecedent.name = newVal
             if statement.antecedent.consequent.name == name:
-                statement.antecedent.consequent.name = mapping[name]
+                statement.antecedent.consequent.name = newVal
             if statement.consequent.name == name:
-                statement.consequent.name = mapping[name]
+                statement.consequent.name = newVal
         for statement in CType3:
             if statement.antecedent.name == name:
-                statement.antecedent.name = mapping[name]
+                statement.antecedent.name = newVal
             if statement.consequent.concept.name == name:
-                statement.consequent.concept.name = mapping[name]
+                statement.consequent.concept.name = newVal
         for statement in CType4:
             if statement.antecedent.concept.name == name:
-                statement.antecedent.concept.name = mapping[name]
+                statement.antecedent.concept.name = newVal
             if statement.consequent.name == name:
-                statement.consequent.name = mapping[name]
+                statement.consequent.name = newVal
         newVal = newVal + 1
     
-    newVal = 1    
+    newVal = -1    
     for name in allowedRNames:
-        mapping[-name] = newVal
+        mapping[newVal] = name
         for statement in CType3:
             if statement.consequent.role.name == name:
-                statement.consequent.role.name = mapping[-name]
+                statement.consequent.role.name = -newVal
         for statement in CType4:
             if statement.antecedent.role.name == name:
-                statement.antecedent.role.name = mapping[-name]
+                statement.antecedent.role.name = -newVal
         for statement in roleSubs:
             if statement.antecedent.name == name:
-                statement.antecedent.name = mapping[-name]
+                statement.antecedent.name = -newVal
             if statement.consequent.name == name:
-                statement.consequent.name = mapping[-name] 
+                statement.consequent.name = -newVal 
         for statement in roleChains:
             if statement.antecedent.roles[0].name == name:
-                statement.antecedent.roles[0].name = mapping[-name]
+                statement.antecedent.roles[0].name = -newVal
             if statement.antecedent.roles[1].name == name:
-                statement.antecedent.roles[1].name = mapping[-name]
+                statement.antecedent.roles[1].name = -newVal
             if statement.consequent.name == name:
-                statement.consequent.name = mapping[-name] 
-        newVal = newVal + 1
+                statement.consequent.name = -newVal
+        newVal = newVal - 1
     
     return mapping,CTypeNull,CType1,CType2,CType3,CType4,roleSubs,roleChains,allowedCNames,allowedRNames
     
 def sampleDataHardGenerator2Format(trials,easy,x):
-    concepts,roles,info = x   
+    concepts,roles,info = x  
+    localmaps = []
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
     kbs = numpy.empty([trials,80 if easy else 588],dtype=numpy.float32)
@@ -729,9 +750,13 @@ def sampleDataHardGenerator2Format(trials,easy,x):
 
     while i < trials:
 
-        print(i)
+        print("Sampling SNOMED to make KB"+str(i))
 
+        if not os.path.isdir("snoutput/Dataset/{}".format(i)): os.mkdir("snoutput/Dataset/{}".format(i))
+        
         localmap,generator = makeKBFromSamples(concepts,roles,info,easy)
+        
+        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/SNOMED/Sample/random/{}/>".format(i),"snoutput/Dataset/{}/KB{}.owl".format(i,i))
         
         kbs[i] = array(generator.toVector())
 
@@ -740,15 +765,18 @@ def sampleDataHardGenerator2Format(trials,easy,x):
         reasoner.ERason()
         
         if len(reasoner.KBaLog) > 4 or len(reasoner.KBaLog) < 2:
+            print("Sample has too few or too many reasoner steps, trying again")
             continue
 
+        localmaps.append(localmap)
+        
         dependencies = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
 
         seq_in[i],seq_out[i] = dependencies.toVector(generator.conceptNamespace,generator.roleNamespace)
-
-        if not os.path.isdir("snoutput/Dataset/{}".format(i)): os.mkdir("snoutput/Dataset/{}".format(i))
-        if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/Dataset/{}/Reasoner Steps".format(i)): os.mkdir("snoutput/Dataset/{}/KB after sequence".format(i))
+        
+        if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/Dataset/{}/Reasoner Steps".format(i)): os.mkdir("snoutput/Dataset/{}/Reasoner Steps".format(i))
         generator.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
+        reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/SNOMED/Sample/random/{}/>".format(i),"snoutput/Dataset/{}/completion{}.owl".format(i,i))
         reasoner.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
         for j in range(0,len(dependencies.donelogs[2])):
             if len(reasoner.KBaLog[j]) > 0: writeFile("snoutput/Dataset/{}/Reasoner Steps/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),dependencies.toString(dependencies.donelogs[2][j]))
@@ -756,9 +784,9 @@ def sampleDataHardGenerator2Format(trials,easy,x):
         i = i + 1
 
 
-    numpy.savez("ssaves/dataEasy" if easy else 'ssaves/data', kbs,seq_in,seq_out)
+    numpy.savez("ssaves/dataEasy" if easy else 'ssaves/data', kbs,seq_in,seq_out,localmaps,info)
 
-    return kbs,seq_in,seq_out    
+    return kbs,seq_in,seq_out,localmaps,info   
     
 
 def shallowSystem(n_epochs0,learning_rate0):
@@ -850,7 +878,7 @@ def shallowSystem(n_epochs0,learning_rate0):
         
         log.write("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-        log.write("\nTESTING HOLDOUT JUSTIFICATION DATA\n\n")    
+        log.write("\nTESTING REASONER SUPPORT DATA\n\n")    
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         distTRan,distRReal = levDistance(newStatements,trueStatements,conceptSpace,roleSpace)
@@ -859,10 +887,8 @@ def shallowSystem(n_epochs0,learning_rate0):
         log.write("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRReal))
         log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRReal))
         
-        #log.write("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Predicted to Random Data: {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRRan,distRReal))
-        #log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Predicted to Random Data: {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRRan,cdistRReal))
-        
-        writeVectorFile("snoutput/predictedOutEasy.txt" if easy else "snoutput/predictedOut.txt",newStatements)
+        x,newStatementsLabeled = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,testLabels)
+        writeVectorFile("snoutput/predictedOutEasy.txt" if easy else "snoutput/predictedOut.txt",newStatementsLabeled)
         
         data = numpy.load("ssaves/halfwayEasy.npz" if easy else "ssaves/halfway.npz",allow_pickle=True)
         data = data['arr_0'] 
@@ -874,11 +900,11 @@ def shallowSystem(n_epochs0,learning_rate0):
         distTRan,distRReal = levDistance(newStatements,trueStatements,conceptSpace,roleSpace)
         cdistTRan,cdistRReal = customDistance(newPreds,preds,conceptSpace,roleSpace)
         
-        log.write("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRReal))
-        
+        log.write("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRReal))        
         log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Actual to Predicted Data: {}\n\n".format(cdistTRan,cdistRReal))    
         
-        writeVectorFile("snoutput/predictedOutPEasy.txt" if easy else "snoutput/predictedOutP.txt",newStatements)
+        x,newStatementsLabeled = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,testLabels)
+        writeVectorFile("snoutput/predictedOutPEasy.txt" if easy else "snoutput/predictedOutP.txt",newStatementsLabeled)
         
 def deepSystem(n_epochs2,learning_rate2):
     log.write("Testing Deep LSTM\n\nMapping KB to hidden layer to KB Completion\n\n")
@@ -920,7 +946,7 @@ def deepSystem(n_epochs2,learning_rate2):
         mseNew = loss2.eval(feed_dict={outputs2: y_pred, y1: y_test})
         log.write("\nTraining Statistics\n\nPrediction\tMean Squared Error:\t{}\nTraining\tLearned Reduction MSE:\t{}\n\t\tIncrease MSE on New:\t{}\n\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-        log.write("\nTESTING HOULDOUT DATA\n\n")    
+        log.write("\nTESTING HOLDOUT KB DATA\n\n")    
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         distTRan,distRReal = levDistance(newStatements,trueStatements,conceptSpace,roleSpace)
@@ -929,16 +955,26 @@ def deepSystem(n_epochs2,learning_rate2):
         log.write("Levenshtein Distance From Actual to Random Data:    {}\nLevenshtein Distance From Actual to Predicted Data: {}\n".format(distTRan,distRReal))
         log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRReal))
         
+        x,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,testLabels)
         writeVectorFile("snoutput/predictedOutDEasy.txt" if easy else "snoutput/predictedOutD.txt",newStatements)    
 
 
+def collapseLabelMap(localMap,classes,roles,labels):
+    for mapping in localMap:
+        for entry in mapping:
+            mapping[entry] = labels[classes[mapping[entry]]] if mapping[entry] > 0 else labels[roles[mapping[entry]]]
+    return localMap
 
 if __name__ == "__main__":
+    generate = False
+    easy = True
+    
     if not os.path.isdir("ssaves"): os.mkdir("ssaves")
     if not os.path.isdir("snoutput"): os.mkdir("snoutput")
-    if not os.path.isdir("snoutput/Dataset"): os.mkdir("snoutput/Dataset")
+    if generate and os.path.isdir("snoutput/Dataset"): shutil.rmtree("snoutput/Dataset")
+    if not os.path.isdir("snoutput/Dataset"): os.mkdir("snoutput/Dataset")    
     
-    easy = True
+    trials = 1000
     conceptSpace = 21 if easy else 106
     roleSpace = 8 if easy else 56  
     
@@ -946,17 +982,22 @@ if __name__ == "__main__":
         epochs = int(sys.argv[1])
         learningRate = float(sys.argv[2])
     else:
-        epochs = 100000 if easy else 50000
+        epochs = 20000 if easy else 5000
         learningRate = 0.0001 if easy else 0.005        
     
     log = open("slog.txt","w")
     
-    KBs,dependencies,output = getDataFromFile('ssaves/dataEasy.npz' if easy else 'ssaves/data.npz',easy)#sampleDataHardGenerator2Format(1000,easy,fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl")))#
+    KBs,dependencies,output,localMaps,stats = sampleDataHardGenerator2Format(trials,easy,fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl"))) if generate else getDataFromFile('ssaves/dataEasy.npz' if easy else 'ssaves/data.npz',easy)
     
-    fileShapes1 = [4,204,52] if easy else [8,2116,324]
+    labels = collapseLabelMap(localMaps,stats[0][2],stats[1][2],stats[4][1])
+    
+    fileShapes1 = [4,272,68] if easy else [8,2116,324]
 
     KBs_test,KBs_train = repeatAndSplitKBs(KBs,fileShapes1[0],0.33)
-                            
+    
+    testLabels = labels[:len(KBs_test)]
+    trainLabels = labels[len(KBs_test):]
+    
     X_train, X_test, y_train, y_test = splitTensors(dependencies, output, 0.33)
     
     X_train = pad(X_train,maxlen1=fileShapes1[0],maxlen2=fileShapes1[1])
@@ -968,19 +1009,19 @@ if __name__ == "__main__":
     print("KBs shape:\t\t{}\nExtended KBs shape:\t{}{}\nDependencies shape:\t{}{}\nOutput shape:\t\t{}{}\n\n".format(KBs.shape,KBs_train.shape,KBs_test.shape,X_train.shape,X_test.shape,y_train.shape,y_test.shape))
     log.write("KBs shape:\t\t{}\nExtended KBs shape:\t{}{}\nDependencies shape:\t{}{}\nOutput shape:\t\t{}{}\n\n".format(KBs.shape,KBs_train.shape,KBs_test.shape,X_train.shape,X_test.shape,y_train.shape,y_test.shape))
 
-    KBvec,KBstr = vecToStatements(KBs_test,conceptSpace,roleSpace)
-    preds,trueStatements = vecToStatements(y_test,conceptSpace,roleSpace)
-    placeholder,inputs = vecToStatements(X_test,conceptSpace,roleSpace)
+    KBvec,KBstr = vecToStatementsWithLabels(KBs_test,conceptSpace,roleSpace,testLabels)
+    preds,trueStatements = vecToStatementsWithLabels(y_test,conceptSpace,roleSpace,testLabels)
+    placeholder,inputs = vecToStatementsWithLabels(X_test,conceptSpace,roleSpace,testLabels)
     
     writeVectorFile("snoutput/KBsInEasy.txt" if easy else "snoutput/KBsIn.txt",KBstr)
     writeVectorFile("snoutput/dependenciesEasy.txt" if easy else "snoutput/dependencies.txt",inputs)
     writeVectorFile("snoutput/targetOutEasy.txt" if easy else "snoutput/targetOut.txt",trueStatements)
     
-    shallowSystem(epochs,learningRate)
+    shallowSystem(int(epochs/2),learningRate)
     
     tf.reset_default_graph()
     
-    deepSystem(epochs*2,learningRate/2)
+    deepSystem(epochs,learningRate/2)
     
     log.close()
     

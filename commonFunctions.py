@@ -1,10 +1,11 @@
-import os,sys,time
+import os,sys,time,shutil
 me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
 sys.path.insert(0,me+"/Reasoner")
 
 import random
 import numpy
+import time
 
 from HardGenERator2 import *
 from HardGenERator import *
@@ -25,6 +26,18 @@ def writeFile(filename,data):
     file.write(data)
     file.close()    
 
+def writeVectorFileWithMap(filename,vector,mapping):
+    file = open(filename,"w")
+    for i in range(len(vector)):
+        print(mapping[i])
+        file.write("Trial: {}\n".format(i))
+        for j in range(len(vector[i])):
+            file.write("\tStep: {}\n".format(j))
+            for k in range(len(vector[i][j])):
+                file.write("\t\t{}\n".format(vector[i][j][k]))
+        file.write("\n")
+    file.close()
+    
 def writeVectorFile(filename,vector):
     file = open(filename,"w")
     for i in range(len(vector)):
@@ -80,12 +93,83 @@ def vecToStatements(vec,conceptSpace,roleSpace):
         
     return statementPred,statementStr
 
+def vecToStatementsWithLabels(vec,conceptSpace,roleSpace,labels):    
+    four = []
+    statementStr = []
+    statementPred = []
+    
+    for i in range(len(vec)):
+        trialStr = []
+        trialPred = []
+        for j in range(len(vec[i])):
+            stepStr = []
+            stepPred = []
+            for k in range(len(vec[i][j])):
+                if len(four) == 3:
+                    four.append(vec[i][j][k])
+                    pred,stri = convertToStatementWithLabels(four,conceptSpace,roleSpace,labels[i])
+                    if stri != None: stepStr.append(stri)
+                    if pred != None: stepPred.append(pred)
+                    four = []                    
+                else:
+                    four.append(vec[i][j][k])
+            if len(stepStr) > 0:
+                trialStr.append(stepStr) 
+            if len(stepPred) > 0: 
+                trialPred.append(stepPred)          
+        statementStr.append(trialStr)
+        statementPred.append(trialPred)
+        
+    return statementPred,statementStr
+
+def convertToStatementWithLabels(four,conceptSpace,roleSpace,labels):
+    
+    new = []
+    text = []
+    for number in four:
+        if isinstance(number,numpy.float32): 
+            number = number.item()
+        if number < 0 and number >= -1:
+            if int(number * roleSpace * -1) == 0: pass
+            else: 
+                number = int(number * roleSpace * -1)
+                text.append(labels[-number]) if (-number) in labels.keys() else text.append("undefinedRelationTo{}".format(number))
+                new.append("R{}".format(number))
+        elif number > 0 and number <= 1:
+            if int(number * conceptSpace) == 0: pass
+            else: 
+                number = int(number * conceptSpace)
+                text.append(labels[number]) if number in labels.keys() else text.append("UndefinedConcept{}".format(number))
+                new.append("C{}".format(number))   
+
+    if  len(new) == 0:
+        return None,None
+    elif len(new) == 1:
+        return new,None 
+    elif len(new) == 2 and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
+        return new,"{}\n\t\t\t{}".format(" ⊑ ".join(new)," is a ".join(text))
+    elif len(new) == 2:
+        return new,None
+    elif len(new) == 3:
+        if four[1] > 0 and four[2] < 0 and four[3] > 0:
+            return new,"{} ⊑ ∃{}.{}\n\t\t\tif something is a {} then there is a {} that it is {}".format(new[0],new[1],new[2],text[0],text[2],text[1])
+        elif four[1] > 0 and four[0] < 0 and four[2] > 0:
+            return new,"∃{}.{} ⊑ {}\n\t\t\tif there is a {} that is {} another thing then the other thing is a {}".format(new[0],new[1],new[2],text[1],text[0],text[2])
+        elif four[1] > 0 and four[0] > 0 and four[2] > 0:
+            return new,"{} ⊓ {} ⊑ {}\n\t\t\tif something is both a {} and a {}, then it is also a {}".format(new[0],new[1],new[2],text[0],text[1],text[2])
+        elif four[1] < 0 and four[0] < 0 and four[2] < 0:
+            return new,"{} ∘ {} ⊑ {}\n\t\t\tif a first thing is {} anything that is {} a third thing, then the first is {} the third".format(new[0],new[1],new[2],text[0],text[1],text[2])
+    
+    return new,None
+
 def convertToStatement(four,conceptSpace,roleSpace):
     
     new = []
     for number in four:
         if isinstance(number,numpy.float32): 
             number = number.item()
+            if number < 0:
+                pass
         if number < 0 and number >= -1:
             if int(number * roleSpace * -1) == 0: pass
             else: new.append("R{}".format(int(number * roleSpace * -1)))
@@ -143,11 +227,11 @@ def levDistance(newStatements,trueStatements,conceptSpace,roleSpace):
     
     rando = []
     
-    for i in range(0,len(trueStatements)):
+    for i in range(0,len(newStatements)):
         kb = []
-        for j in range(0,len(trueStatements[i])):
+        for j in range(0,len(newStatements[i])):
             step = []
-            gen = GenERator(numCType1=len(trueStatements[i][j])//2,numCType2=0,numCType3=len(trueStatements[i][j]) - len(trueStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace)
+            gen = GenERator(numCType1=len(newStatements[i][j])//2,numCType2=0,numCType3=len(newStatements[i][j]) - len(newStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[])
             gen.genERate()
             for k in range(0,len(gen.CType1)):
                 step.append(gen.CType1[k].toString())
@@ -165,7 +249,7 @@ def levDistance(newStatements,trueStatements,conceptSpace,roleSpace):
     
     for i in range(len(trueStr)):
         for j in range(len(trueStr[i])):
-            levTR = levTR + levenshtein(trueStr[i][j],randoStr[i][j])
+            levTR = levTR + (levenshtein(trueStr[i][j],randoStr[i][j]) if len(randoStr[i]) > j else levenshtein(trueStr[i][j],""))
             levTN = levTN + (levenshtein(trueStr[i][j],newStr[i][j]) if len(newStr[i]) > j else levenshtein(trueStr[i][j],""))
     
     return levTR,levTN
@@ -194,11 +278,11 @@ def customDistance(newPred,truePred,conceptSpace,roleSpace):
     
     rando = []
     
-    for i in range(0,len(truePred)):
+    for i in range(0,len(newPred)):
         kb = []
-        for j in range(0,len(truePred[i])):
+        for j in range(0,len(newPred[i])):
             step = []
-            gen = GenERator(numCType1=len(truePred[i][j])//2,numCType2=0,numCType3=len(truePred[i][j]) - len(truePred[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace)
+            gen = GenERator(numCType1=len(newPred[i][j])//2,numCType2=0,numCType3=len(newPred[i][j]) - len(newPred[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[])
             gen.genERate()
             for k in range(0,len(gen.CType1)):
                 step.append([gen.CType1[k].antecedent.toString(),gen.CType1[k].consequent.toString()])
@@ -226,6 +310,4 @@ def repeatAndSplitKBs(kbs,steps,splitSize):
             newKBs[i][j] = kbs[i]
     return numpy.split(newKBs,[int(len(newKBs)*splitSize)])
 
-def getDataFromFile(filename,easy):
-    data = numpy.load(filename,allow_pickle=True)
-    return data['arr_0'],data['arr_1'],data['arr_2']
+
