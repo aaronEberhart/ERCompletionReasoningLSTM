@@ -227,9 +227,9 @@ def levDistance(newStatements,trueStatements,conceptSpace,roleSpace):
     
     rando = []
     
-    for i in range(0,len(newStatements)):
+    for i in range(0,max(len(newStatements),len(trueStatements))):
         kb = []
-        for j in range(0,len(newStatements[i])):
+        for j in range(0,max(len(newStatements[i]),len(trueStatements[i]))):
             step = []
             gen = GenERator(numCType1=len(newStatements[i][j])//2,numCType2=0,numCType3=len(newStatements[i][j]) - len(newStatements[i][j])//2,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[])
             gen.genERate()

@@ -220,7 +220,7 @@ def deepSystem(n_epochs2,learning_rate2):
         
         log.write("\nCustom Distance From Actual to Random Data:    {}\nCustom Distance From Actual to Predicted Data: {}\n".format(cdistTRan,cdistRReal))
         
-        writeVectorFile("output/predictedOutEasyC.txt" if easy else "output/predictedOutC.txt",newStatements)    
+        writeVectorFile("output/predictedOutCEasy.txt" if easy else "output/predictedOutC.txt",newStatements)    
     
 if __name__ == "__main__":
     generate = False
