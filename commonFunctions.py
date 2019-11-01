@@ -247,10 +247,10 @@ def levDistance(newStatements,trueStatements,conceptSpace,roleSpace):
     levTR = 0
     levTN = 0
     
-    for i in range(len(trueStr)):
-        for j in range(len(trueStr[i])):
-            levTR = levTR + (levenshtein(trueStr[i][j],randoStr[i][j]) if len(randoStr[i]) > j else levenshtein(trueStr[i][j],""))
-            levTN = levTN + (levenshtein(trueStr[i][j],newStr[i][j]) if len(newStr[i]) > j else levenshtein(trueStr[i][j],""))
+    for i in range(max(len(trueStr),len(randoStr),len(newStr))):
+        for j in range(max(len(trueStr[i]),len(randoStr[i]),len(newStr[i]))):
+            levTR = levTR + (levenshtein(trueStr[i][j],randoStr[i][j]) if (len(randoStr[i]) > j and len(trueStr[i]) > j) else (levenshtein(trueStr[i][j],"") if len(trueStr[i]) > j else 0))
+            levTN = levTN + (levenshtein(trueStr[i][j],newStr[i][j]) if (len(newStr[i]) > j and len(trueStr[i]) > j) else (levenshtein(trueStr[i][j],"") if len(trueStr[i]) > j else 0))
     
     return levTR,levTN
 
@@ -295,11 +295,11 @@ def customDistance(newPred,truePred,conceptSpace,roleSpace):
     custNR = 0
     custTN = 0
     
-    for i in range(len(truePred)):
-        for j in range(len(truePred[i])):
-            for k in range(len(truePred[i][j])):
-                custTR = custTR + (custom(truePred[i][j][k],rando[i][j][k],conceptSpace,roleSpace) if (len(rando[i]) > j and len(rando[i][j]) > k) else custom(truePred[i][j][k],[""]*len(truePred[i][j][k]),conceptSpace,roleSpace))
-                custTN = custTN + (custom(truePred[i][j][k],newPred[i][j][k],conceptSpace,roleSpace) if (len(newPred[i]) > j and len(newPred[i][j]) > k) else custom(truePred[i][j][k],[""]*len(truePred[i][j][k]),conceptSpace,roleSpace))
+    for i in range(max(len(truePred),len(newPred),len(rando))):
+        for j in range(max(len(truePred[i]),len(newPred[i]),len(rando[i]))):
+            for k in range(max((len(truePred[i][j])if len(truePred[i]) > j else 0),(len(newPred[i][j])if len(newPred[i]) > j else 0),(len(rando[i][j])if len(rando[i]) > j else 0))):
+                custTR = custTR + (custom(truePred[i][j][k],rando[i][j][k],conceptSpace,roleSpace) if (len(truePred[i]) > j and len(truePred[i][j]) > k and len(rando[i]) > j and len(rando[i][j]) > k) else (custom(truePred[i][j][k],[""]*len(truePred[i][j][k]),conceptSpace,roleSpace) if (len(truePred[i]) > j and len(truePred[i][j]) > k) else 0))
+                custTN = custTN + (custom(truePred[i][j][k],newPred[i][j][k],conceptSpace,roleSpace) if (len(truePred[i]) > j and len(truePred[i][j]) > k and len(newPred[i]) > j and len(newPred[i][j]) > k) else (custom(truePred[i][j][k],[""]*len(truePred[i][j][k]),conceptSpace,roleSpace) if (len(truePred[i]) > j and len(truePred[i][j]) > k) else 0))
     
     return custTR,custTN
 
