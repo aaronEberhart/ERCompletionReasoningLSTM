@@ -1258,23 +1258,22 @@ def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,
         for j in range(len(rando[i])):
             for k in range(len(rando[i][j])):    
                 if len(trueStatements) > i and len(trueStatements[i]) > j and len(trueStatements[i][j]) > k: #FOR VERY TRUE STATEMENT
-                    sizeTrue = sizeTrue + 1
-                    levTR = levTR + findBestMatchNoNums(trueStatements[i][j][k],flatRand[i])                    #compare to best match in random                  
+                    sizeTrue = sizeTrue + 1                                                                  #if there is a true KB corresponding to this random data, compare the random statement to its best match in the true statements
+                    sizeRan = sizeRan + 1
+                    levRT = levRT + findBestMatchNoNums(rando[i][j][k],flatTrue[i])
+                    levTR = levTR + findBestMatchNoNums(trueStatements[i][j][k],flatRand[i])                 #compare to best match in random                  
                     if (len(newStatements) > i and len(newStatements[i]) > 0):
-                        levTN = levTN + findBestMatchNoNums(trueStatements[i][j][k],flatNew[i])        #if there are predictions for this KB, compare to best match in there
+                        levTN = levTN + findBestMatchNoNums(trueStatements[i][j][k],flatNew[i])              #if there are predictions for this KB, compare to best match in there
                     else:
                         levTN = levTN + levenshteinIgnoreNum(trueStatements[i][j][k],'')                     #otherwise compare with no prediction
                         
                 if len(newStatements) > i and len(newStatements[i]) > j and len(newStatements[i][j]) > k:    #FOR EVERY PREDICTION
                     sizeNew = sizeNew + 1
                     if (len(trueStatements) > i and len(trueStatements[i]) > 0):
-                        levNT = levNT + findBestMatchNoNums(newStatements[i][j][k],flatTrue[i])        #if there are true values for this KB, compare to best match in there
+                        levNT = levNT + findBestMatchNoNums(newStatements[i][j][k],flatTrue[i])              #if there are true values for this KB, compare to best match in there
                     else:
                         levNT = levNT + levenshteinIgnoreNum(newStatements[i][j][k],'')                      #otherwise compare with no true value
-                
-                if (len(trueStatements) > i and len(trueStatements[i]) > 0):
-                    levRT = levRT + findBestMatchNoNums(rando[i][j][k],flatTrue[i])                    #if there is a true KB corresponding to this random data, compare the random statement to its best match in the true statements
-                    sizeRan = sizeRan + 1
+                    
                     
     return levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan
 
@@ -1375,13 +1374,13 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn):
                     if (len(newPred) > i and len(newPred[i]) > 0):
                         custTN = custTN + findBestPredMatch(truePred[i][j][k],flatNew[i],conceptSpace,roleSpace)
                     else: 
-                        custTN = custTN + custom(truePred[i][j][k],[""]*len(truePred[i][j][k]),conceptSpace,roleSpace)
+                        custTN = custTN + custom(truePred[i][j][k],[],conceptSpace,roleSpace)
                 if (len(newPred) > i and len(newPred[i]) > j and len(newPred[i][j]) > k):
                     countNew = countNew + 1
                     if (len(truePred) > i and len(truePred[i]) > 0):
                         custNT = custNT + findBestPredMatch(newPred[i][j][k],flatTrue[i],conceptSpace,roleSpace)
                     else:
-                        custNT = custNT + custom(newPred[i][j][k],[""]*len(newPred[i][j][k]),conceptSpace,roleSpace)                    
+                        custNT = custNT + custom(newPred[i][j][k],[],conceptSpace,roleSpace)                    
                     
     return custTR,custRT,custTN,custNT,countTrue,countNew,countRan
 
@@ -1399,9 +1398,9 @@ def formatDataSynth(log,conceptSpace,roleSpace,KBs,supports,output):
     
     fileShapes1 = [3,124,48]#[0,0,0]#
 
-    KBs_test,KBs_train = repeatAndSplitKBs(KBs,fileShapes1[0],0.33)
+    KBs_test,KBs_train = repeatAndSplitKBs(KBs,fileShapes1[0],0.1)
 
-    X_train, X_test, y_train,y_test = splitTensors(supports, output, 0.33)
+    X_train, X_test, y_train,y_test = splitTensors(supports, output, 0.1)
 
     X_train = pad(X_train,maxlen1=fileShapes1[0],maxlen2=fileShapes1[1])
     X_test = pad(X_test,maxlen1=fileShapes1[0],maxlen2=fileShapes1[1])
@@ -1720,14 +1719,14 @@ def runOnce(log,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
     
     print("\nDone")
 
-def runNthTime(log,epochs,learningRate,conceptSpace,roleSpace,nthData,syn):
+def runNthTime(log,epochs,learningRate,conceptSpace,roleSpace,nthData,syn,n):
     if log == None: log = open(os.devnull,"w")
     
-    eval1,eval2 = shallowSystem(int(epochs/2),learningRate,log,conceptSpace,roleSpace,nthData,syn)    
+    eval1,eval2 = shallowSystem(int(epochs/2),learningRate,log,conceptSpace,roleSpace,nthData,syn,n)    
     
     tf.reset_default_graph()
     
-    eval3 = deepSystem(epochs,learningRate/2,log,conceptSpace,roleSpace,nthData,syn)
+    eval3 = deepSystem(epochs,learningRate/2,log,conceptSpace,roleSpace,nthData,syn,n)
     
     tf.reset_default_graph()
     
@@ -1782,7 +1781,7 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
     evals = numpy.zeros((3,3,7),dtype=numpy.float64)
     for i in range(n):
         KBs_test = allTheData[0][i] ; KBs_train = allTheData[1][i] ; X_train = allTheData[2][i] ; X_test = allTheData[3][i] ; y_train = allTheData[4][i] ; y_test = allTheData[5][i] ; truePreds = allTheData[6][i] ; trueStatements = allTheData[7][i]
-        evals = evals + runNthTime(open("crossValidationFolds/fold[{}].txt".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements),syn)
+        evals = evals + runNthTime(open("crossValidationFolds/fold[{}].txt".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements),syn,n)
     evals = evals / n
     
     avgResult = evals.tolist()
@@ -1936,7 +1935,7 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
         else: sKB = None ; ssupport = None ; soutput = None      
         
         for j in range(len(crossKBsTrain[i])):
-            train = list(set(range(len(KBs))).intersection(set(indexes[i])))
+            train = list(set(range(len(KBs))).difference(set(indexes[i])))
             for k in range(len(train)):
                 crossKBsTrain[i][j] = KBs[train[k]]
                 crossSupportTrain[j] = supports[train[k]]
@@ -1977,7 +1976,14 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     return crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements
 
 if __name__ == "__main__":
+    
     if len(sys.argv) == 3: 
         nTimesCrossValidate(n=10,epochs=int(sys.argv[1]),learningRate=float(sys.argv[2]),conceptSpace=21,roleSpace=8,syn=True,mix=False)
     else: 
         nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False)    
+    '''
+    if len(sys.argv) == 3: 
+        runOnce(log=open("synthetic.txt","w"),epochs=int(sys.argv[1]),learningRate=float(sys.argv[2]),conceptSpace=21,roleSpace=8,syn=True,mix=False)
+    else: 
+        runOnce(log=open("synthetic.txt","w"),epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False)   
+    '''
