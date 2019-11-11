@@ -3,6 +3,7 @@ me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
 sys.path.insert(0,me+"/Reasoner")
 
+import argparse
 import re
 import fileinput
 import random
@@ -1760,6 +1761,7 @@ def formatDataN(KBs,supports,outputs,labels,sKBs,ssupports,soutputs):
     return KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements
 
 def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
+    if os.path.isdir("crossValidationFolds"): shutil.rmtree("crossValidationFolds") 
     if not os.path.isdir("crossValidationFolds"): os.mkdir("crossValidationFolds")
     if syn:
         if not os.path.isdir("output"): os.mkdir("output")
@@ -1975,15 +1977,35 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     
     return crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements
 
+def readInputs():
+    
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-e","--epochs", help="number of epochs for each system",type=int, default=20000)
+    parser.add_argument("-l","--learningRate", help="learning rate of each system", type=float, default=0.0001)
+    parser.add_argument("-s","--syn", help="use synthetic dataset", action="store_true", default=True)
+    parser.add_argument("-m","--mix", help="use test set from different souce", action="store_true", default=False)
+    parser.add_argument("-c","--cross", help="use cross validation", type=int)
+    parser.add_argument("-f","--file", help="log file to save to", type=str, default="log.txt")
+    
+    args = parser.parse_args()
+    
+    if args.epochs and args.epochs < 2:
+        raise ValueError("Try a bigger number maybe!")    
+    
+    if args.cross and args.cross < 1:
+        raise ValueError("K fold Cross Validation works better with k greater than 1")
+    
+    if args.cross and args.file != "log.txt":
+        print("File name ignored for cross validation, sorry")
+    
+    return args
+
 if __name__ == "__main__":
     
-    if len(sys.argv) == 3: 
-        nTimesCrossValidate(n=10,epochs=int(sys.argv[1]),learningRate=float(sys.argv[2]),conceptSpace=21,roleSpace=8,syn=True,mix=False)
+    args = readInputs()
+      
+    if args.cross: 
+        nTimesCrossValidate(n=args.cross,epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=args.syn,mix=args.mix)
     else: 
-        nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False)    
-    '''
-    if len(sys.argv) == 3: 
-        runOnce(log=open("synthetic.txt","w"),epochs=int(sys.argv[1]),learningRate=float(sys.argv[2]),conceptSpace=21,roleSpace=8,syn=True,mix=False)
-    else: 
-        runOnce(log=open("synthetic.txt","w"),epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False)   
-    '''
+        runOnce(open(args.file,"w"),epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=args.syn,mix=args.mix)
