@@ -1532,7 +1532,7 @@ def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatement
 def trainingStats(log,mseNew,mse0,mseL):
     log.write("\n\tTraining Statistics\n\n\tPrediction\tMean Squared Error:\t{}\n\tTraining\tLearned Reduction MSE:\t{}\n\t\t\tIncrease MSE on Test:\t{}\n\t\t\tPercent Change MSE:\t{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData,syn):
+def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData,syn,n):
     KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements = allTheData
     
     log.write("Stepwise LSTM\n\n\tFitting KBs to Reasoner Supports\n\n")
@@ -1576,7 +1576,7 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         trainingStats(log,mseNew,mse0,mseL)
                       
-        writeVectorFile("output/supportsP.txt" if syn else "snoutput/supportsP.txt",newStatements)
+        writeVectorFile("{}output/learnedSupportsP[{}].txt".format("" if syn else "sn",n),newStatements)
         
         numpy.savez("saves/halfway.npz" if syn else "ssaves/halfway.npz", y_pred)
       
@@ -1624,7 +1624,7 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("output/predictedOutR.txt" if syn else "snoutput/predictedOutR.txt",newStatements)
+        writeVectorFile("{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if syn else "sn",n),newStatements)
         
         evals = distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)        
         
@@ -1640,11 +1640,11 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("output/predictedOutP.txt" if syn else "snoutput/predictedOutP.txt",newStatements)
+        writeVectorFile("{}output/predicteionSavedKBPipeliine[{}].txt".format("" if syn else "sn",n),newStatements)
         
         return evals,distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)
         
-def deepSystem(n_epochs2,learning_rate2,log,conceptSpace,roleSpace,allTheData,syn):
+def deepSystem(n_epochs2,learning_rate2,log,conceptSpace,roleSpace,allTheData,syn,n):
     KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements = allTheData
     
     log.write("\nDeep LSTM\n\n\tFitting KBs to hidden layer to KB Completions\n\n")
@@ -1687,7 +1687,7 @@ def deepSystem(n_epochs2,learning_rate2,log,conceptSpace,roleSpace,allTheData,sy
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("output/predictedOutD.txt" if syn else "snoutput/predictedOutD.txt",newStatements)
+        writeVectorFile("output/predictionDeepArchitecture[{}].txt".format("" if syn else "sn",n),newStatements)
         
         return distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)
 
@@ -1710,11 +1710,11 @@ def runOnce(log,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
             allTheData = formatDataSno2Syn(log,conceptSpace,roleSpace,KBs,supports,output,sKBs,ssupports,soutput,localMaps,stats)
         else: allTheData = formatDataSno(log,conceptSpace,roleSpace,KBs,supports,output,localMaps,stats)
     
-    shallowSystem(int(epochs/2),learningRate,log,conceptSpace,roleSpace,allTheData,syn)    
+    shallowSystem(int(epochs/2),learningRate,log,conceptSpace,roleSpace,allTheData,syn,1)    
     
     tf.reset_default_graph()
     
-    deepSystem(epochs,learningRate/2,log,conceptSpace,roleSpace,allTheData,syn)
+    deepSystem(epochs,learningRate/2,log,conceptSpace,roleSpace,allTheData,syn,1)
     
     log.close()
     
@@ -1728,6 +1728,8 @@ def runNthTime(log,epochs,learningRate,conceptSpace,roleSpace,nthData,syn):
     tf.reset_default_graph()
     
     eval3 = deepSystem(epochs,learningRate/2,log,conceptSpace,roleSpace,nthData,syn)
+    
+    tf.reset_default_graph()
     
     log.close()  
     
