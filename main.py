@@ -1265,15 +1265,13 @@ def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,
                     levTR = levTR + findBestMatchNoNums(trueStatements[i][j][k],flatRand[i])                 #compare to best match in random                  
                     if (len(newStatements) > i and len(newStatements[i]) > 0):
                         levTN = levTN + findBestMatchNoNums(trueStatements[i][j][k],flatNew[i])              #if there are predictions for this KB, compare to best match in there
-                    else:
-                        levTN = levTN + levenshteinIgnoreNum(trueStatements[i][j][k],'')                     #otherwise compare with no prediction
+                    else: levTN = levTN + levenshteinIgnoreNum(trueStatements[i][j][k],'')                     #otherwise compare with no prediction
                         
                 if len(newStatements) > i and len(newStatements[i]) > j and len(newStatements[i][j]) > k:    #FOR EVERY PREDICTION
                     sizeNew = sizeNew + 1
                     if (len(trueStatements) > i and len(trueStatements[i]) > 0):
                         levNT = levNT + findBestMatchNoNums(newStatements[i][j][k],flatTrue[i])              #if there are true values for this KB, compare to best match in there
-                    else:
-                        levNT = levNT + levenshteinIgnoreNum(newStatements[i][j][k],'')                      #otherwise compare with no true value
+                    else: levNT = levNT + levenshteinIgnoreNum(newStatements[i][j][k],'')                      #otherwise compare with no true value
                     
                     
     return levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan
@@ -1374,14 +1372,12 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn):
                     custRT = custRT + findBestPredMatch(rando[i][j][k],flatTrue[i],conceptSpace,roleSpace)                    
                     if (len(newPred) > i and len(newPred[i]) > 0):
                         custTN = custTN + findBestPredMatch(truePred[i][j][k],flatNew[i],conceptSpace,roleSpace)
-                    else: 
-                        custTN = custTN + custom(truePred[i][j][k],[],conceptSpace,roleSpace)
+                    else: custTN = custTN + custom(truePred[i][j][k],[],conceptSpace,roleSpace)
                 if (len(newPred) > i and len(newPred[i]) > j and len(newPred[i][j]) > k):
                     countNew = countNew + 1
                     if (len(truePred) > i and len(truePred[i]) > 0):
                         custNT = custNT + findBestPredMatch(newPred[i][j][k],flatTrue[i],conceptSpace,roleSpace)
-                    else:
-                        custNT = custNT + custom(newPred[i][j][k],[],conceptSpace,roleSpace)                    
+                    else: custNT = custNT + custom(newPred[i][j][k],[],conceptSpace,roleSpace)                    
                     
     return custTR,custRT,custTN,custNT,countTrue,countNew,countRan
 
@@ -1576,7 +1572,7 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         trainingStats(log,mseNew,mse0,mseL)
                       
-        writeVectorFile("{}output/learnedSupportsP[{}].txt".format("" if syn else "sn",n),newStatements)
+        writeVectorFile("{}{}output/learnedSupportsP[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
         numpy.savez("saves/halfway.npz" if syn else "ssaves/halfway.npz", y_pred)
       
@@ -1624,7 +1620,7 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if syn else "sn",n),newStatements)
+        writeVectorFile("{}{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
         evals = distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)        
         
@@ -1640,7 +1636,7 @@ def shallowSystem(n_epochs0,learning_rate0,log,conceptSpace,roleSpace,allTheData
         
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}output/predicteionSavedKBPipeliine[{}].txt".format("" if syn else "sn",n),newStatements)
+        writeVectorFile("{}{}output/predictionSavedKBPipeline[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
         return evals,distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)
         
@@ -1687,7 +1683,7 @@ def deepSystem(n_epochs2,learning_rate2,log,conceptSpace,roleSpace,allTheData,sy
           
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("output/predictionDeepArchitecture[{}].txt".format("" if syn else "sn",n),newStatements)
+        writeVectorFile("{}{}output/predictionDeepArchitecture[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
         return distanceEvaluations(log,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn)
 
@@ -1763,8 +1759,13 @@ def formatDataN(KBs,supports,outputs,labels,sKBs,ssupports,soutputs):
 def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
     if os.path.isdir("crossValidationFolds"): shutil.rmtree("crossValidationFolds") 
     if not os.path.isdir("crossValidationFolds"): os.mkdir("crossValidationFolds")
-    if syn:
-        if not os.path.isdir("output"): os.mkdir("output")
+    if syn and not os.path.isdir("crossValidationFolds/output"): os.mkdir("crossValidationFolds/output")
+    elif not os.path.isdir("crossValidationFolds/snoutput"): os.mkdir("crossValidationFolds/snoutput")
+    
+    if os.path.isfile("{}saves/{}foldData{}.npz".format("" if syn else "s",n,"Mixed" if mix else "")):
+        data = numpy.load("{}saves/{}foldData{}.npz".format("" if syn else "s",n,"Mixed" if mix else ""), allow_pickle=True)
+        allTheData = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'],data['arr_5'],data['arr_6'],data['arr_7']
+    elif syn:
         KBs,supports,outputs = getSynDataFromFile('saves/data.npz')
         if mix:
             sKBs,ssupports,soutputs,localMaps,stats = getSnoDataFromFile('saves/data.npz')
@@ -1772,7 +1773,6 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
             allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,conceptSpace,roleSpace)
         else: allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,None,conceptSpace,roleSpace)
     else:
-        if not os.path.isdir("snoutput"): os.mkdir("snoutput")
         KBs,supports,outputs,localMaps,stats = getSnoDataFromFile('ssaves/data.npz')
         labels = collapseLabelMap(localMaps,stats[0][2],stats[1][2],stats[4][1])
         if mix:
@@ -1780,15 +1780,19 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
             allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,conceptSpace,roleSpace)
         else: allTheData =  crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,labels,conceptSpace,roleSpace)
     
+    KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss = allTheData
+            
+    numpy.savez("{}saves/{}foldData{}".format("" if syn else "s",n,"Mixed" if mix else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss)
+    
     evals = numpy.zeros((3,3,7),dtype=numpy.float64)
     for i in range(n):
-        KBs_test = allTheData[0][i] ; KBs_train = allTheData[1][i] ; X_train = allTheData[2][i] ; X_test = allTheData[3][i] ; y_train = allTheData[4][i] ; y_test = allTheData[5][i] ; truePreds = allTheData[6][i] ; trueStatements = allTheData[7][i]
-        evals = evals + runNthTime(open("crossValidationFolds/fold[{}].txt".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements),syn,n)
+        evals = evals + runNthTime(open("crossValidationFolds/evalFold[{}].txt".format(i),"w"), \
+        epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i]),syn,n)
     evals = evals / n
     
     avgResult = evals.tolist()
     
-    log = open("crossValidationFolds/fold[avg].txt","w")
+    log = open("crossValidationFolds/evalFold[avg].txt","w")
     
     levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan = avgResult[0][0]
     levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2 = avgResult[0][1]
@@ -1837,13 +1841,15 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
     
     log.close()
     
+    print("\nDone")
+    
     return avgResult
 
 def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,localMaps,conceptSpace,roleSpace):
     
     fileShapes1 = [3,124,48]
     
-    newKBs = numpy.empty([KBs.shape[0],3,KBs.shape[1]],dtype=numpy.float32)
+    newKBs = numpy.empty([KBs.shape[0],3,KBs.shape[1]],dtype=float)
     for i in range(len(newKBs)):
         for j in range(3):
             newKBs[i][j] = KBs[i]
@@ -1855,49 +1861,36 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     k, m = divmod(len(indexes), n)
     indexes = list(indexes[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))    
     
-    crossKBsTest = numpy.empty((len(indexes),len(indexes[0]),len(KBs[0]),len(KBs[0][0])),dtype=numpy.ndarray)
-    crossSupportsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
-    crossOutputsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
+    crossKBsTest = numpy.zeros((len(indexes),len(indexes[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
+    crossSupportsTest = numpy.zeros((len(indexes),len(indexes[0]),len(supports[0]),fileShapes1[1]),dtype=float)
+    crossOutputsTest = numpy.zeros((len(indexes),len(indexes[0]),len(outputs[0]),fileShapes1[2]),dtype=float)
     
     if localMaps != None:
         crossLabelsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
     else: crossLabelsTest = None
     
-    if sKBs != None:
-        scrossKBsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
-        scrossSupportsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
-        scrossOutputsTest = numpy.empty(len(indexes),dtype=numpy.ndarray)
+    if sKBs != None: #TODO
+        scrossKBsTest = numpy.zeros((len(indexes),len(indexes[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
+        scrossSupportsTest = numpy.zeros((len(indexes),len(indexes[i]),len(supports[0]),fileShapes1[1]),dtype=float)
+        scrossOutputsTest = numpy.zeros((len(indexes),len(indexes[i]),len(outputs[0]),fileShapes1[2]),dtype=float)
     else:
         scrossKBsTest = None
         scrossSupportsTest = None
         scrossOutputsTest = None        
     
     for i in range(len(indexes)):
-        KB = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-        support = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-        output = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
         if crossLabelsTest != None: labels = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-        else: labels = None
-        if scrossKBsTest != None:
-            sKB = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-            ssupport = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-            soutput = numpy.empty(len(indexes[i]),dtype=numpy.ndarray)
-        else:
-            sKB = None
-            ssupport = None
-            soutput = None      
+        else: labels = None  
         for j in range(len(indexes[i])):
             crossKBsTest[i][j] = KBs[indexes[i][j]]
-            support[j] = supports[indexes[i][j]]
-            output[j] = outputs[indexes[i][j]]
+            crossSupportsTest[i][j] = numpy.hstack([supports[indexes[i][j]],numpy.zeros([fileShapes1[0],fileShapes1[1]-len(supports[indexes[i][j]][0])])])
+            crossOutputsTest[i][j] = numpy.hstack([outputs[indexes[i][j]],numpy.zeros([fileShapes1[0],fileShapes1[2]-len(outputs[indexes[i][j]][0])])])
             if labels != None: 
                 labels[j] = localMaps[indexes[i][j]]
-            if sKB != None:
+            if scrossKBsTest != None:
                 sKB[j] = sKBs[indexes[i][j]]
                 ssupport[j] = ssupports[indexes[i][j]]
                 soutput[j] = soutputs[indexes[i][j]] 
-        crossSupportsTest[i] = support
-        crossOutputsTest[i] = output
         if crossLabelsTest != None: 
             crossLabels[i] = labels
         if scrossKBsTest != None:
@@ -1905,32 +1898,30 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
             scrossSupports[i] = ssupport
             scrossOutputs[i] = soutput
     
-    for i in range(len(crossOutputsTest)):
-        crossOutputsTest[i] = array(crossOutputsTest[i])
     
-    crossKBsTrain = numpy.empty((n,len(KBs)-len(crossKBsTest[0]),len(KBs[0]),len(KBs[0][0])),dtype=numpy.ndarray)
-    crossOutputsTrain = numpy.empty(n,dtype=numpy.ndarray)
-    crossSupportsTrain = numpy.empty(n,dtype=numpy.ndarray)
+    crossKBsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
+    crossOutputsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(outputs[0]),fileShapes1[2]),dtype=float)
+    crossSupportsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(supports[0]),fileShapes1[1]),dtype=float)
     
     if localMaps != None:
         crossLabelsTrain = numpy.empty(len(indexes),dtype=numpy.ndarray)
     else: crossLabelsTrain = None
     
     if sKBs != None:
-        scrossKBsTrain = numpy.empty(len(indexes),dtype=numpy.ndarray)
-        scrossSupportsTrain = numpy.empty(len(indexes),dtype=numpy.ndarray)
-        scrossOutputsTrain = numpy.empty(len(indexes),dtype=numpy.ndarray)
+        scrossKBsTrain = numpy.empty((n,len(KBs)-len(crossKBsTest[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
+        scrossOutputsTrain = numpy.empty((n,len(KBs)-len(crossKBsTest[0]),len(outputs[0]),fileShapes1[2]),dtype=float)
+        scrossSupportsTrain = numpy.empty((n,len(KBs)-len(crossKBsTest[0]),len(supports[0]),fileShapes1[1]),dtype=float)
     else:
         scrossKBsTrain = None
         scrossSupportsTrain = None
         scrossOutputsTrain = None  
         
-    for i in range(len(indexes)):
-        crossOutputTrain = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)
-        crossSupportTrain = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)        
-        if crossLabelsTrain != None: labels = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)
+    for i in range(len(indexes)): 
+        
+        #TODO
+        if crossLabelsTrain != None: labels = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=float)
         else: labels = None
-        if scrossKBsTest != None:
+        if scrossKBsTest != None: 
             sKB = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)
             ssupport = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)
             soutput = numpy.empty(len(KBs)-len(crossKBsTest[0]),dtype=numpy.ndarray)
@@ -1938,32 +1929,32 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
         
         for j in range(len(crossKBsTrain[i])):
             train = list(set(range(len(KBs))).difference(set(indexes[i])))
+            random.shuffle(train)
             for k in range(len(train)):
                 crossKBsTrain[i][j] = KBs[train[k]]
-                crossSupportTrain[j] = supports[train[k]]
-                crossOutputTrain[j] = outputs[train[k]]
+                crossSupportsTrain[i][j] = numpy.hstack([supports[train[k]],numpy.zeros([fileShapes1[0],fileShapes1[1]-len(supports[train[k]][0])])])
+                crossOutputsTrain[i][j] = numpy.hstack([outputs[train[k]],numpy.zeros([fileShapes1[0],fileShapes1[2]-len(outputs[train[k]][0])])])
                 if labels != None: 
                     labels[j] = localMaps[train[k]]
                 if sKB != None:
                     sKB[j] = sKBs[train[i][k]]
                     ssupport[j] = ssupports[train[k]]
                     soutput[j] = soutputs[train[k]]
-        crossSupportsTrain[i] = crossSupportTrain
-        crossOutputsTrain[i] = crossOutputTrain
         if crossLabelsTrain != None: 
             crossLabelsTrain[i] = labels
         if scrossKBsTrain != None:
             scrossKBsTrain[i] = sKB
             scrossSupportsTrain[i] = ssupport
             scrossOutputsTrain[i] = soutput        
-    
+    '''
     for i in range(n):
         crossSupportsTrain[i] = pad(crossSupportsTrain[i],maxlen1=fileShapes1[0],maxlen2=fileShapes1[1])
         crossSupportsTest[i] = pad(crossSupportsTest[i],maxlen1=fileShapes1[0],maxlen2=fileShapes1[1])
     
         crossOutputsTrain[i] = pad(crossOutputsTrain[i],maxlen1=fileShapes1[0],maxlen2=fileShapes1[2])
         crossOutputsTest[i] = pad(crossOutputsTest[i],maxlen1=fileShapes1[0],maxlen2=fileShapes1[2])
-        
+     '''  
+    
     nTruePreds = numpy.empty(n,dtype=numpy.ndarray)
     nTrueStatements = numpy.empty(n,dtype=numpy.ndarray)
     for i in range(n):
@@ -1971,11 +1962,19 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
         nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace)
         placeholder,inputs = vecToStatements(crossSupportsTest[i],conceptSpace,roleSpace)
     
-        writeVectorFile("{}output/KBsIn[{}].txt".format("sn" if localMaps != None else "",i),KBn)
-        writeVectorFile("{}output/supports[{}].txt".format("sn" if localMaps != None else "",i),inputs)
-        writeVectorFile("{}output/reasonerCompletion[{}].txt".format("sn" if localMaps != None else "",i),nTrueStatements[i])        
+        writeVectorFile("crossValidationFolds/{}output/KBsIn[{}].txt".format("sn" if localMaps != None else "",i),KBn)
+        writeVectorFile("crossValidationFolds/{}output/supports[{}].txt".format("sn" if localMaps != None else "",i),inputs)
+        writeVectorFile("crossValidationFolds/{}output/reasonerCompletion[{}].txt".format("sn" if localMaps != None else "",i),nTrueStatements[i])        
+    
+    #allTheData = crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements
     
     return crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements
+
+def addAllToArray(smaller,bigger):
+    for i in range(len(smaller)):
+        for j in range(len(smaller[i])):
+            bigger[i][j] = smaller[i][j]
+    return bigger
 
 def readInputs():
     
@@ -1985,7 +1984,7 @@ def readInputs():
     parser.add_argument("-l","--learningRate", help="learning rate of each system", type=float, default=0.0001)
     parser.add_argument("-s","--syn", help="use synthetic dataset", action="store_true", default=True)
     parser.add_argument("-m","--mix", help="use test set from different souce", action="store_true", default=False)
-    parser.add_argument("-c","--cross", help="use cross validation", type=int)
+    parser.add_argument("-c","--cross", help="cross validation k", type=int, default=10)
     parser.add_argument("-f","--file", help="log file to save to", type=str, default="log.txt")
     
     args = parser.parse_args()
@@ -1993,8 +1992,10 @@ def readInputs():
     if args.epochs and args.epochs < 2:
         raise ValueError("Try a bigger number maybe!")    
     
-    if args.cross and args.cross < 1:
-        raise ValueError("K fold Cross Validation works better with k greater than 1")
+    if args.cross:
+        if args.cross == 1: args.cross = False
+        elif args.cross < 1:
+            raise ValueError("K fold Cross Validation works better with k greater than 1")
     
     if args.cross and args.file != "log.txt":
         print("File name ignored for cross validation, sorry")
