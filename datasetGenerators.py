@@ -875,7 +875,7 @@ def readInputs():
 if __name__ == "__main__":
     
             #[input KB len * 4, max reasoning steps (odd number) , max supports * 4 , max completion * 4 ]
-    shapes = [80,3,316,48]
+    shapes = [80,3,124,48]
     
     args = readInputs()
     
