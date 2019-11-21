@@ -892,7 +892,6 @@ def makeSynDataPerturbed(trials,err):
         badGenerator = generator.copy(conceptSpace,roleSpace)
         
         writeFile("good.txt",generator.toString())
-        badGenerator.CType1[0].antecedent.name = -50
         writeFile("bad.txt",badGenerator.toString())
         
         generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/KB{}.owl".format(i,i))
