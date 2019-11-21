@@ -167,8 +167,8 @@ class GenERator:
 
 	def toString(self):
 		ret = "Original KB"
-		for statement in self.CTypeNull:
-			ret = ret + statement.toString() + "\n"
+		#for statement in self.CTypeNull:
+			#ret = ret + statement.toString() + "\n"
 		for statement in self.CType1:
 			ret = ret + "\n" + statement.toString()
 		for statement in self.CType2:

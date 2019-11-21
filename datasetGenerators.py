@@ -1,4 +1,4 @@
-import os,sys,shutil,argparse,re,fileinput
+import os,sys,shutil,argparse,re,fileinput,numpy
 me = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,me+"/Generator")
 sys.path.insert(0,me+"/Reasoner")
@@ -859,6 +859,162 @@ def makeSynData(trials):
     
     return kbs,seq_in,seq_out
 
+def messUpKB():
+    pass
+
+def makeSynDataPerturbed(trials,err):
+    
+    if os.path.isdir("output/Dataset"): shutil.rmtree("output/Dataset")
+    if not os.path.isdir("output"): os.mkdir("output") 
+    if not os.path.isdir("output/Dataset"): os.mkdir("output/Dataset")
+    
+    seq_in = numpy.empty(trials,dtype=numpy.ndarray)
+    seq_out = numpy.empty(trials,dtype=numpy.ndarray)
+    kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
+    if not os.path.isdir("output"): os.mkdir("output")
+    i = 0
+
+    while i < trials:
+        
+        print("Making Random-Sequetial KB"+str(i))
+        
+        if not os.path.isdir("output/Dataset/{}".format(i)): os.mkdir("output/Dataset/{}".format(i))
+        
+        gen = GenERator(numCType1=2,numCType2=1,numCType3=2,numCType4=1,numRoleSub=1,numRoleChains=1,conceptNamespace=conceptSpace-3,roleNamespace=roleSpace-3,CTypeNull=[],CType1=[],CType2=[],CType3=[],CType4=[],roleSubs=[],roleChains=[])
+        
+        generator = HardGenERator2(rGenerator=gen,difficulty=int(shapes[1]/2))
+        
+        generator.genERate()
+        
+        if generator.conceptNamespace != conceptSpace or generator.roleNamespace != roleSpace:
+            raise
+        
+        badGenerator = generator.copy(conceptSpace,roleSpace)
+        
+        writeFile("good.txt",generator.toString())
+        badGenerator.CType1[0].antecedent.name = -50
+        writeFile("bad.txt",badGenerator.toString())
+        
+        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/KB{}.owl".format(i,i))
+        
+        reasoner = ReasonER(generator,showSteps=True)
+        
+        reasoner.ERason()
+	
+        if len(reasoner.KBaLog) > 1:
+            print("KB has too many reasoner steps, trying again")
+            continue
+        
+        supports = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
+        
+        a,b = supports.toVector(generator.conceptNamespace,generator.roleNamespace)
+        
+        if len(a[0]) > shapes[2]:
+            print("KB has too many supports, trying again")
+            continue
+        
+        if len(b[0]) > shapes[3]:
+            print("KB has too many entailments, trying again")
+            continue
+        
+        kbs[i] = array(generator.toVector())
+        
+        seq_in[i] = a
+        seq_out[i] = b
+
+        if not os.path.isdir("output/Dataset/{}/sequence".format(i)): os.mkdir("output/Dataset/{}/sequence".format(i))
+        if not os.path.isdir("output/Dataset/{}/KB during sequence".format(i)): os.mkdir("output/Dataset/{}/KB during sequence".format(i))        
+        if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/Dataset/{}/KB after sequence".format(i)): os.mkdir("output/Dataset/{}/KB after sequence".format(i))
+        reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/completion{}.owl".format(i,i))
+        generator.toStringFile("output/Dataset/{}/completedKB.txt".format(i))
+        reasoner.toStringFile("output/Dataset/{}/completedKB.txt".format(i))        
+        for j in range(0,len(supports.donelogs[0])):
+            writeFile("output/Dataset/{}/sequence/reasonerStep{}.txt".format(i,j),supports.toString(supports.donelogs[0][j]))
+        for j in range(0,len(supports.donelogs[1])):
+            if len(reasoner.KBsLog[j]) > 0: writeFile("output/Dataset/{}/KB during sequence/reasonerStep{}.txt".format(i,j),supports.toString(supports.donelogs[1][j]))
+        for j in range(0,len(supports.donelogs[2])):
+            if len(reasoner.KBaLog[j]) > 0: writeFile("output/Dataset/{}/KB after sequence/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),supports.toString(supports.donelogs[2][j]))
+        
+        i = i + 1
+            
+    numpy.savez('saves/data', kbs,seq_in,seq_out)
+    
+    return kbs,seq_in,seq_out
+
+def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
+    
+    if os.path.isdir("snoutput/Dataset"): shutil.rmtree("snoutput/Dataset")
+    if not os.path.isdir("snoutput"): os.mkdir("snoutput")
+    if not os.path.isdir("snoutput/Dataset"): os.mkdir("snoutput/Dataset")     
+    
+    concepts,roles,info = SNOMEDdata  
+    localmaps = []
+    seq_in = numpy.empty(trials,dtype=numpy.ndarray)
+    seq_out = numpy.empty(trials,dtype=numpy.ndarray)
+    kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
+    if not os.path.isdir("snoutput"): os.mkdir("snoutput")
+    i = 0
+
+    while i < trials:
+
+        print("Sampling SNOMED to make KB"+str(i))
+
+        if not os.path.isdir("snoutput/Dataset/{}".format(i)): os.mkdir("snoutput/Dataset/{}".format(i))
+        
+        localmap,generator = makeKBFromSamples(concepts,roles,info)
+        
+        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/SNOMED/Sample/random/{}/>".format(i),"snoutput/Dataset/{}/KB{}.owl".format(i,i))
+        
+        reasoner = ReasonER(generator,showSteps=True)
+
+        reasoner.ERason()
+        
+        if len(reasoner.KBaLog) < shapes[1]:
+            print("Sample has too few reasoner steps, trying again")
+            continue
+        
+        if len(reasoner.KBaLog) > shapes[1]:
+            print("Sample has too many reasoner steps, trying again")
+            continue        
+
+        supports = DependencyReducer(generator.getAllExpressions(),reasoner.sequenceLog,reasoner.KBsLog,reasoner.KBaLog)
+        
+        a,b = supports.toVector(generator.conceptNamespace,generator.roleNamespace)
+        
+        if len(a[0]) > shapes[2]:
+            print("Sample has too many supports, trying again")
+            continue
+        
+        if len(b[0]) > shapes[3]:
+            print("Sample has too many entailments, trying again")
+            continue        
+        
+        badGenerator = generator.copy(conceptSpace,roleSpace)
+        
+        writeFile("good.txt",generator.toString())
+        writeFile("bad.txt",badGenerator.toString())        
+        
+        localmaps.append(localmap)
+        
+        kbs[i] = array(generator.toVector())
+        
+        seq_in[i] = a
+        seq_out[i] = b
+        
+        if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/Dataset/{}/Reasoner Steps".format(i)): os.mkdir("snoutput/Dataset/{}/Reasoner Steps".format(i))
+        generator.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
+        reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/SNOMED/Sample/random/{}/>".format(i),"snoutput/Dataset/{}/completion{}.owl".format(i,i))
+        reasoner.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
+        for j in range(0,len(supports.donelogs[2])):
+            if len(reasoner.KBaLog[j]) > 0: writeFile("snoutput/Dataset/{}/Reasoner Steps/reasonerStep{}.txt".format(i,j+len(reasoner.sequenceLog)),supports.toString(supports.donelogs[2][j]))
+            
+        i = i + 1
+
+
+    numpy.savez('ssaves/data', kbs,seq_in,seq_out,localmaps,info)
+
+    return kbs,seq_in,seq_out,localmaps,info 
+
 def readInputs():
     
     parser = argparse.ArgumentParser()
@@ -867,6 +1023,7 @@ def readInputs():
     parser.add_argument("-c","--concepts", help="number of concepts in namespace", type=int, default=21)
     parser.add_argument("-r","--roles", help="number of roles in namespace", type=int, default=8)
     parser.add_argument("-k","--kbs", help="number of KBs to generate and reason over", type=int, default=1000)
+    parser.add_argument("-p","--perturb", help="amount  to disturb each kb for comparison", type=float, default=0.3)
     
     args = parser.parse_args()
     
@@ -882,9 +1039,15 @@ if __name__ == "__main__":
     conceptSpace = args.concepts
     roleSpace = args.roles
     
-    if args.snomed:
-        sampleDataHardGenerator2Format(fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl")),args.kbs)
+    if args.perturb == 0.0:
+        if args.snomed:
+            sampleDataHardGenerator2Format(fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl")),args.kbs)
+        else:
+            makeSynData(args.kbs)
     else:
-        makeSynData(args.kbs)
+        if args.snomed:
+            sampleDataHardGenerator2FormatPerturbed(fsOWLReader(normalizeFS("SNOMED/SNOMED2012fs.owl","SNOMED/SNOrMED2012fs.owl")),args.kbs,args.perturb)
+        else:
+            makeSynDataPerturbed(args.kbs,args.perturb)        
         
     print("Done")

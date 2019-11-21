@@ -337,3 +337,32 @@ class HardGenERator2:
     
     def getAllExpressions(self):
         return [self.CType1,self.CType2,self.CType3,self.CType4,self.roleSubs,self.roleChains]
+    def copy(self,conceptSpace,roleSpace):
+        
+        CTypeNull=[]
+        CType1=[]
+        CType2=[]
+        CType3=[]
+        CType4=[]
+        roleSubs=[]
+        roleChains=[]
+        
+        for statement in self.CTypeNull:
+            CTypeNull.append(statement.copy())
+        for statement in self.CType1:
+            CType1.append(statement.copy())
+        for statement in self.CType2:
+            CType2.append(statement.copy())
+        for statement in self.CType3:
+            CType3.append(statement.copy())
+        for statement in self.CType4:
+            CType4.append(statement.copy())
+        for statement in self.roleSubs:
+            roleSubs.append(statement.copy())
+        for statement in self.roleChains:
+            roleChains.append(statement.copy())
+            
+        gen = GenERator(numCType1=0,numCType2=0,numCType3=0,numCType4=0,numRoleSub=0,numRoleChains=0,conceptNamespace=conceptSpace,roleNamespace=roleSpace,CTypeNull=CTypeNull,CType1=CType1,CType2=CType2,CType3=CType3,CType4=CType4,roleSubs=roleSubs,roleChains=roleChains)
+        gen.hasRun = True
+        
+        return gen        

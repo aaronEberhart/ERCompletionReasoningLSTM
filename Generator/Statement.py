@@ -60,6 +60,21 @@ class ConceptStatement(Concept):
             return [self.antecedent.antecedent.toVector()/concepts, self.antecedent.consequent.toVector()/concepts, self.consequent.toVector()/concepts, 0.0]
         else:
             return [0.0, self.antecedent.toVector()/concepts, self.consequent.toVector()/concepts, 0.0]
+    
+    def copy(self):
+        if isinstance(self.antecedent,ConceptRole):
+            cs = ConceptStatement(self.name,True,ConceptRole('e',Role(self.antecedent.role.name,[0,1]),Concept(self.antecedent.concept.name,[1])),Concept(self.consequent.name,[0]))
+        elif isinstance(self.consequent,ConceptRole):
+            cs = ConceptStatement(self.name,True,Concept(self.antecedent.name,[0]),ConceptRole('e',Role(self.consequent.role.name,[0,1]),Concept(self.consequent.concept.name,[1])))
+        elif isinstance(self.antecedent,ConceptStatement):
+            cs1 = ConceptStatement(1,True,Concept(self.antecedent.antecedent.name,[0]),Concept(self.antecedent.consequent.name,[0]))
+            cs1.complete('⊓')    
+            cs = ConceptStatement(self.name,True,cs1,Concept(self.consequent.name,[0]))
+        else:
+            cs = ConceptStatement(self.name,True,Concept(self.antecedent.name,[0]),Concept(self.consequent.name,[0]))
+            
+        cs.complete('⊑')
+        return cs       
         
 class RoleStatement(Role):
     
@@ -144,3 +159,12 @@ class RoleStatement(Role):
             return [self.antecedent.roles[0].toVector()/roles, self.antecedent.roles[1].toVector()/roles, self.consequent.toVector()/roles, 0.0]
         else:
             return [0.0, self.antecedent.toVector()/roles, self.consequent.toVector()/roles, 0.0]
+        
+    def copy(self):
+        if isinstance(self.antecedent,RoleChain):
+            rs = RoleStatement(self.name,True,RoleChain(0,Role(self.antecedent.roles[0].name,[0,1]),Role(self.antecedent.roles[1].name,[1,2])),Role(self.consequent.name,[0,2]))
+        else:
+            rs = RoleStatement(self.name,True,Role(self.antecedent.name,[0,1]),Role(self.consequent.name,[0,1]))
+        
+        rs.complete('⊑')
+        return rs

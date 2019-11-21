@@ -2,14 +2,15 @@ import os,sys,shutil,argparse,random,numpy,math
 
 from numpy import array
 from functools import partial
-from tensorflow.contrib import rnn
+#from tensorflow.contrib import rnn
 
 from datasetGenerators import *
 
 import tensorflow as tf
 
 tf.logging.set_verbosity(tf.logging.ERROR)
- 
+
+
 def makeRandomPredCompletions(shape,conceptSpace,roleSpace,syn):
     rando = []
     
@@ -1013,11 +1014,15 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
             
     numpy.savez("{}saves/{}foldData{}".format("" if syn else "s",n,"Mixed" if mix else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss)  
     
-    F1s = []
+    if isinstance(labelss,numpy.ndarray):
+        if (labelss.ndim and labells.size) == 0: 
+            labelss = None
+    
     evals = numpy.zeros((6 if mix else 3,3,8),dtype=numpy.float64)
     for i in range(n):
         print("\nCross Validation Fold {}\n\nTraining With {} Data\nTesting With {} Data\n".format(i,"Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
-        evals = evals + runNthTime(open("crossValidationFolds/training/trainFold[{}].csv".format(i),"w"),open("crossValidationFolds/evals/evalFold[{}].csv".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i],labelss[i] if isinstance(labelss,numpy.ndarray) else None),syn,mix,i)
+        x = runNthTime(open("crossValidationFolds/training/trainFold[{}].csv".format(i),"w"),open("crossValidationFolds/evals/evalFold[{}].csv".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i],(labelss[i] if isinstance(labelss,numpy.ndarray) else None)),syn,mix,i)
+        evals = evals + x
     evals = evals / n
     
     print("Summarizing All Results")
