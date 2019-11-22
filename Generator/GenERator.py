@@ -199,7 +199,30 @@ class GenERator:
 			ret = ret + "\n" + statement.toFunctionalSyntax()
 		return ret
 	
-	def toFunctionalSyntaxFile(self,file):
+	def toStringFile(self,filename):
+		file = open(filename,"w")
+		file.write("KB")
+		for statement in self.CType1:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.CType2:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.CType3:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.CType4:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.roleSubs:
+			file.write("\n{}".format(statement.toString()))
+		for statement in self.roleChains:
+			file.write("\n{}".format(statement.toString()))
+		file.close()  
+		
+	def toFunctionalSyntaxFile(self,IRI,filename): 
+		file = open(filename,"w")
+		file.write("Prefix(:="+IRI+")\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nOntology( "+IRI+"\n\n")
+		for i in range(1,self.conceptNamespace):
+			file.write("Declaration( Class( :C{} ) )\n".format(i))
+		for i in range(1,self.roleNamespace):
+			file.write("Declaration( ObjectProperty( :R{} ) )\n".format(i))        
 		for statement in self.CType1:
 			file.write(statement.toFunctionalSyntax())
 		for statement in self.CType2:
@@ -211,24 +234,29 @@ class GenERator:
 		for statement in self.roleSubs:
 			file.write(statement.toFunctionalSyntax())
 		for statement in self.roleChains:
-			file.write(statement.toFunctionalSyntax())
+			file.write(statement.toFunctionalSyntax())  
+		file.write("\n\n)")
+		file.close()
 	
 	def toVector(self):
 		vec = []
 		for statement in self.CType1:
-			vec.append(statement.toVector())
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
 		for statement in self.CType2:
-			vec.append(statement.toVector())
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
 		for statement in self.CType3:
-			vec.append(statement.toVector())
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
 		for statement in self.CType4:
-			vec.append(statement.toVector())	
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))	
 		for statement in self.roleSubs:
-			vec.append(statement.toVector())
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))
 		for statement in self.roleChains:
-			vec.append(statement.toVector())	
-		return vec
+			vec.extend(statement.toVector(self.conceptNamespace,self.roleNamespace))	
+		return vec 
 
+	def getAllExpressions(self):
+		return [self.CType1,self.CType2,self.CType3,self.CType4,self.roleSubs,self.roleChains]
+	
 	def getStatistics(self):
 		
 		uniqueConceptNames = []

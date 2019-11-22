@@ -1,6 +1,7 @@
 from Statement import *
 from HardGenERator2 import *
 from HardGenERator import *
+import numpy
 
 """
 Completion rules:
@@ -227,8 +228,25 @@ class ReasonER:
 			vec.append(statement.toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
 		for statement in self.knownCType3:
 			vec.append(statement.toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))	
-		return vec
-				
+		return vec	
+	
+	def toCompletion(self):
+		if len(self.sequenceLog) == 0 and len(self.log) == 0 and len(self.KBaLog) == 0 and len(self.KBsLog) == 0:
+			return numpy.ndarray(0)
+		vec = []
+		for i in range(0,len(self.sequenceLog)):
+			iterb = []
+			for j in range(0,len(self.sequenceLog[i])):
+				iterb.extend(self.sequenceLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+			vec.append(numpy.array(iterb))  
+			
+		v = numpy.zeros((len(vec),len(max(vec, key=lambda coll: len(coll)))))
+		
+		for i in range(len(vec)):
+			for j in range(len(vec[i])):
+				v[i][j] = vec[i][j]
+		return 	v	
+	
 	def toString(self):
 		ret = "\nExtended KB"
 		for statement in self.knownCType1:

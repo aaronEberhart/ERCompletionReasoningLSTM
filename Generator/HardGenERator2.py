@@ -130,6 +130,8 @@ class HardGenERator2:
         self.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
         self.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
         self.CType4.sort(key=lambda x: (x.antecedent.role.name, x.antecedent.concept.name, x.consequent.name))
+        self.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+        self.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))        
 
         self.hasRun = True
 
@@ -221,8 +223,6 @@ class HardGenERator2:
     def toStringFile(self,filename):
         file = open(filename,"w")
         file.write("KB")
-        for statement in self.CTypeNull:
-            file.write("\n{}".format(statement.toString()))
         for statement in self.CType1:
             file.write("\n{}".format(statement.toString()))
         for statement in self.CType2:

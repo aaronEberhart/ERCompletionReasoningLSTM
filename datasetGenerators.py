@@ -859,8 +859,52 @@ def makeSynData(trials):
     
     return kbs,seq_in,seq_out
 
-def messUpKB():
-    pass
+def messUpKB(gen,err):
+    for statement in gen.CType1:
+        if random.random() < err:
+            statement.antecedent.name = random.randint(1,conceptSpace)
+        if random.random() < err:
+            statement.consequent.name = random.randint(1,conceptSpace)
+    for statement in gen.CType2:
+        if random.random() < err:
+            statement.antecedent.antecedent.name = random.randint(1,conceptSpace)
+        if random.random() < err:
+            statement.antecedent.consequent.name = random.randint(1,conceptSpace)
+        if random.random() < err:
+            statement.consequent.name = random.randint(1,conceptSpace)
+    for statement in gen.CType3:
+        if random.random() < err:
+            statement.antecedent.name = random.randint(1,conceptSpace)
+        if random.random() < err:
+            statement.consequent.role.name = random.randint(1,roleSpace)
+        if random.random() < err:
+            statement.consequent.concept.name = random.randint(1,conceptSpace)
+    for statement in gen.CType4:
+        if random.random() < err:
+            statement.antecedent.role.name = random.randint(1,roleSpace)
+        if random.random() < err:
+            statement.antecedent.concept.name = random.randint(1,conceptSpace)
+        if random.random() < err:
+            statement.consequent.name = random.randint(1,conceptSpace)
+    for statement in gen.roleSubs:
+        if random.random() < err:
+            statement.antecedent.name = random.randint(1,roleSpace)
+        if random.random() < err:
+            statement.consequent.name = random.randint(1,roleSpace)
+    for statement in gen.roleChains:
+        if random.random() < err:
+            statement.antecedent.roles[0].name = random.randint(1,roleSpace)
+        if random.random() < err:
+            statement.antecedent.roles[1].name = random.randint(1,roleSpace)
+        if random.random() < err:
+            statement.consequent.name = random.randint(1,roleSpace)
+    
+    gen.CType1.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+    gen.CType2.sort(key=lambda x: (x.antecedent.antecedent.name, x.antecedent.consequent.name, x.consequent.name))
+    gen.CType3.sort(key=lambda x: (x.antecedent.name, x.consequent.role.name, x.consequent.concept.name))
+    gen.CType4.sort(key=lambda x: (x.antecedent.role.name, x.antecedent.concept.name, x.consequent.name))
+    gen.roleSubs.sort(key=lambda x: (x.antecedent.name, x.consequent.name))
+    gen.roleChains.sort(key=lambda x: (x.antecedent.roles[0].name, x.antecedent.roles[1].name, x.consequent.name))    
 
 def makeSynDataPerturbed(trials,err):
     
@@ -870,6 +914,8 @@ def makeSynDataPerturbed(trials,err):
     
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
+    bad_KBs = numpy.empty(trials,dtype=numpy.ndarray)
+    bad_out = numpy.empty(trials,dtype=numpy.ndarray)
     kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
     if not os.path.isdir("output"): os.mkdir("output")
     i = 0
@@ -888,13 +934,6 @@ def makeSynDataPerturbed(trials,err):
         
         if generator.conceptNamespace != conceptSpace or generator.roleNamespace != roleSpace:
             raise
-        
-        badGenerator = generator.copy(conceptSpace,roleSpace)
-        
-        writeFile("good.txt",generator.toString())
-        writeFile("bad.txt",badGenerator.toString())
-        
-        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/KB{}.owl".format(i,i))
         
         reasoner = ReasonER(generator,showSteps=True)
         
@@ -916,17 +955,31 @@ def makeSynDataPerturbed(trials,err):
             print("KB has too many entailments, trying again")
             continue
         
-        kbs[i] = array(generator.toVector())
+        badGenerator = generator.copy(conceptSpace,roleSpace)
         
+        messUpKB(badGenerator,err)       
+        
+        badReasoner = ReasonER(badGenerator,showSteps=True)
+        
+        badReasoner.ERason()
+        
+        kbs[i] = array(generator.toVector())        
         seq_in[i] = a
         seq_out[i] = b
-
+        bad_KBs[i] = array(badGenerator.toVector())
+        bad_out[i] = badReasoner.toCompletion()    
+        
         if not os.path.isdir("output/Dataset/{}/sequence".format(i)): os.mkdir("output/Dataset/{}/sequence".format(i))
         if not os.path.isdir("output/Dataset/{}/KB during sequence".format(i)): os.mkdir("output/Dataset/{}/KB during sequence".format(i))        
         if len(reasoner.KBaLog) > 0 and not os.path.isdir("output/Dataset/{}/KB after sequence".format(i)): os.mkdir("output/Dataset/{}/KB after sequence".format(i))
+        generator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/KB{}.owl".format(i,i))
+        badGenerator.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/bad{}/>".format(i),"output/Dataset/{}/badKB{}.owl".format(i,i))        
         reasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/{}/>".format(i),"output/Dataset/{}/completion{}.owl".format(i,i))
+        badReasoner.toFunctionalSyntaxFile("<http://www.randomOntology.com/Synthetic/Sequential/random/bad{}/>".format(i),"output/Dataset/{}/completionBad{}.owl".format(i,i))
         generator.toStringFile("output/Dataset/{}/completedKB.txt".format(i))
-        reasoner.toStringFile("output/Dataset/{}/completedKB.txt".format(i))        
+        badReasoner.toStringFile("output/Dataset/{}/completedBadKB.txt".format(i))  
+        badGenerator.toStringFile("output/Dataset/{}/completedBadKB.txt".format(i))
+        reasoner.toStringFile("output/Dataset/{}/completedKB.txt".format(i))          
         for j in range(0,len(supports.donelogs[0])):
             writeFile("output/Dataset/{}/sequence/reasonerStep{}.txt".format(i,j),supports.toString(supports.donelogs[0][j]))
         for j in range(0,len(supports.donelogs[1])):
@@ -936,9 +989,9 @@ def makeSynDataPerturbed(trials,err):
         
         i = i + 1
             
-    numpy.savez('saves/data', kbs,seq_in,seq_out)
+    numpy.savez('saves/messData', kbs,seq_in,seq_out,bad_KBs)
     
-    return kbs,seq_in,seq_out
+    return kbs,seq_in,seq_out,bad_KBs,bad_out
 
 def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
     
@@ -950,6 +1003,8 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
     localmaps = []
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
+    bad_KBs = numpy.empty(trials,dtype=numpy.ndarray)
+    bad_out = numpy.empty(trials,dtype=numpy.ndarray)    
     kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
     if not os.path.isdir("snoutput"): os.mkdir("snoutput")
     i = 0
@@ -966,7 +1021,7 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         
         reasoner = ReasonER(generator,showSteps=True)
 
-        reasoner.ERason()
+        reasoner.ERason()      
         
         if len(reasoner.KBaLog) < shapes[1]:
             print("Sample has too few reasoner steps, trying again")
@@ -990,15 +1045,19 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         
         badGenerator = generator.copy(conceptSpace,roleSpace)
         
-        writeFile("good.txt",generator.toString())
-        writeFile("bad.txt",badGenerator.toString())        
+        messUpKB(badGenerator,err)       
+        
+        badReasoner = ReasonER(badGenerator,showSteps=True)
+        
+        badReasoner.ERason()     
         
         localmaps.append(localmap)
         
-        kbs[i] = array(generator.toVector())
-        
+        kbs[i] = array(generator.toVector())        
         seq_in[i] = a
         seq_out[i] = b
+        bad_KBs[i] = array(badGenerator.toVector())
+        bad_out[i] = badReasoner.toCompletion()        
         
         if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/Dataset/{}/Reasoner Steps".format(i)): os.mkdir("snoutput/Dataset/{}/Reasoner Steps".format(i))
         generator.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
@@ -1010,9 +1069,9 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         i = i + 1
 
 
-    numpy.savez('ssaves/data', kbs,seq_in,seq_out,localmaps,info)
+    numpy.savez('ssaves/messData', kbs,seq_in,seq_out,localmaps,info,bad_KBs,bad_out)
 
-    return kbs,seq_in,seq_out,localmaps,info 
+    return kbs,seq_in,seq_out,localmaps,info,bad_KBs,bad_out
 
 def readInputs():
     
