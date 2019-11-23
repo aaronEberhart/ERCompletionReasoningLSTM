@@ -915,7 +915,7 @@ def makeSynDataPerturbed(trials,err):
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
     bad_KBs = numpy.empty(trials,dtype=numpy.ndarray)
-    bad_out = numpy.empty(trials,dtype=numpy.ndarray)
+    bad_out = numpy.empty((trials,shapes[1],shapes[3]),dtype=numpy.ndarray)
     kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
     if not os.path.isdir("output"): os.mkdir("output")
     i = 0
@@ -947,6 +947,14 @@ def makeSynDataPerturbed(trials,err):
         
         a,b = supports.toVector(generator.conceptNamespace,generator.roleNamespace)
         
+        badGenerator = generator.copy(conceptSpace,roleSpace)
+        
+        messUpKB(badGenerator,err)       
+        
+        badReasoner = ReasonER(badGenerator,showSteps=True)
+        
+        badReasoner.ERason()        
+        
         if len(a[0]) > shapes[2]:
             print("KB has too many supports, trying again")
             continue
@@ -955,19 +963,16 @@ def makeSynDataPerturbed(trials,err):
             print("KB has too many entailments, trying again")
             continue
         
-        badGenerator = generator.copy(conceptSpace,roleSpace)
-        
-        messUpKB(badGenerator,err)       
-        
-        badReasoner = ReasonER(badGenerator,showSteps=True)
-        
-        badReasoner.ERason()
+        if len(badReasoner.sequenceLog) != 0:
+            if len(badReasoner.sequenceLog) > shapes[1] or len(max(badReasoner.sequenceLog, key=lambda coll: len(coll))) > shapes[3] / 4:
+                print("Messed up KB has too many entailments, trying again")
+                continue        
         
         kbs[i] = array(generator.toVector())        
         seq_in[i] = a
         seq_out[i] = b
         bad_KBs[i] = array(badGenerator.toVector())
-        bad_out[i] = badReasoner.toCompletion()    
+        bad_out[i] = badReasoner.toCompletionPadded(len(bad_out[0]),len(bad_out[0][0]))    
         
         if not os.path.isdir("output/Dataset/{}/sequence".format(i)): os.mkdir("output/Dataset/{}/sequence".format(i))
         if not os.path.isdir("output/Dataset/{}/KB during sequence".format(i)): os.mkdir("output/Dataset/{}/KB during sequence".format(i))        
@@ -989,7 +994,7 @@ def makeSynDataPerturbed(trials,err):
         
         i = i + 1
             
-    numpy.savez('saves/messData', kbs,seq_in,seq_out,bad_KBs)
+    numpy.savez('saves/messData{}'.format(err), kbs,seq_in,seq_out,bad_KBs,bad_out)
     
     return kbs,seq_in,seq_out,bad_KBs,bad_out
 
@@ -1004,7 +1009,7 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
     seq_in = numpy.empty(trials,dtype=numpy.ndarray)
     seq_out = numpy.empty(trials,dtype=numpy.ndarray)
     bad_KBs = numpy.empty(trials,dtype=numpy.ndarray)
-    bad_out = numpy.empty(trials,dtype=numpy.ndarray)    
+    bad_out = bad_out = numpy.empty((trials,shapes[1],shapes[3]),dtype=numpy.ndarray)    
     kbs = numpy.empty([trials,shapes[0]],dtype=numpy.float32)
     if not os.path.isdir("snoutput"): os.mkdir("snoutput")
     i = 0
@@ -1041,7 +1046,7 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         
         if len(b[0]) > shapes[3]:
             print("Sample has too many entailments, trying again")
-            continue        
+            continue  
         
         badGenerator = generator.copy(conceptSpace,roleSpace)
         
@@ -1049,7 +1054,12 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         
         badReasoner = ReasonER(badGenerator,showSteps=True)
         
-        badReasoner.ERason()     
+        badReasoner.ERason() 
+        
+        if len(badReasoner.sequenceLog) != 0:
+            if len(badReasoner.sequenceLog) > shapes[1] or len(max(badReasoner.sequenceLog, key=lambda coll: len(coll))) > shapes[3] / 4:
+                print("Messed up KB has too many entailments, trying again")
+                continue              
         
         localmaps.append(localmap)
         
@@ -1057,7 +1067,7 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         seq_in[i] = a
         seq_out[i] = b
         bad_KBs[i] = array(badGenerator.toVector())
-        bad_out[i] = badReasoner.toCompletion()        
+        bad_out[i] = badReasoner.toCompletionPadded(len(bad_out[0]),len(bad_out[0][0]))        
         
         if len(reasoner.KBaLog) > 0 and not os.path.isdir("snoutput/Dataset/{}/Reasoner Steps".format(i)): os.mkdir("snoutput/Dataset/{}/Reasoner Steps".format(i))
         generator.toStringFile("snoutput/Dataset/{}/completedKB.txt".format(i))
@@ -1069,7 +1079,7 @@ def sampleDataHardGenerator2FormatPerturbed(SNOMEDdata,trials,err):
         i = i + 1
 
 
-    numpy.savez('ssaves/messData', kbs,seq_in,seq_out,localmaps,info,bad_KBs,bad_out)
+    numpy.savez('ssaves/messData{}'.format(err), kbs,seq_in,seq_out,localmaps,info,bad_KBs,bad_out)
 
     return kbs,seq_in,seq_out,localmaps,info,bad_KBs,bad_out
 
@@ -1081,9 +1091,12 @@ def readInputs():
     parser.add_argument("-c","--concepts", help="number of concepts in namespace", type=int, default=21)
     parser.add_argument("-r","--roles", help="number of roles in namespace", type=int, default=8)
     parser.add_argument("-k","--kbs", help="number of KBs to generate and reason over", type=int, default=1000)
-    parser.add_argument("-p","--perturb", help="amount  to disturb each kb for comparison", type=float, default=0.3)
+    parser.add_argument("-p","--perturb", help="percent to perturb each kb for comparison", type=float, default=0.0)
     
     args = parser.parse_args()
+    
+    if args.perturb < 0 or args.perturb > 1:
+        raise ValueError("Can only perturb by a percent between 0 and 1")
     
     return args
 

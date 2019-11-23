@@ -2,7 +2,7 @@ import os,sys,shutil,argparse,random,numpy,math
 
 from numpy import array
 from functools import partial
-#from tensorflow.contrib import rnn
+from tensorflow.contrib import rnn
 
 from datasetGenerators import *
 
@@ -121,6 +121,30 @@ def pad(arr,maxlen1=0,maxlen2=0):
                 newarr[i][j][k] = arr[i][j][k]
 
     return newarr
+
+def vecToStatement(vec,conceptSpace,roleSpace):    
+    four = []
+    statementStr = []
+    statementPred = []
+    
+    for j in range(len(vec)):
+        stepStr = []
+        stepPred = []
+        for k in range(len(vec[j])):
+            if len(four) == 3:
+                four.append(vec[j][k])
+                pred,stri = convertToStatement(four,conceptSpace,roleSpace)
+                if stri != None: stepStr.append(stri)
+                if pred != None: stepPred.append(pred)
+                four = []                    
+            else:
+                four.append(vec[j][k])
+        if len(stepStr) > 0:
+            statementStr.append(stepStr) 
+        if len(stepPred) > 0: 
+            statementPred.append(stepPred) 
+        
+    return statementPred,statementStr
 
 def vecToStatements(vec,conceptSpace,roleSpace):    
     four = []
@@ -346,7 +370,7 @@ def findBestMatchNoNums(statement,reasonerSteps):
 def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix):
     
     if (syn and os.path.isfile("saves/randoStr.npz")) or os.path.isfile("ssaves/randoStr.npz"):
-        rando = numpy.load("saves/randoStr.npz" if syn else "ssaves/randoStr.npz",allow_pickle=True)
+        rando = numpy.load(("saves/randoStr.npz" if syn else "ssaves/randoStr.npz"),allow_pickle=True)
         rando = rando['arr_0'].tolist()
     else:
         rando = makeRandomStrCompletions(shape,conceptSpace,roleSpace,syn)
@@ -443,7 +467,7 @@ def levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mi
 def findBestMatch(statement,reasonerSteps):
     return min(map(partial(levenshtein,statement),reasonerSteps))
 
-def custom(conceptSpace,roleSpace,s1,s2,):
+def custom(conceptSpace,roleSpace,s1,s2):
    
     if len(s1) < len(s2): return custom(conceptSpace,roleSpace,s2,s1)
     
@@ -499,14 +523,14 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn,mix):
                     custRT = custRT + best                    
                     if (len(newPred) > i and len(newPred[i]) > 0):
                         custTN = custTN + findBestPredMatch(truePred[i][j][k],flatNew[i],conceptSpace,roleSpace)
-                    elif not mix: custTN = custTN + custom(truePred[i][j][k],[],conceptSpace,roleSpace)
+                    elif not mix: custTN = custTN + custom(conceptSpace,roleSpace,truePred[i][j][k],[])
                 if (len(newPred) > i and len(newPred[i]) > j and len(newPred[i][j]) > k):
                     countNew = countNew + 1
                     if (len(truePred) > i and len(truePred[i]) > 0):
                         best = findBestPredMatch(newPred[i][j][k],flatTrue[i],conceptSpace,roleSpace)
                         if best == 0: F1s[0] = F1s[0] + 1 ; F1s[1] = F1s[1] - 1 ; F1s[2] = F1s[2] - 1
                         custNT = custNT + best
-                    elif not mix: custNT = custNT + custom(newPred[i][j][k],[],conceptSpace,roleSpace)
+                    elif not mix: custNT = custNT + custom(conceptSpace,roleSpace,newPred[i][j][k],[])
                     
     return custTR,custRT,custTN,custNT,countTrue,countNew,countRan,F1s,rF1s
 
@@ -636,6 +660,7 @@ def formatDataSno2Syn(log,conceptSpace,roleSpace,KBs,supports,output,sKBs,ssuppo
     
     return KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,testLabels
 
+
 def precision(TP,FP):
     return 0 if TP == 0 and FP == 0 else TP / (TP + FP)
 
@@ -664,7 +689,7 @@ def writeAccMeasures(F,rF,log):
     
     return array([x,array([TPs,FPs,FNs,pre,rec,F])])
 
-def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,pert):
+def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,newErrs,newErrStatements):
     if mix:
         levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,F11,F111 = levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,False)          
         
@@ -711,30 +736,63 @@ def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatement
         c = writeAccMeasures(F13,F131,log)
         
         return x,array([array([levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,a]),array([levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,b]),array([custTR,custRT,custTN,custNT,countTrue,countNew,countRan,c])])
-    elif pert:
+    elif newErrs:
         levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,F11,F111 = levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix)          
+        f,g,h,i, j,k,l, m,n = levDistanceNoNums(shape,newErrStatements,trueStatements,conceptSpace,roleSpace,syn,mix)
         
-        log.write("\nNo Nums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Predicted Data,{}\nLevenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR,levRT,levTN,levNT)) 
-        log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR/sizeTrue,levRT/sizeRan,levTN/sizeTrue,0 if sizeNew == 0 else levNT/sizeNew))
+        log.write("\nNo Nums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Error Data,{}\nLevenshtein Distance From Error to Reasoner Data,{}\n".format(levTR,levRT,levTN,levNT)) 
+        log.write("Levenshtein Distance From Reasoner to Error Data,{}\nLevenshtein Distance From Error to Reasoner Data,{}\n".format(h,i)) 
+        log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR/sizeTrue,levRT/sizeRan,levTN/sizeTrue,0 if sizeNew == 0 else levNT/sizeNew))        
+        log.write("Average Levenshtein Distance From Reasoner to Error Statement,{}\nAverage Levenshtein Distance From Error to Reasoner Statement,{}\n".format(h/j,0 if k == 0 else i/k))
         
         a = writeAccMeasures(F11,F111,log)
         
+        TPs,FPs,FNs = m
+        pre = precision(TPs,FPs)
+        rec = recall(TPs,FNs)
+        F = F1(pre,rec) 
+        
+        log.write("\nError Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs,FPs,FNs,pre,rec,F))
+        x = array([h,i,j,k,array([TPs,FPs,FNs,pre,rec,F])]) 
+        
         levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,F12,F121 = levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix)          
+        f1,g1,h1,i1,j1,k1,l1,m1,n1 = levDistance(shape,newErrStatements,trueStatements,conceptSpace,roleSpace,syn,mix)
         
         log.write("\nNums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Predicted Data,{}\nLevenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR2,levRT2,levTN2,levNT2)) 
+        log.write("Levenshtein Distance From Reasoner to Error Data,{}\nLevenshtein Distance From Error to Reasoner Data,{}\n".format(f1,g1))
         log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR2/sizeTrue2,levRT2/sizeRan2,levTN2/sizeTrue2,0 if sizeNew2 == 0 else levNT2/sizeNew2))
+        log.write("Average Levenshtein Distance From Reasoner to Error Statement,{}\nAverage Levenshtein Distance From Error to Reasoner Statement,{}\n".format(h1/j1,0 if k1 == 0 else i1/k1))
         
         b = writeAccMeasures(F12,F121,log)
         
+        TPs,FPs,FNs = m1
+        pre = precision(TPs,FPs)
+        rec = recall(TPs,FNs)
+        F = F1(pre,rec) 
+        
+        log.write("\nError Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs,FPs,FNs,pre,rec,F))        
+        x1 = array([h1,i1,j1,k1,array([TPs,FPs,FNs,pre,rec,F])])
+        
         custTR,custRT,custTN,custNT,countTrue,countNew,countRan,F13,F131 = customDistance(shape,newPreds,truePreds,conceptSpace,roleSpace,syn,mix)
+        f2,g2,h2,i2,j2,k2,l2,m2,n2 = customDistance(shape,newErrs,truePreds,conceptSpace,roleSpace,syn,mix)
         
         log.write("\nCustom\nCustom Distance From Reasoner to Random Data,{}\nCustom Distance From Random to Reasoner Data,{}\nCustom Distance From Reasoner to Predicted Data,{}\nCustom Distance From Predicted to Reasoner Data,{}\n".format(custTR,custRT,custTN,custNT)) 
+        log.write("Custom Distance From Reasoner to Error Data,{}\nCustom Distance From Error to Reasoner Data,{}\n".format(f2,g2))
         log.write("Average Custom Distance From Reasoner to Random Statement,{}\nAverage Custom Distance From Random to Reasoner Statement,{}\nAverage Custom Distance From Reasoner to Predicted Statement,{}\nAverage Custom Distance From Prediction to Reasoner Statement,{}\n".format(custTR/countTrue,custRT/countRan,custTN/countTrue,0 if countNew == 0 else custNT/countNew))
+        log.write("Average Custom Distance From Reasoner to Error Statement,{}\nAverage Custom Distance From Error to Reasoner Statement,{}\n".format(h2/j2,0 if k2 == 0 else i2/k2))
         
         c = writeAccMeasures(F13,F131,log)
         
-        return array([array([levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,a]),array([levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,b]),array([custTR,custRT,custTN,custNT,countTrue,countNew,countRan,c])])        
-    else:
+        TPs,FPs,FNs = m2
+        pre = precision(TPs,FPs)
+        rec = recall(TPs,FNs)
+        F = F1(pre,rec) 
+        
+        log.write("\nError Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs,FPs,FNs,pre,rec,F))        
+        x2 = array([h2,i2,j2,k2,array([TPs,FPs,FNs,pre,rec,F])])
+        
+        return array([array([levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,a,x]),array([levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,b,x1]),array([custTR,custRT,custTN,custNT,countTrue,countNew,countRan,c,x2])])        
+    else:        
         levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,F11,F111 = levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix)          
         
         log.write("\nNo Nums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Predicted Data,{}\nLevenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR,levRT,levTN,levNT)) 
@@ -744,7 +802,7 @@ def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatement
         
         levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,F12,F121 = levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix)          
         
-        log.write("\nNums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Predicted Data,{}\nLevenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR2,levRT2,levTN2,levNT2)) 
+        log.write("\nNums\nLevenshtein Distance From Reasoner to Random Data,{}\nLevenshtein Distance From Random to Reasoner Data,{}\nLevenshtein Distance From Reasoner to Predicted Data,{}\nLevenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR2,levRT2,levTN2,levNT2))        
         log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR2/sizeTrue2,levRT2/sizeRan2,levTN2/sizeTrue2,0 if sizeNew2 == 0 else levNT2/sizeNew2))
         
         b = writeAccMeasures(F12,F121,log)
@@ -760,8 +818,8 @@ def distanceEvaluations(log,shape,newPreds,truePreds,newStatements,trueStatement
 def trainingStats(log,mseNew,mse0,mseL):
     log.write("Training Statistics\nPrediction Mean Squared Error,{}\nLearned Reduction MSE,{}\nIncrease MSE on Test,{}\nTraining Percent Change MSE,{}\n".format(numpy.float32(mseNew),mse0-mseL,numpy.float32(mseNew)-mseL,(mseL - mse0)/mse0*100))
         
-def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,n,pert):
-    KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,labels = allTheData
+def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,n):
+    KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,labels,errPreds,errStatements = allTheData
     
     trainlog.write("Piecewise LSTM Part One\nEpoch,Mean Squared Error,Root Mean Squared Error\n")
     evallog.write("Piecewise LSTM Part One\n")
@@ -860,7 +918,7 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         writeVectorFile("{}{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
-        evals = distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,False)        
+        evals = distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,False,False)        
         
         data = numpy.load("{}{}saves/halfwayData[{}].npz".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n),allow_pickle=True)
         data = data['arr_0'] 
@@ -881,10 +939,10 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         #saver.save(sess,"{}{}saves/secondHalfModel[{}]".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n))
         
-        return evals,distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,pert)
+        return distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,errPreds,errStatements)
         
-def deepSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,n,pert):
-    KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,labels = allTheData
+def deepSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,n):
+    KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,labels,errPreds,errStatements = allTheData
     
     trainlog.write("Deep LSTM\nEpoch,Mean Squared Error,Root Mean Squared Error\n")
     evallog.write("\nDeep LSTM\n\n")
@@ -936,8 +994,62 @@ def deepSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,
         
         #saver.save(sess,"{}{}saves/deepModel[{}]".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n))
         
-        return distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,pert)
+        return distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,errPreds,errStatements)
 
+def flatSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,n):
+    KBs_test,KBs_train,X_train,X_test,y_train,y_test,truePreds,trueStatements,labels,errPreds,errStatements = allTheData
+    
+    trainlog.write("Flat LSTM\nEpoch,Mean Squared Error,Root Mean Squared Error\n")
+    evallog.write("\nFlat LSTM\n\n")
+    print("")
+    
+    X0 = tf.placeholder(tf.float32, shape=[None,KBs_train.shape[1],KBs_train.shape[2]])
+    y1 = tf.placeholder(tf.float32, shape=[None,y_train.shape[1],y_train.shape[2]])
+    
+    outputs2, states2 = tf.nn.dynamic_rnn(tf.contrib.rnn.LSTMCell(num_units=y_train.shape[2]), X0, dtype=tf.float32)
+    
+    loss2 = tf.losses.mean_squared_error(y1,outputs2)
+    optimizer2 = tf.train.AdamOptimizer(learning_rate=learning_rate2)
+    training_op2 = optimizer2.minimize(loss2)
+    
+    #saver = tf.train.Saver()
+    
+    init2 = tf.global_variables_initializer()
+    
+    with tf.Session() as sess:    
+        init2.run()
+        mse0 = 0
+        mseL = 0
+        for epoch in range(n_epochs2): 
+            print("Flat System\t\tEpoch: {}".format(epoch))
+            ynew,a = sess.run([outputs2,training_op2],feed_dict={X0: KBs_train,y1: y_train})
+            mse = loss2.eval(feed_dict={outputs2: ynew, y1: y_train})
+            if epoch == 0: mse0 = mse
+            if epoch == n_epochs2 - 1: mseL = mse
+            trainlog.write("{},{},{}\n".format(epoch,mse,math.sqrt(mse)))
+            if mse < 0.0001:
+                mseL = mse
+                break
+        
+        print("\nEvaluating Result\n")
+        
+        y_pred = sess.run(outputs2,feed_dict={X0: KBs_test})  
+        mseNew = loss2.eval(feed_dict={outputs2: y_pred, y1: y_test})
+        
+        trainingStats(evallog,mseNew,mse0,mseL)
+        
+        evallog.write("\nTest Data Evaluation\n")    
+          
+        newPreds,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,labels) if (not mix and not syn) else vecToStatements(y_pred,conceptSpace,roleSpace)
+        
+        writeVectorFile("{}{}output/predictionFlatArchitecture[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        
+        if (not mix and not syn):
+            newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)        
+        
+        #saver.save(sess,"{}{}saves/deepModel[{}]".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n))
+        
+        return distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,errPreds,errStatements)
 def runOnce(trainlog,evallog,epochs,learningRate,conceptSpace,roleSpace,syn,mix):
     
     if syn:
@@ -961,6 +1073,10 @@ def runOnce(trainlog,evallog,epochs,learningRate,conceptSpace,roleSpace,syn,mix)
     
     deepSystem(epochs,learningRate/2,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,1)
     
+    tf.reset_default_graph()
+    
+    flatSystem(epochs,learningRate/2,trainlog,evallog,conceptSpace,roleSpace,allTheData,syn,mix,1)    
+    
     trainlog.close()
     evallog.close()
     
@@ -968,11 +1084,15 @@ def runOnce(trainlog,evallog,epochs,learningRate,conceptSpace,roleSpace,syn,mix)
 
 def runNthTime(trainlog,evallog,epochs,learningRate,conceptSpace,roleSpace,nthData,syn,mix,n):
     
-    evals1 = shallowSystem(int(epochs/2),learningRate,trainlog,evallog,conceptSpace,roleSpace,nthData,syn,mix,n,pert)     
+    evals1 = shallowSystem(int(epochs/2),learningRate,trainlog,evallog,conceptSpace,roleSpace,nthData,syn,mix,n)     
     
     tf.reset_default_graph()
     
-    evals2 = deepSystem(epochs,learningRate/2,trainlog,evallog,conceptSpace,roleSpace,nthData,syn,mix,n,pert)
+    evals2 = deepSystem(epochs,learningRate/2,trainlog,evallog,conceptSpace,roleSpace,nthData,syn,mix,n)
+    
+    tf.reset_default_graph()
+    
+    evals3 = flatSystem(epochs,learningRate/2,trainlog,evallog,conceptSpace,roleSpace,nthData,syn,mix,n)
     
     tf.reset_default_graph()
     
@@ -980,11 +1100,40 @@ def runNthTime(trainlog,evallog,epochs,learningRate,conceptSpace,roleSpace,nthDa
     evallog.close()
     
     if mix:
-        return evals1[0][0],evals1[0][1],evals1[1][0],evals1[1][1],evals2[0],evals2[1]
+        return evals1[0],evals1[1],evals2[0],evals2[1],evals3[0],evals3[1]
     else:
-        return evals1[0],evals1[1],evals2
+        return evals1,evals2,evals3
     
-   
+def writeFinalAverageDataMess(result,log):
+    levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,((TPs,FPs,FNs,pre,rec,F),(rTPs,rFPs,rFNs,rpre,rrec,rF)),(h,i,j,k,(mTPs,mFPs,mFNs,mpre,mrec,mF)) = result[0]
+    levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,((TPs1,FPs1,FNs1,pre1,rec1,F1),(rTPs1,rFPs1,rFNs1,rpre1,rrec1,rF1)),(h1,i1,j1,k1,(mTPs1,mFPs1,mFNs1,mpre1,mrec1,mF1)) = result[1]
+    custTR,custRT,custTN,custNT,countTrue,countNew,countRan,((TPs2,FPs2,FNs2,pre2,rec2,F2),(rTPs2,rFPs2,rFNs2,rpre2,rrec2,rF2)),(h2,i2,j2,k2,(mTPs2,mFPs2,mFNs2,mpre2,mrec2,mF2)) = result[2]    
+    log.write("\nNo Nums\nAverage Levenshtein Distance From Reasoner to Random Data,{}\nAverage Levenshtein Distance From Random to Reasoner Data,{}\nAverage Levenshtein Distance From Reasoner to Predicted Data,{}\nAverage Levenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR,levRT,levTN,levNT)) 
+    log.write("Average Levenshtein Distance From Reasoner to Error Data,{}\nAverage Levenshtein Distance From Error to Reasoner Data,{}\n".format(h,i)) 
+    log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR/sizeTrue,levRT/sizeRan,levTN/sizeTrue,levNT/sizeNew))       
+    log.write("Average Levenshtein Distance From Reasoner to Error Statement,{}\nAverage Levenshtein Distance From Error to Reasoner Statement,{}\n".format(h/j,0 if k == 0 else i/k))
+        
+    log.write("\nAverage Prediction Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs,FPs,FNs,pre,rec,F))
+    log.write("\nAverage Random Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(rTPs,rFPs,rFNs,rpre,rrec,rF))
+    log.write("\nAverage Error Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(mTPs,mFPs,mFNs,mpre,mrec,mF))
+    
+    log.write("\nNums\nAverage Levenshtein Distance From Reasoner to Random Data,{}\nAverage Levenshtein Distance From Random to Reasoner Data,{}\nAverage Levenshtein Distance From Reasoner to Predicted Data,{}\nAverage Levenshtein Distance From Prediction to Reasoner Data,{}\n".format(levTR2,levRT2,levTN2,levNT2)) 
+    log.write("Average Levenshtein Distance From Reasoner to Error Data,{}\nAverage Levenshtein Distance From Error to Reasoner Data,{}\n".format(h1,i1))
+    log.write("Average Levenshtein Distance From Reasoner to Random Statement,{}\nAverage Levenshtein Distance From Random to Reasoner Statement,{}\nAverage Levenshtein Distance From Reasoner to Predicted Statement,{}\nAverage Levenshtein Distance From Prediction to Reasoner Statement,{}\n".format(levTR2/sizeTrue2,levRT2/sizeRan2,levTN2/sizeTrue2,levNT2/sizeNew2))
+    log.write("Average Levenshtein Distance From Reasoner to Error Statement,{}\nAverage Levenshtein Distance From Error to Reasoner Statement,{}\n".format(h1/j1,0 if k1 == 0 else i1/k1))
+        
+    log.write("\nAverage Prediction Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs1,FPs1,FNs1,pre1,rec1,F1))
+    log.write("\nAverage Random Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(rTPs1,rFPs1,rFNs1,rpre1,rrec1,rF1))
+    log.write("\nAverage Error Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(mTPs1,mFPs1,mFNs1,mpre1,mrec1,mF1))
+    
+    log.write("\nCustom\nAverage Custom Distance From Reasoner to Random Data,{}\nAverage Custom Distance From Random to Reasoner Data,{}\nAverage Custom Distance From Reasoner to Predicted Data,{}\nAverage Custom Distance From Predicted to Reasoner Data,{}\n".format(custTR,custRT,custTN,custNT)) 
+    log.write("Average Custom Distance From Reasoner to Error Data,{}\nAverage Custom Distance From Error to Reasoner Data,{}\n".format(h2,i2))
+    log.write("Average Custom Distance From Reasoner to Random Statement,{}\nAverage Custom Distance From Random to Reasoner Statement,{}\nAverage Custom Distance From Reasoner to Predicted Statement,{}\nAverage Custom Distance From Prediction to Reasoner Statement,{}\n".format(custTR/countTrue,custRT/countRan,custTN/countTrue,custNT/countNew))
+    log.write("Average Custom Distance From Reasoner to Error Statement,{}\nAverage Custom Distance From Error to Reasoner Statement,{}\n".format(h2/j2,0 if k2 == 0 else i2/k2))
+        
+    log.write("\nAverage Prediction Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(TPs2,FPs2,FNs2,pre2,rec2,F2))
+    log.write("\nAverage Random Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(rTPs2,rFPs2,rFNs2,rpre2,rrec2,rF2)) 
+    log.write("\nAverage Error Accuracy For this Distance Measure\nTrue Positives,{}\nFalse Positives,{}\nFalse Negatives,{}\nPrecision,{}\nRecall,{}\nF1 Score,{}\n".format(mTPs2,mFPs2,mFNs2,mpre2,mrec2,mF2))
 def writeFinalAverageData(result,log):
     levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,((TPs,FPs,FNs,pre,rec,F),(rTPs,rFPs,rFNs,rpre,rrec,rF)) = result[0]
     levTR2,levRT2,levTN2,levNT2,sizeTrue2,sizeNew2,sizeRan2,((TPs1,FPs1,FNs1,pre1,rec1,F1),(rTPs1,rFPs1,rFNs1,rpre1,rrec1,rF1)) = result[1]
@@ -1015,36 +1164,46 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
     if not os.path.isdir("crossValidationFolds/evals"): os.mkdir("crossValidationFolds/evals")
     if not os.path.isdir("crossValidationFolds/{}saves".format("" if syn else "s")): os.mkdir("crossValidationFolds/{}saves".format("" if syn else "s"))
     
-    if os.path.isfile("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Mess" if pert else "")):
-        data = numpy.load("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Mess" if pert else ""), allow_pickle=True)
-        allTheData = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'],data['arr_5'],data['arr_6'],data['arr_7'],data['arr_8'],data['arr_9']
+    if os.path.isfile("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else "")):
+        data = numpy.load("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else ""), allow_pickle=True)
+        allTheData = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'],data['arr_5'],data['arr_6'],data['arr_7'],data['arr_8'],data['arr_9'],data['arr_10']
     elif syn:
-        KBs,supports,outputs = getSynDataFromFile('saves/data.npz')
-        if mix:
+        if pert > 0 and os.path.isfile("saves/messData{}.npz".format(pert)):
+            data = numpy.load("saves/messData{}.npz".format(pert), allow_pickle=True)
+            KBs,supports,outputs,mKBs,mouts = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'] 
+        else:
+            KBs,supports,outputs = getSynDataFromFile('saves/data.npz')
+            mKBs = None; mouts = None
+        if mix and pert == 0:
             sKBs,ssupports,soutputs,localMaps,stats = getSnoDataFromFile('ssaves/data.npz')
             labels = collapseLabelMap(localMaps,stats[0][2],stats[1][2],stats[4][1])
-            allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,conceptSpace,roleSpace,syn,mix,pert)
-        else: allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,None,conceptSpace,roleSpace,syn,mix,pert)
+            allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
+        else: allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,None,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
     else:
-        KBs,supports,outputs,localMaps,stats = getSnoDataFromFile('ssaves/data.npz')
+        if pert > 0 and os.path.isfile("ssaves/messData{}.npz".format(pert)):
+            data = numpy.load("ssaves/messData{}.npz".format(pert), allow_pickle=True)
+            KBs,supports,outputs,localMaps,stats,mKBs,mouts = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'] ,data['arr_5'],data['arr_6']         
+        else:
+            KBs,supports,outputs,localMaps,stats = getSnoDataFromFile('ssaves/data.npz')
+            mKbs = None; mouts = None
         labels = collapseLabelMap(localMaps,stats[0][2],stats[1][2],stats[4][1])
-        if mix:
+        if mix and pert == 0:
             sKBs,ssupports,soutputs = getSynDataFromFile('saves/data.npz')
-            allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,conceptSpace,roleSpace,syn,mix,pert)
-        else: allTheData =  crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,labels,conceptSpace,roleSpace,syn,mix,pert)
+            allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
+        else: allTheData =  crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,labels,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
     
-    KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,perts = allTheData
+    KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,nErrsPreds,nErrStatements = allTheData
             
-    numpy.savez("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Mess" if pert else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,perts)  
+    numpy.savez("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,nErrsPreds,nErrStatements)  
     
     if isinstance(labelss,numpy.ndarray):
-        if (labelss.ndim and labells.size) == 0: 
+        if (labelss.ndim and labelss.size) == 0: 
             labelss = None
     
-    evals = numpy.zeros((6 if mix else 3,3,8),dtype=numpy.float64)
+    evals = numpy.zeros(((6,3,8) if mix else ((3,3,9) if pert > 0 else (3,3,8))),dtype=numpy.float64)
     for i in range(n):
         print("\nCross Validation Fold {}\n\nTraining With {} Data\nTesting With {} Data\n".format(i,"Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
-        x = runNthTime(open("crossValidationFolds/training/trainFold[{}].csv".format(i),"w"),open("crossValidationFolds/evals/evalFold[{}].csv".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i],(labelss[i] if isinstance(labelss,numpy.ndarray) else None)),syn,mix,i)
+        x = runNthTime(open("crossValidationFolds/training/trainFold[{}].csv".format(i),"w"),open("crossValidationFolds/evals/evalFold[{}].csv".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i],(labelss[i] if isinstance(labelss,numpy.ndarray) else None),nErrsPreds[i],nErrStatements[i]),syn,mix,i)            
         evals = evals + x
     evals = evals / n
     
@@ -1056,41 +1215,43 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
     
     if mix:
         
-        log.write("Trained With {} Data\nTested With {} Data\n\nRegular Distances\n\nPiecewise System Only Second Half\n".format("Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
+        log.write("Trained With {} Data\nTested With {} Data\n\nRegular Distances\n\nPiecewise System\n".format("Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
         
         writeFinalAverageData(avgResult[0],log)
         
-        log.write("\nPiecewise System Pipelined Data\n")
+        log.write("\nDeep System\n")
         
         writeFinalAverageData(avgResult[1],log)
         
-        log.write("\nDeep System\n")
+        log.write("\nFlat System\n")
         
         writeFinalAverageData(avgResult[2],log)
         
-        log.write("\n\nDistance Ignoring Prediction Gaps\n\nPiecewise System Only Second Half\n")
+        log.write("\n\nDistance Ignoring Prediction Gaps\n\nPiecewise System\n")
         
         writeFinalAverageData(avgResult[3],log)
         
-        log.write("\nPiecewise System Pipelined Data\n")
+        log.write("\nDeep System\n")
         
         writeFinalAverageData(avgResult[4],log)
         
-        log.write("\nDeep System\n")
+        log.write("\nFlat System\n")
         
         writeFinalAverageData(avgResult[5],log)
+        
     else:
-        log.write("Piecewise System Only Second Half\n")        
         
-        writeFinalAverageData(avgResult[0],log)
+        log.write("Piecewise System\n")
         
-        log.write("\nPiecewise System Pipelined Data\n")
-        
-        writeFinalAverageData(avgResult[1],log)
+        writeFinalAverageDataMess(avgResult[0],log)
         
         log.write("\nDeep System\n")
         
-        writeFinalAverageData(avgResult[2],log)
+        writeFinalAverageDataMess(avgResult[1],log) 
+        
+        log.write("\nFlat System\n")
+        
+        writeFinalAverageDataMess(avgResult[2],log)         
         
     log.close()
     
@@ -1098,12 +1259,9 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
     
     return avgResult
 
-def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,localMaps,conceptSpace,roleSpace,syn,mix,pert):
-    
-    if pert:
-        data = numpy.load("{}saves/messData.npz".format("" if syn else "s"), allow_pickle=True)
-        mKBs,mouts = data['arr_0'],data['arr_1']     
-        maxout = len(max(mouts, key=lambda coll: len(coll[0]))[0])
+def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,localMaps,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert):
+         
+    maxout = None if not isinstance(mouts,numpy.ndarray) else len(max(mouts, key=lambda coll: len(coll))[0])
     
     fileShapes1 = [len(supports[0]),len(max(supports, key=lambda coll: len(coll[0]))[0]),len(max(outputs, key=lambda coll: len(coll[0]))[0])]
     fileShapes2 = [len(ssupports[0]),len(max(ssupports, key=lambda coll: len(coll[0]))[0]),len(max(soutputs, key=lambda coll: len(coll[0]))[0])] if mix else [0,0,0]              
@@ -1125,7 +1283,7 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     crossKBsTest = numpy.zeros((len(indexes),len(indexes[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
     crossSupportsTest = numpy.zeros((len(indexes),len(indexes[0]),len(supports[0]),fileShapes1[1] if not mix else fileShapes2[1]),dtype=float)
     crossOutputsTest = numpy.zeros((len(indexes),len(indexes[0]),len(outputs[0]),fileShapes1[2] if not mix else fileShapes2[2]),dtype=float)
-    crossMixesTest = numpy.zeros((len(indexes),len(indexes[0]),len(mouts[0]),maxout),dtype=float)
+    crossErrTest = None if not isinstance(mKBs,numpy.ndarray) else numpy.zeros((len(indexes),len(indexes[0]),len(mouts[0]),maxout),dtype=float)
     
     if isinstance(localMaps,numpy.ndarray):
         crossLabels = numpy.empty((len(indexes),len(indexes[0])),dtype=dict)
@@ -1133,20 +1291,26 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     
     print("Extracting Test Sets")
     for i in range(len(indexes)):
+        KBns =[]
         for j in range(len(indexes[i])):
             if not mix:
-                crossKBsTest[i][j] = mKBs[indexes[i][j]] if pert else KBs[indexes[i][j]]
+                if pert > 0.0 and isinstance(mKBs,numpy.ndarray):
+                    crossKBsTest[i][j] = mKBs[indexes[i][j]] 
+                    placeholder,KBn = vecToStatement(KBs[indexes[i][j]],conceptSpace,roleSpace)
+                    KBns.append(KBn)
+                    crossErrTest[i][j]  = numpy.hstack([mouts[indexes[i][j]],numpy.zeros([fileShapes1[0],maxout-len(mouts[indexes[i][j]][0])])])
+                else:
+                    crossKBsTest[i][j] = KBs[indexes[i][j]]
                 crossSupportsTest[i][j] = numpy.hstack([supports[indexes[i][j]],numpy.zeros([fileShapes1[0],fileShapes1[1]-len(supports[indexes[i][j]][0])])])
-                crossOutputsTest[i][j] = numpy.hstack([outputs[indexes[i][j]],numpy.zeros([fileShapes1[0],fileShapes1[2]-len(outputs[indexes[i][j]][0])])])
-                crossMixesTest  = numpy.hstack([mouts[indexes[i][j]],numpy.zeros([fileShapes1[0],maxout-len(mouts[indexes[i][j]][0])])])
+                crossOutputsTest[i][j] = numpy.hstack([outputs[indexes[i][j]],numpy.zeros([fileShapes1[0],fileShapes1[2]-len(outputs[indexes[i][j]][0])])])                    
             else:
                 crossKBsTest[i][j] = sKBs[indexes[i][j]]
                 crossSupportsTest[i][j] = numpy.hstack([ssupports[indexes[i][j]],numpy.zeros([fileShapes2[0],fileShapes2[1]-len(ssupports[indexes[i][j]][0])])])
                 crossOutputsTest[i][j] = numpy.hstack([soutputs[indexes[i][j]],numpy.zeros([fileShapes2[0],fileShapes2[2]-len(soutputs[indexes[i][j]][0])])])                
             if isinstance(localMaps,numpy.ndarray): 
                 crossLabels[i][j] = localMaps[indexes[i][j]]
-    
-    
+        writeVectorFile("crossValidationFolds/{}output/originalKBsIn[{}].txt".format("sn" if not syn else "",i),array(KBns))
+        
     crossKBsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(KBs[0]),len(KBs[0][0])),dtype=float)
     crossOutputsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(outputs[0]),fileShapes1[2]),dtype=float)
     crossSupportsTrain = numpy.zeros((n,len(KBs)-len(crossKBsTest[0]),len(supports[0]),fileShapes1[1]),dtype=float) 
@@ -1164,6 +1328,8 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
     print("Saving Reasoner Answers")
     nTruePreds = numpy.empty(n,dtype=numpy.ndarray)
     nTrueStatements = numpy.empty(n,dtype=numpy.ndarray)
+    nErrsPreds = numpy.empty(n,dtype=numpy.ndarray)
+    nErrStatements = numpy.empty(n,dtype=numpy.ndarray)    
     for i in range(n):
         if not syn or (syn and mix):
             placeholder,KBn = vecToStatementsWithLabels(crossKBsTest[i],conceptSpace,roleSpace,crossLabels[i])
@@ -1172,18 +1338,25 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
             
             writeVectorFile("crossValidationFolds/{}output/reasonerCompletion[{}].txt".format("sn" if not syn else "",i),nTrueStatementsLabeled)
             
-            nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace)            
+            nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace) 
+            if pert > 0:
+                nErrsPreds[i],nErrStatements[i] = vecToStatements(crossErrTest[i],conceptSpace,roleSpace)
+                writeVectorFile("crossValidationFolds/{}output/ruinedCompletion[{}].txt".format("sn" if not syn else "",i),nErrStatements[i])
         else:
             placeholder,KBn = vecToStatements(crossKBsTest[i],conceptSpace,roleSpace)
             nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace)
+            if pert > 0:
+                nErrsPreds[i],nErrStatements[i] = vecToStatements(crossErrTest[i],conceptSpace,roleSpace) 
+                writeVectorFile("crossValidationFolds/{}output/ruinedCompletion[{}].txt".format("sn" if not syn else "",i),nErrStatements[i])                
             placeholder,inputs = vecToStatements(crossSupportsTest[i],conceptSpace,roleSpace)
         
             writeVectorFile("crossValidationFolds/{}output/reasonerCompletion[{}].txt".format("sn" if not syn else "",i),nTrueStatements[i])
             
-        writeVectorFile("crossValidationFolds/{}output/KBsIn[{}].txt".format("sn" if not syn else "",i),KBn)
-        writeVectorFile("crossValidationFolds/{}output/supports[{}].txt".format("sn" if not syn else "",i),inputs)
+        writeVectorFile("crossValidationFolds/{}output/{}KBsIn[{}].txt".format("sn" if not syn else "","Messed" if pert > 0 else "",i),KBn)
+        #writeVectorFile("crossValidationFolds/{}output/supports[{}].txt".format("sn" if not syn else "",i),inputs)
         
-    return crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements,crossLabels,crossMixesTest
+        
+    return crossKBsTest,crossKBsTrain,crossSupportsTrain,crossSupportsTest,crossOutputsTrain,crossOutputsTest,nTruePreds,nTrueStatements,crossLabels,nErrsPreds,nErrStatements
 
 def readInputs():
     
@@ -1196,19 +1369,18 @@ def readInputs():
     parser.add_argument("-c","--cross", help="cross validation k", type=int, default=10)
     parser.add_argument("-t","--trainfile", help="training log file to save to", type=str, default="trainlog.csv")
     parser.add_argument("-v","--evalfile", help="eval log file to save to", type=str, default="evallog.csv")
-    parser.add_argument("-p","--perturb", help="disturb each kb for comparison", action="store_true", default=True)
+    parser.add_argument("-p","--perturb", help="disturb each kb for comparison", type=float, default=0.0)
     
     args = parser.parse_args()
     
-    if args.mix and args.perturb:
+    if args.mix and args.perturb != 0.0:
         raise IOError("Can't use two test sets simultaneously")
     
     if args.epochs and args.epochs < 2:
         raise ValueError("Try a bigger number maybe!")    
     
     if args.cross:
-        if args.cross == 1: args.cross = False
-        elif args.cross < 1:
+        if args.cross < 1:
             raise ValueError("K fold Cross Validation works better with k greater than 1")
     
     return args
@@ -1217,7 +1389,4 @@ if __name__ == "__main__":
     
     args = readInputs()
       
-    if args.cross: 
-        nTimesCrossValidate(n=args.cross,epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=not args.snomed,mix=args.mix,pert=args.perturb)
-    else: 
-        runOnce(open(args.trainfile,"w"),open(args.evalfile,"w"),epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=not args.snomed,mix=args.mix,pert=args.perturb)
+    nTimesCrossValidate(n=args.cross,epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=not args.snomed,mix=args.mix,pert=args.perturb)

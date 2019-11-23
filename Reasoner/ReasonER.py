@@ -230,9 +230,9 @@ class ReasonER:
 			vec.append(statement.toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))	
 		return vec	
 	
-	def toCompletion(self):
+	def toCompletionPadded(self,maxwid,maxlen):
 		if len(self.sequenceLog) == 0 and len(self.log) == 0 and len(self.KBaLog) == 0 and len(self.KBsLog) == 0:
-			return numpy.ndarray(0)
+			return numpy.zeros((maxwid,maxlen))
 		vec = []
 		for i in range(0,len(self.sequenceLog)):
 			iterb = []
@@ -240,7 +240,7 @@ class ReasonER:
 				iterb.extend(self.sequenceLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
 			vec.append(numpy.array(iterb))  
 			
-		v = numpy.zeros((len(vec),len(max(vec, key=lambda coll: len(coll)))))
+		v = numpy.zeros((maxwid,maxlen))
 		
 		for i in range(len(vec)):
 			for j in range(len(vec[i])):
