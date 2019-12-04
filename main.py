@@ -227,11 +227,11 @@ def convertToStatementWithLabels(four,conceptSpace,roleSpace,labels):
     if  len(new) == 0:
         return None,None
     elif len(new) == 1:
-        return new,None 
-    elif len(new) == 2 and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
-        return new,"a {}\n\t\t\t{}".format(" ⊑ ".join(new)," is a ".join(text))
-    elif len(new) == 2:
-        return new,None
+        return  None,None#new,new[0] 
+    elif len(new) == 2:# and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
+        return new,"{}\n\t\t\ta {}".format(" ⊑ ".join(new)," is a ".join(text))
+    #elif len(new) == 2:
+        #return new,None
     elif len(new) == 3:
         if four[1] > 0 and four[2] < 0 and four[3] > 0:
             return new,"{} ⊑ ∃{}.{}\n\t\t\tif something is a {} then there is a {} that it is {}".format(new[0],new[1],new[2],text[0],text[2],text[1])
@@ -261,11 +261,11 @@ def convertToStatement(four,conceptSpace,roleSpace):
     if  len(new) == 0:
         return None,None
     elif len(new) == 1:
-        return new,None 
-    elif len(new) == 2 and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
+        return None,None# new,new[0]
+    elif len(new) == 2:# and ((four[1] > 0 and four[2] > 0) or (four[1] < 0 and four[2] < 0)):
         return new," ⊑ ".join(new)
-    elif len(new) == 2:
-        return new,None
+    #elif len(new) == 2:
+        #return new,None
     elif len(new) == 3:
         if four[1] > 0 and four[2] < 0 and four[3] > 0:
             return new,"{} ⊑ ∃{}.{}".format(new[0],new[1],new[2])
@@ -276,7 +276,7 @@ def convertToStatement(four,conceptSpace,roleSpace):
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
             return new,"{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
     
-    return new,None#" x ".join(new)
+    return new,None#" ".join(new)
     
 def splitTensors(inputs,outputs, size):
     inTest, inTrain = numpy.split(inputs,[int(len(inputs)*size)])
@@ -305,10 +305,14 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 def levenshteinIgnoreNum(s1, s2):
+    
     if len(s1) < len(s2):
-        return levenshteinIgnoreNum(s2, s1)
+        return levenshteinIgnoreNum(s2, s1)   
     
     s1,s2 = convertAllNumsToAtoms(s1,s2)
+    
+    if len(s1) < len(s2):
+        return levenshteinIgnoreNum(s2, s1)    
     
     # len(s1) >= len(s2)
     if len(s2) == 0:
@@ -380,7 +384,7 @@ def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,
     flatNew = [[item for sublist in x for item in sublist] for x in newStatements]
     
     F1s = array([0,sum([len(x) for x in flatNew]),sum([len(x) for x in flatTrue])])
-    rF1s = array([0,sum([len(x) for x in flatRand]),sum([len(x) for x in flatTrue])])
+    rF1s = array([0,0,0])
     
     levTR = 0
     levRT = 0
@@ -393,13 +397,14 @@ def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,
     
     for i in range(len(rando)):      
         for j in range(len(rando[i])):
-            for k in range(len(rando[i][j])):    
+            for k in range(len(rando[i][j])):
+                sizeRan = sizeRan + 1    
                 if len(trueStatements) > i and len(trueStatements[i]) > j and len(trueStatements[i][j]) > k: #FOR VERY TRUE STATEMENT
                     sizeTrue = sizeTrue + 1                                                                  #if there is a true KB corresponding to this random data, compare the random statement to its best match in the true statements
-                    sizeRan = sizeRan + 1
+                    
                     levRT = levRT + findBestMatchNoNums(rando[i][j][k],flatTrue[i])
                     best = findBestMatchNoNums(trueStatements[i][j][k],flatRand[i])                          #compare to best match in random 
-                    if best == 0: rF1s[0] = rF1s[0] + 1 ; rF1s[1] = rF1s[1] - 1 ; rF1s[2] = rF1s[2] - 1
+                    if best == 0: rF1s[0] = rF1s[0] + 1
                     levTR = levTR + best                                                                                      
                     if (len(newStatements) > i and len(newStatements[i]) > 0):
                         levTN = levTN + findBestMatchNoNums(trueStatements[i][j][k],flatNew[i])              #if there are predictions for this KB, compare to best match in there
@@ -407,12 +412,16 @@ def levDistanceNoNums(shape,newStatements,trueStatements,conceptSpace,roleSpace,
                         
                 if len(newStatements) > i and len(newStatements[i]) > j and len(newStatements[i][j]) > k:    #FOR EVERY PREDICTION
                     sizeNew = sizeNew + 1
-                    if (len(trueStatements) > i and len(trueStatements[i]) > 0):
+                    if (len(trueStatements) > i and len(trueStatements[i]) > 0):                        
                         best = findBestMatchNoNums(newStatements[i][j][k],flatTrue[i]) 
-                        if best == 0: F1s[0] = F1s[0] + 1 ; F1s[1] = F1s[1] - 1 ; F1s[2] = F1s[2] - 1
+                        if best == 0: F1s[0] = F1s[0] + 1
                         levNT = levNT + best                                                                #if there are true values for this KB, compare to best match in there
                     elif not mix: levNT = levNT + levenshteinIgnoreNum(newStatements[i][j][k],'')                      #otherwise compare with no true value    
                     
+    F1s[1] = sizeNew - F1s[0]
+    F1s[2] = sizeTrue - F1s[0]
+    rF1s[1] = sizeRan - rF1s[0]
+    rF1s[2] = sizeTrue - rF1s[0]              
     return levTR,levRT,levTN,levNT,sizeTrue,sizeNew,sizeRan,F1s,rF1s
 
 def levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix):
@@ -427,8 +436,8 @@ def levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mi
     flatRand = [[item for sublist in x for item in sublist] for x in rando]
     flatNew = [[item for sublist in x for item in sublist] for x in newStatements]
     
-    F1s = array([0,sum([len(x) for x in flatNew]),sum([len(x) for x in flatTrue])])
-    rF1s = array([0,sum([len(x) for x in flatRand]),sum([len(x) for x in flatTrue])])
+    F1s = array([0,0,0])
+    rF1s = array([0,0,0])
     
     levTR = 0
     levRT = 0
@@ -441,13 +450,13 @@ def levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mi
     
     for i in range(len(rando)):       
         for j in range(len(rando[i])):
-            for k in range(len(rando[i][j])):    
+            for k in range(len(rando[i][j])): 
+                countRan = countRan + 1
                 if len(trueStatements) > i and len(trueStatements[i]) > j and len(trueStatements[i][j]) > k: #FOR VERY TRUE STATEMENT
-                    countTrue = countTrue + 1
-                    countRan = countRan + 1
+                    countTrue = countTrue + 1                    
                     levTR = levTR + findBestMatch(trueStatements[i][j][k],flatRand[i])                       #compare to best match in random and vice versa  
                     best = findBestMatch(rando[i][j][k],flatTrue[i])
-                    if best == 0: rF1s[0] = rF1s[0] + 1 ; rF1s[1] = rF1s[1] - 1 ; rF1s[2] = rF1s[2] - 1                     
+                    if best == 0: rF1s[0] = rF1s[0] + 1                    
                     levRT = levRT + best
                     
                     if (len(newStatements) > i and len(newStatements[i]) > 0):
@@ -458,10 +467,14 @@ def levDistance(shape,newStatements,trueStatements,conceptSpace,roleSpace,syn,mi
                     countNew = countNew + 1
                     if (len(trueStatements) > i and len(trueStatements[i]) > 0):
                         best = findBestMatch(newStatements[i][j][k],flatTrue[i]) 
-                        if best == 0: F1s[0] = F1s[0] + 1 ; F1s[1] = F1s[1] - 1 ; F1s[2] = F1s[2] - 1
+                        if best == 0: F1s[0] = F1s[0] + 1
                         levNT = levNT + best                                                                    #if there are true values for this KB, compare to best match in there
                     elif not mix: levNT = levNT + levenshtein(newStatements[i][j][k],'')                            #otherwise compare with no true value
-        
+    
+    F1s[1] = countNew - F1s[0]
+    F1s[2] = countTrue - F1s[0]
+    rF1s[1] = countRan - rF1s[0]
+    rF1s[2] = countTrue - rF1s[0]    
     return levTR,levRT,levTN,levNT,countTrue,countNew,countRan,F1s,rF1s
 
 def findBestMatch(statement,reasonerSteps):
@@ -499,8 +512,8 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn,mix):
     flatRand = [[item for sublist in x for item in sublist] for x in rando]
     flatNew = [[item for sublist in x for item in sublist] for x in newPred]
     
-    F1s = array([0,sum([len(x) for x in flatNew]),sum([len(x) for x in flatTrue])])
-    rF1s = array([0,sum([len(x) for x in flatRand]),sum([len(x) for x in flatTrue])])
+    F1s = array([0,0,0])
+    rF1s = array([0,0,0])
     
     custTR = 0
     custRT = 0
@@ -514,12 +527,12 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn,mix):
     for i in range(len(rando)): #KB
         for j in range(len(rando[i])): #Step
             for k in range(len(rando[i][j])): #Statement
+                countRan = countRan + 1
                 if (len(truePred) > i and len(truePred[i]) > j and len(truePred[i][j]) > k):
-                    countTrue = countTrue + 1
-                    countRan = countRan + 1
+                    countTrue = countTrue + 1                    
                     custTR = custTR + findBestPredMatch(truePred[i][j][k],flatRand[i],conceptSpace,roleSpace)
                     best = findBestPredMatch(rando[i][j][k],flatTrue[i],conceptSpace,roleSpace)
-                    if best == 0: rF1s[0] = rF1s[0] + 1 ; rF1s[1] = rF1s[1] - 1 ; rF1s[2] = rF1s[2] - 1
+                    if best == 0: rF1s[0] = rF1s[0] + 1
                     custRT = custRT + best                    
                     if (len(newPred) > i and len(newPred[i]) > 0):
                         custTN = custTN + findBestPredMatch(truePred[i][j][k],flatNew[i],conceptSpace,roleSpace)
@@ -528,10 +541,13 @@ def customDistance(shape,newPred,truePred,conceptSpace,roleSpace,syn,mix):
                     countNew = countNew + 1
                     if (len(truePred) > i and len(truePred[i]) > 0):
                         best = findBestPredMatch(newPred[i][j][k],flatTrue[i],conceptSpace,roleSpace)
-                        if best == 0: F1s[0] = F1s[0] + 1 ; F1s[1] = F1s[1] - 1 ; F1s[2] = F1s[2] - 1
+                        if best == 0: F1s[0] = F1s[0] + 1
                         custNT = custNT + best
                     elif not mix: custNT = custNT + custom(conceptSpace,roleSpace,newPred[i][j][k],[])
-                    
+    F1s[1] = countNew - F1s[0]
+    F1s[2] = countTrue - F1s[0]
+    rF1s[1] = countRan - rF1s[0]
+    rF1s[2] = countTrue - rF1s[0]                
     return custTR,custRT,custTN,custNT,countTrue,countNew,countRan,F1s,rF1s
 
 def findBestPredMatch(statement,otherKB,conceptSpace,roleSpace):
@@ -932,7 +948,7 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         newPreds,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,labels) if (not mix and not syn) else vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}{}output/predictionSavedKBPipeline[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("{}{}output/predictionSavedKBPipeline[{}].txt".format("" if n == -1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
         
         if (not mix and not syn):
             newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
@@ -1164,11 +1180,11 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
     if not os.path.isdir("crossValidationFolds/evals"): os.mkdir("crossValidationFolds/evals")
     if not os.path.isdir("crossValidationFolds/{}saves".format("" if syn else "s")): os.mkdir("crossValidationFolds/{}saves".format("" if syn else "s"))
     
-    if os.path.isfile("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else "")):
-        data = numpy.load("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else ""), allow_pickle=True)
+    if os.path.isfile("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert >= 0 else "")):
+        data = numpy.load("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert >= 0 else ""), allow_pickle=True)
         allTheData = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'],data['arr_5'],data['arr_6'],data['arr_7'],data['arr_8'],data['arr_9'],data['arr_10']
     elif syn:
-        if pert > 0 and os.path.isfile("saves/messData{}.npz".format(pert)):
+        if pert >= 0 and os.path.isfile("saves/messData{}.npz".format(pert)):
             data = numpy.load("saves/messData{}.npz".format(pert), allow_pickle=True)
             KBs,supports,outputs,mKBs,mouts = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'] 
         else:
@@ -1180,7 +1196,7 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
             allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,labels,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
         else: allTheData = crossValidationSplitAllData(n,KBs,supports,outputs,None,None,None,None,mKBs,mouts,conceptSpace,roleSpace,syn,mix,pert)
     else:
-        if pert > 0 and os.path.isfile("ssaves/messData{}.npz".format(pert)):
+        if pert >= 0 and os.path.isfile("ssaves/messData{}.npz".format(pert)):
             data = numpy.load("ssaves/messData{}.npz".format(pert), allow_pickle=True)
             KBs,supports,outputs,localMaps,stats,mKBs,mouts = data['arr_0'],data['arr_1'],data['arr_2'],data['arr_3'],data['arr_4'] ,data['arr_5'],data['arr_6']         
         else:
@@ -1194,13 +1210,13 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
     
     KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,nErrsPreds,nErrStatements = allTheData
             
-    numpy.savez("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert > 0 else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,nErrsPreds,nErrStatements)  
+    numpy.savez("{}saves/{}foldData{}{}.npz".format("" if syn else "s",n,"Mixed" if mix else "","Err[{}]".format(str(pert)) if pert >= 0 else ""), KBs_tests,KBs_trains,X_trains,X_tests,y_trains,y_tests,truePredss,trueStatementss,labelss,nErrsPreds,nErrStatements)  
     
     if isinstance(labelss,numpy.ndarray):
         if (labelss.ndim and labelss.size) == 0: 
             labelss = None
     
-    evals = numpy.zeros(((6,3,8) if mix else ((3,3,9) if pert > 0 else (3,3,8))),dtype=numpy.float64)
+    evals = numpy.zeros(((6,3,8) if mix else ((3,3,9) if pert >= 0 else (3,3,8))),dtype=numpy.float64)
     for i in range(n):
         print("\nCross Validation Fold {}\n\nTraining With {} Data\nTesting With {} Data\n".format(i,"Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
         x = runNthTime(open("crossValidationFolds/training/trainFold[{}].csv".format(i),"w"),open("crossValidationFolds/evals/evalFold[{}].csv".format(i),"w"),epochs,learningRate,conceptSpace,roleSpace,(KBs_tests[i],KBs_trains[i],X_trains[i],X_tests[i],y_trains[i],y_tests[i],truePredss[i],trueStatementss[i],(labelss[i] if isinstance(labelss,numpy.ndarray) else None),nErrsPreds[i],nErrStatements[i]),syn,mix,i)            
@@ -1218,7 +1234,7 @@ def nTimesCrossValidate(n,epochs,learningRate,conceptSpace,roleSpace,syn,mix,per
         log.write("Trained With {} Data\nTested With {} Data\n\nRegular Distances\n\nPiecewise System\n".format("Synthetic" if syn else "SNOMED","Synthetic" if syn else "SNOMED"))
         
         writeFinalAverageData(avgResult[0],log)
-        
+        e
         log.write("\nDeep System\n")
         
         writeFinalAverageData(avgResult[1],log)
@@ -1294,7 +1310,7 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
         KBns =[]
         for j in range(len(indexes[i])):
             if not mix:
-                if pert > 0.0 and isinstance(mKBs,numpy.ndarray):
+                if pert >= 0.0 and isinstance(mKBs,numpy.ndarray):
                     crossKBsTest[i][j] = mKBs[indexes[i][j]] 
                     placeholder,KBn = vecToStatement(KBs[indexes[i][j]],conceptSpace,roleSpace)
                     KBns.append(KBn)
@@ -1339,20 +1355,20 @@ def crossValidationSplitAllData(n,KBs,supports,outputs,sKBs,ssupports,soutputs,l
             writeVectorFile("crossValidationFolds/{}output/reasonerCompletion[{}].txt".format("sn" if not syn else "",i),nTrueStatementsLabeled)
             
             nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace) 
-            if pert > 0:
+            if pert >= 0:
                 nErrsPreds[i],nErrStatements[i] = vecToStatements(crossErrTest[i],conceptSpace,roleSpace)
                 writeVectorFile("crossValidationFolds/{}output/ruinedCompletion[{}].txt".format("sn" if not syn else "",i),nErrStatements[i])
         else:
             placeholder,KBn = vecToStatements(crossKBsTest[i],conceptSpace,roleSpace)
             nTruePreds[i],nTrueStatements[i] = vecToStatements(crossOutputsTest[i],conceptSpace,roleSpace)
-            if pert > 0:
+            if pert >= 0:
                 nErrsPreds[i],nErrStatements[i] = vecToStatements(crossErrTest[i],conceptSpace,roleSpace) 
                 writeVectorFile("crossValidationFolds/{}output/ruinedCompletion[{}].txt".format("sn" if not syn else "",i),nErrStatements[i])                
             placeholder,inputs = vecToStatements(crossSupportsTest[i],conceptSpace,roleSpace)
         
             writeVectorFile("crossValidationFolds/{}output/reasonerCompletion[{}].txt".format("sn" if not syn else "",i),nTrueStatements[i])
             
-        writeVectorFile("crossValidationFolds/{}output/{}KBsIn[{}].txt".format("sn" if not syn else "","Messed" if pert > 0 else "",i),KBn)
+        writeVectorFile("crossValidationFolds/{}output/{}KBsIn[{}].txt".format("sn" if not syn else "","Messed" if pert >= 0 else "",i),KBn)
         #writeVectorFile("crossValidationFolds/{}output/supports[{}].txt".format("sn" if not syn else "",i),inputs)
         
         
@@ -1385,8 +1401,30 @@ def readInputs():
     
     return args
 
+def runAllTests():
+    if not os.path.isdir("Tests"): os.mkdir("Tests")
+    if not os.path.isdir("Tests/Syn"): os.mkdir("Tests/Syn")
+    if not os.path.isdir("Tests/Sno"): os.mkdir("Tests/Sno")
+    
+    for i in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
+        print("{} percent corruption\nSynthetic Data".format(i))
+        nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False,pert=i)
+        shutil.move("crossValidationFolds", "Tests/Syn", copy_function = shutil.copytree)
+        os.rename("Tests/Syn/crossValidationFolds","Tests/Syn/crossValidationFolds{}".format(i))
+        
+    for i in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:  
+        print("{} percent corruption\nSNOMED Data".format(i))
+        nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=False,mix=False,pert=i)
+        shutil.move("crossValidationFolds", "Tests/Sno", copy_function = shutil.copytree)
+        os.rename("Tests/Sno/crossValidationFolds","Tests/Sno/crossValidationFolds{}".format(i))
+
 if __name__ == "__main__":
     
+    runAllTests()
+    
+    '''
     args = readInputs()
       
     nTimesCrossValidate(n=args.cross,epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=not args.snomed,mix=args.mix,pert=args.perturb)
+    
+    '''

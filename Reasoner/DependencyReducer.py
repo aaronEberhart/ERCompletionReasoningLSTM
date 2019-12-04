@@ -100,14 +100,28 @@ class DependencyReducer:
     def toString(self,rules):
         return "\n".join(["{}: ({}){}".format(rule[0].toString(),str(rule[1]+1),",".join([x.toString() for x in rule[2]])) for rule in rules])
     
-    def correctRange(self,log1a,log2a,i):
-        if len(log1a) == 0 and len(log2a) == 0: return 0
-        elif len(log1a) == 0: log1 = 0; log2 = len(log2a)
-        elif len(log2a) == 0: log2 = 0; log1 = len(log1a)
-        else: log1 = len(log1a);log2 = len(log2a)
+    def correctRange(self,log1,log2):
         return(max(log1,log2) if log1 != 0 and log2 != 0 else (log1 if log2 == 0 else (log2 if log1 == 0 else 0)))
         
+    def supportVector(self,maxwid,maxlen,concepts,roles):
+        supports = numpy.zeros((maxwid,maxlen))
+        
+        for i in range(len(self.donelogs)):
+            step = []
+            for col in self.donelogs[i]:
+                for statement in col:
+                    for dependency in statement[2]:
+                        step.extend(dependency.toVector(concepts,roles))
+            while len(step) < maxlen:
+                step.extend(array([0,0,0,0]))
+            if len(step) > len(supports[i]):
+                return 0
+            supports[i] = array(step)
+        
+        return supports
+        
     def toVector(self,concepts,roles):
+        
         ans = []
         vec = []
         maxa = 0
@@ -117,15 +131,15 @@ class DependencyReducer:
             iterb = []
             if (i > len(self.donelogs[1])):
                 print(self.kb.toString())
-            for j in range(0,self.correctRange(self.donelogs[0],self.donelogs[1],i)):
+            for j in range(0,self.correctRange(len(self.donelogs[0]),len(self.donelogs[1]))):
                 if j < len(self.donelogs[0][i]): itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[0][i][j][2]]
                 if j < len(self.donelogs[1][i]): itera = itera + [array(x.toVector(concepts,roles)) for x in self.donelogs[1][i][j][2]]
                 if j < len(self.donelogs[0][i]) and j < len(self.donelogs[1][i]):
                     iterb.append(array(self.donelogs[0][i][j][0].toVector(concepts,roles)))
                     iterb.append(array(self.donelogs[1][i][j][0].toVector(concepts,roles)))
-                elif j < len(self.donelogs[0][i]):
+                if j < len(self.donelogs[0][i]):
                     iterb.append(array(self.donelogs[0][i][j][0].toVector(concepts,roles)))
-                elif j < len(self.donelogs[1][i]):
+                if j < len(self.donelogs[1][i]):
                     iterb.append(array(self.donelogs[1][i][j][0].toVector(concepts,roles)))
             if len(itera) > maxv: maxv = len(itera)
             if len(iterb) > maxa: maxa = len(iterb)
@@ -155,7 +169,8 @@ class DependencyReducer:
             for j in range(1,maxa):
                 if j < len(ans[i]): itera = numpy.concatenate((itera,ans[i][j]),axis=None)
                 else: itera = numpy.concatenate((itera,array([0.0,0.0,0.0,0.0])),axis=None)
-            a.append(array(itera))            
+            a.append(array(itera))    
+            
         
         return array(v),array(a)
     

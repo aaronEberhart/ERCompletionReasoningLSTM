@@ -234,16 +234,34 @@ class ReasonER:
 		if len(self.sequenceLog) == 0 and len(self.log) == 0 and len(self.KBaLog) == 0 and len(self.KBsLog) == 0:
 			return numpy.zeros((maxwid,maxlen))
 		vec = []
-		for i in range(0,len(self.sequenceLog)):
-			iterb = []
-			for j in range(0,len(self.sequenceLog[i])):
-				iterb.extend(self.sequenceLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
-			vec.append(numpy.array(iterb))  
+		
+		if len(self.KBsLog) == 0 and len(self.KBaLog) == 0:
+			for i in range(0,len(self.sequenceLog)):
+				iterb = []
+				for j in range(0,len(self.sequenceLog[i])):
+					iterb.extend(self.sequenceLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+				vec.append(numpy.array(iterb))
+		else:
+			for i in range(0,max(len(self.sequenceLog),len(self.KBsLog))):
+				iterb = []
+				ran = max(len(self.sequenceLog[i]),len(self.KBsLog[i])) if (len(self.sequenceLog) > i and len(self.KBsLog) > i) else (len(self.sequenceLog) if len(self.KBsLog) < i else (len(self.KBsLog) if len(self.sequenceLog) < i else 0))
+				for j in range(0,ran):
+					if len(self.sequenceLog) > i and len(self.sequenceLog[i]) > j: iterb.extend(self.sequenceLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+					if len(self.KBsLog) > i and len(self.KBsLog[i]) > j: iterb.extend(self.KBsLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+				vec.append(numpy.array(iterb))
+				
+			for i in range(0,len(self.KBaLog)):
+				iterb = []
+				for j in range(0,len(self.KBaLog[i])):
+					iterb.extend(self.KBaLog[i][j][0].toVector(self.syntheticData.conceptNamespace,self.syntheticData.roleNamespace))
+				vec.append(numpy.array(iterb))			
 			
 		v = numpy.zeros((maxwid,maxlen))
 		
 		for i in range(len(vec)):
+			if i >= maxwid: return 0
 			for j in range(len(vec[i])):
+				if j >= maxlen: return 0
 				v[i][j] = vec[i][j]
 		return 	v	
 	
