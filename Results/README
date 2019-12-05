@@ -1,0 +1,12 @@
+filenames:
+
+Syn = Synthetic data
+Sno = SNOMED data
+
+lev = Character Levenshtein Distance
+I = Atomic Levenshtein Distance
+p = Predicate Distance
+
+D = Deep Architecture
+P = Piecewise Architecture
+F = Flat Architecture
