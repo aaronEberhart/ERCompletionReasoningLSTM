@@ -10,3 +10,5 @@ p = Predicate Distance
 D = Deep Architecture
 P = Piecewise Architecture
 F = Flat Architecture
+
+f1 = Precision, Recall, F1-Score chart
