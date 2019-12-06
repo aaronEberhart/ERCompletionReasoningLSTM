@@ -242,7 +242,7 @@ def convertToStatementWithLabels(four,conceptSpace,roleSpace,labels):
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
             return new,"{} ∘ {} ⊑ {}\n\t\t\tif a first thing is {} anything that is {} a third thing, then the first is {} the third".format(new[0],new[1],new[2],text[0],text[1],text[2])
     
-    return new,None
+    return None,None
 
 def convertToStatement(four,conceptSpace,roleSpace):
     
@@ -276,7 +276,7 @@ def convertToStatement(four,conceptSpace,roleSpace):
         elif four[1] < 0 and four[0] < 0 and four[2] < 0:
             return new,"{} ∘ {} ⊑ {}".format(new[0],new[1],new[2])
     
-    return new,None#" ".join(new)
+    return None,None#" ".join(new)
     
 def splitTensors(inputs,outputs, size):
     inTest, inTrain = numpy.split(inputs,[int(len(inputs)*size)])
@@ -879,9 +879,9 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         trainingStats(evallog,mseNew,mse0,mseL)
                       
-        writeVectorFile("{}{}output/learnedSupportsP[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("crossValidationFolds/{}output/learnedSupportsP[{}].txt".format("" if syn else "sn",n),newStatements)
         
-        numpy.savez("{}{}saves/halfwayData[{}]".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n), y_pred)
+        numpy.savez("crossValidationFolds/{}saves/halfwayData[{}]".format("" if syn else "s",n), y_pred)
         
         #saver.save(sess,"{}{}saves/firstHalfModel[{}]".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n))
       
@@ -932,11 +932,11 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("crossValidationFolds/{}output/predictedOutLeftOverSupportTest[{}].txt".format("" if syn else "sn",n),newStatements)
         
         evals = distanceEvaluations(evallog,y_pred.shape,newPreds,truePreds,newStatements,trueStatements,conceptSpace,roleSpace,syn,mix,False,False)        
         
-        data = numpy.load("{}{}saves/halfwayData[{}].npz".format("" if n == 1 else "crossValidationFolds/","" if syn else "s",n),allow_pickle=True)
+        data = numpy.load("crossValidationFolds/{}saves/halfwayData[{}].npz".format("" if syn else "s",n),allow_pickle=True)
         data = data['arr_0'] 
         
         evallog.write("\nSaved Test Data From Previous LSTM Evaluation\n")
@@ -948,7 +948,7 @@ def shallowSystem(n_epochs0,learning_rate0,trainlog,evallog,conceptSpace,roleSpa
         
         newPreds,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,labels) if (not mix and not syn) else vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}{}output/predictionSavedKBPipeline[{}].txt".format("" if n == -1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("crossValidationFolds/{}output/predictionSavedKBPipeline[{}].txt".format("" if syn else "sn",n),newStatements)
         
         if (not mix and not syn):
             newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)
@@ -1003,7 +1003,7 @@ def deepSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,
           
         newPreds,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,labels) if (not mix and not syn) else vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}{}output/predictionDeepArchitecture[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("crossValidationFolds/{}output/predictionDeepArchitecture[{}].txt".format("" if syn else "sn",n),newStatements)
         
         if (not mix and not syn):
             newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)        
@@ -1058,7 +1058,7 @@ def flatSystem(n_epochs2,learning_rate2,trainlog,evallog,conceptSpace,roleSpace,
           
         newPreds,newStatements = vecToStatementsWithLabels(y_pred,conceptSpace,roleSpace,labels) if (not mix and not syn) else vecToStatements(y_pred,conceptSpace,roleSpace)
         
-        writeVectorFile("{}{}output/predictionFlatArchitecture[{}].txt".format("" if n == 1 else "crossValidationFolds/","" if syn else "sn",n),newStatements)
+        writeVectorFile("crossValidationFolds/{}output/predictionFlatArchitecture[{}].txt".format("" if syn else "sn",n),newStatements)
         
         if (not mix and not syn):
             newPreds,newStatements = vecToStatements(y_pred,conceptSpace,roleSpace)        
@@ -1420,11 +1420,7 @@ def runAllTests():
 
 if __name__ == "__main__":
     
-    runAllTests()
-    
-    '''
     args = readInputs()
       
     nTimesCrossValidate(n=args.cross,epochs=args.epochs,learningRate=args.learningRate,conceptSpace=21,roleSpace=8,syn=not args.snomed,mix=args.mix,pert=args.perturb)
     
-    '''
