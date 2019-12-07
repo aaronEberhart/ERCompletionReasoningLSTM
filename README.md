@@ -23,27 +23,31 @@ usage: main.py [-h] [-e EPOCHS] [-l LEARNINGRATE] [-s] [-m] [-c CROSS]
 
 optional arguments:
 
-  -h, --help            show this help message and exit
+  -h, --help
+  show this help message and exit
   
-  -e EPOCHS, --epochs EPOCHS
-                        number of epochs for each system
+  -e, --epochs
+  number of epochs for each system
                         
   -l LEARNINGRATE, --learningRate LEARNINGRATE
-                        learning rate of each system
+  learning rate of each system
                         
-  -s, --snomed          use SNOMED dataset
+  -s, --snomed          
+  use SNOMED dataset
   
-  -m, --mix             use test set from different souce than train
-  -c CROSS, --cross CROSS
-                        cross validation k
+  -m, --mix             
+  use test set from different souce than train
+  
+  -c CROSS, --cross CROSS 
+  cross validation folds
                         
   -t TRAINFILE, --trainfile TRAINFILE
-                        training log file to save to
+  training log file to save to
                         
   -v EVALFILE, --evalfile EVALFILE
-                        eval log file to save to
+  eval log file to save to
                         
   -p PERTURB, --perturb PERTURB
-                        disturb each kb for comparison
+  perturb each kb by percent for comparison
 
 
