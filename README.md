@@ -27,12 +27,10 @@ optional arguments:
 |:--------:|:-----------------------------:|
 |-h, --help|show this help message and exit|
 |-e, --epochs|number of epochs for each system|
-|-l LEARNINGRATE, --learningRate LEARNINGRATE|learning rate of each system|
+|-l LEARNINGRATE, --learningRate LEARNINGRATE|learning rate of each system, number between 0.0 and 1.0|
 |-s, --snomed|use SNOMED dataset|
 |-m, --mix|use test set from different souce than train|
-|-c CROSS, --cross CROSS|cross validation folds|
-|-t TRAINFILE, --trainfile TRAINFILE|training log file to save to|
-|-v EVALFILE, --evalfile EVALFILE|eval log file to save to|
-|-p PERTURB, --perturb PERTURB|perturb each kb by percent for comparison|
+|-c CROSS, --cross CROSS|cross validation folds, default 10|
+|-p PERTURB, --perturb PERTURB|perturb each kb by percent between 0 and 1 and compare|
 
 
