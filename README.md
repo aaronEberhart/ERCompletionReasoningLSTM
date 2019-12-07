@@ -19,7 +19,7 @@ This file builds a prediction model of the reasoner with an LSTM. It can be run 
 This is the manual for the command line options:
 
 usage: main.py [-h] [-e EPOCHS] [-l LEARNINGRATE] [-s] [-m] [-c CROSS]
-               [-t TRAINFILE] [-v EVALFILE] [-p PERTURB]
+[-p PERTURB]
 
 optional arguments:
 
