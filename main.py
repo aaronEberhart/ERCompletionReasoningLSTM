@@ -1383,13 +1383,11 @@ def readInputs():
     parser.add_argument("-s","--snomed", help="use SNOMED dataset", action="store_true", default=False)
     parser.add_argument("-m","--mix", help="use test set from different souce than train", action="store_true", default=False)
     parser.add_argument("-c","--cross", help="cross validation k", type=int, default=10)
-    parser.add_argument("-t","--trainfile", help="training log file to save to", type=str, default="trainlog.csv")
-    parser.add_argument("-v","--evalfile", help="eval log file to save to", type=str, default="evallog.csv")
-    parser.add_argument("-p","--perturb", help="disturb each kb for comparison", type=float, default=0.0)
+    parser.add_argument("-p","--perturb", help="disturb each kb for comparison", type=float, default=-1.0)
     
     args = parser.parse_args()
     
-    if args.mix and args.perturb != 0.0:
+    if args.mix and args.perturb >= 0:
         raise IOError("Can't use two test sets simultaneously")
     
     if args.epochs and args.epochs < 2:
