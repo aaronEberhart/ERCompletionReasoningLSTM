@@ -22,6 +22,7 @@ usage: main.py [-h] [-e EPOCHS] [-l LEARNINGRATE] [-s] [-m] [-c CROSS]
                [-t TRAINFILE] [-v EVALFILE] [-p PERTURB]
 
 optional arguments:
+
 |Argument  |Meaning                        |
 |:--------:|:-----------------------------:|
 |-h, --help|show this help message and exit|
