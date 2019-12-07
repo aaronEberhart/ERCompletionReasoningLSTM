@@ -22,9 +22,8 @@ usage: main.py [-h] [-e EPOCHS] [-l LEARNINGRATE] [-s] [-m] [-c CROSS]
                [-t TRAINFILE] [-v EVALFILE] [-p PERTURB]
 
 optional arguments:
-
-  -h, --help
-  show this help message and exit
+|:--:|:--:|
+|-h, --help|show this help message and exit|
   
   -e, --epochs
   number of epochs for each system
@@ -32,11 +31,9 @@ optional arguments:
   -l LEARNINGRATE, --learningRate LEARNINGRATE
   learning rate of each system
                         
-  -s, --snomed          
-  use SNOMED dataset
+  -s, --snomed            use SNOMED dataset
   
-  -m, --mix             
-  use test set from different souce than train
+  -m, --mix  use test set from different souce than train
   
   -c CROSS, --cross CROSS 
   cross validation folds
