@@ -1,4 +1,5 @@
 # PySynGenReas
+This system was developed for a [paper](https://github.com/aaronEberhart/me/raw/master/papers/AAAI-MAKE2020CompletionReasoningEmulationfortheDescriptionLogicEL%2B.pdf) that was accepted at the AAAI-MAKE 2020 conference.
 
 ## predicateTest.py
 
