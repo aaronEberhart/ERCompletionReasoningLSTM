@@ -1405,13 +1405,13 @@ def runAllTests():
     if not os.path.isdir("Tests/Sno"): os.mkdir("Tests/Sno")
     
     for i in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-        print("{} percent corruption\nSynthetic Data".format(i))
+        print("{} percent corruption\nSynthetic Data".format(i * 10))
         nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=True,mix=False,pert=i)
         shutil.move("crossValidationFolds", "Tests/Syn", copy_function = shutil.copytree)
         os.rename("Tests/Syn/crossValidationFolds","Tests/Syn/crossValidationFolds{}".format(i))
         
     for i in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:  
-        print("{} percent corruption\nSNOMED Data".format(i))
+        print("{} percent corruption\nSNOMED Data".format(i * 10))
         nTimesCrossValidate(n=10,epochs=20000,learningRate=0.0001,conceptSpace=21,roleSpace=8,syn=False,mix=False,pert=i)
         shutil.move("crossValidationFolds", "Tests/Sno", copy_function = shutil.copytree)
         os.rename("Tests/Sno/crossValidationFolds","Tests/Sno/crossValidationFolds{}".format(i))
