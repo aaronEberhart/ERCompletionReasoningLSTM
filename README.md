@@ -32,6 +32,6 @@ optional arguments:
 |-s, --snomed|use SNOMED dataset|
 |-m, --mix|use test set from different souce than train|
 |-c CROSS, --cross CROSS|cross validation folds, default 10|
-|-p PERTURB, --perturb PERTURB|perturb each kb by percent between 0 and 1 and compare|
+|-p PERTURB, --perturb PERTURB|perturb each kb by proportion between 0 and 1 and compare|
 
 
